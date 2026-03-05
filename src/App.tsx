@@ -47,11 +47,11 @@ interface LandingContent {
 }
 
 const palette = {
-  gradient: 'from-[#04110F] via-[#0C3D36] to-[#0B1F43]',
-  surface: 'bg-white/10',
-  surfaceStrong: 'bg-white/20',
-  accent: '#34D399',
-  highlight: '#F59E0B',
+  gradient: 'from-[#2B0A57] via-[#E636A4] to-[#FF7A2F]',
+  surface: 'bg-white/12',
+  surfaceStrong: 'bg-white/22',
+  accent: '#FF7A2F',
+  highlight: '#FFD166',
 };
 
 const localizedContent: Record<Locale, LandingContent> = {
@@ -305,9 +305,9 @@ function App() {
   return (
     <div className={`min-h-screen overflow-hidden bg-gradient-to-br ${palette.gradient} text-white`}>
       <div className="pointer-events-none absolute inset-0 opacity-70">
-        <div className="absolute -top-40 left-1/2 h-[26rem] w-[26rem] -translate-x-1/2 rounded-full bg-emerald-400/20 blur-3xl" />
-        <div className="absolute bottom-0 left-0 h-[24rem] w-[24rem] rounded-full bg-sky-400/10 blur-3xl" />
-        <div className="absolute right-0 top-0 h-[20rem] w-[20rem] rounded-full bg-amber-300/10 blur-3xl" />
+        <div className="absolute -top-40 left-1/2 h-[26rem] w-[26rem] -translate-x-1/2 rounded-full bg-fuchsia-300/25 blur-3xl" />
+        <div className="absolute bottom-0 left-0 h-[24rem] w-[24rem] rounded-full bg-pink-300/15 blur-3xl" />
+        <div className="absolute right-0 top-0 h-[20rem] w-[20rem] rounded-full bg-orange-300/20 blur-3xl" />
       </div>
 
       <div className="relative mx-auto max-w-6xl space-y-16 px-6 py-10 md:px-8 md:py-14">
@@ -317,7 +317,7 @@ function App() {
               <img src="/logo.png" alt="fix.pictures logo" className="h-10 w-10 rounded-xl object-cover" />
               <span className="text-xs font-bold uppercase tracking-[0.25em] text-white/80">fix.pictures</span>
             </div>
-            <p className="text-xs font-semibold uppercase tracking-[0.3em] text-emerald-200">{content.trustBadge}</p>
+            <p className="text-xs font-semibold uppercase tracking-[0.3em] text-pink-100">{content.trustBadge}</p>
             <h1 className="mt-3 max-w-3xl text-4xl font-black tracking-tight drop-shadow-2xl md:text-6xl">
               {content.headline}
             </h1>
@@ -348,7 +348,7 @@ function App() {
               {content.markets.map((market) => (
                 <span
                   key={market}
-                  className="rounded-full border border-emerald-200/30 bg-emerald-300/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-emerald-100"
+                  className="rounded-full border border-pink-200/30 bg-fuchsia-300/15 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-pink-50"
                 >
                   {market}
                 </span>
