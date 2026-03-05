@@ -1,517 +1,254 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
-type Locale = 'EN' | 'ES';
+const INSTALL_EXTENSION_URL = 'https://chromewebstore.google.com/';
 
-interface Feature {
-  title: string;
-  detail: string;
-}
-
-interface Step {
-  title: string;
-  detail: string;
-}
-
-interface FaqItem {
-  question: string;
-  answer: string;
-}
-
-interface EngineMode {
-  title: string;
-  detail: string;
-}
-
-interface LandingContent {
-  trustBadge: string;
-  productName: string;
-  headline: string;
-  subheadline: string;
-  primaryCta: { label: string; href: string };
-  secondaryCta: { label: string; href: string };
-  markets: string[];
-  stats: Array<{ value: string; label: string }>;
-  releaseTitle: string;
-  releaseSubtitle: string;
-  features: Feature[];
-  workflowTitle: string;
-  workflow: Step[];
-  checksTitle: string;
-  checks: Array<{ label: string; value: string }>;
-  enginesTitle: string;
-  engineModes: EngineMode[];
-  testimonial: { quote: string; author: string; role: string };
-  faqs: FaqItem[];
-  finalTitle: string;
-  finalSubtitle: string;
-}
-
-const palette = {
-  gradient: 'from-[#2B0A57] via-[#E636A4] to-[#FF7A2F]',
-  surface: 'bg-white/12',
-  surfaceStrong: 'bg-white/22',
-  accent: '#FF7A2F',
-  highlight: '#FFD166',
+const heroExample = {
+  before:
+    'https://images.unsplash.com/photo-1585386959984-a41552262a27?auto=format&fit=crop&w=1400&q=80',
+  after:
+    'https://images.unsplash.com/photo-1585386959984-a41552262a27?auto=format&fit=crop&w=1400&q=80&sat=-35&exp=20',
 };
 
-const localizedContent: Record<Locale, LandingContent> = {
-  EN: {
-    trustBadge: 'New release: local GPU + batch zip workflow',
-    productName: 'fix.pictures',
-    headline: 'Marketplace image pipeline, now faster and more controllable.',
-    subheadline:
-      'The newest extension flow combines in-page Fix buttons, instant audit checks, dual inference engines, and one-click batch export for catalog teams.',
-    primaryCta: { label: 'Start Free Trial', href: 'https://fix.pictures' },
-    secondaryCta: { label: 'See New Workflow', href: '#workflow' },
-    markets: ['Amazon', 'eBay', 'Etsy'],
-    stats: [
-      { value: '2', label: 'Parallel jobs per queue' },
-      { value: '2000px', label: 'Master export canvas' },
-      { value: '25MB', label: 'Single-file upload limit' },
-    ],
-    releaseTitle: 'Built for modern listing operations',
-    releaseSubtitle: 'Aligned with the latest sidepanel architecture and QA flow.',
-    features: [
-      {
-        title: 'Smart in-page capture',
-        detail:
-          'Injects a Fix chip directly in marketplace editors so operators can queue images from the listing screen.',
-      },
-      {
-        title: 'Instant Analysis panel',
-        detail:
-          'Runs pre-checks before AI processing to flag background, framing, dimensions, and format issues early.',
-      },
-      {
-        title: 'Dual inference engines',
-        detail:
-          'Uses browser worker by default and can switch to secure localhost GPU service with token handshakes.',
-      },
-      {
-        title: 'Contact shadow controls',
-        detail:
-          'Auto mode applies grounded shadows and lets teams tune intensity or disable shadows for edge cases.',
-      },
-      {
-        title: 'Queue + batch zip export',
-        detail:
-          'Processes multiple files concurrently, then exports selected outputs or a compressed batch archive.',
-      },
-      {
-        title: 'Marketplace presets',
-        detail:
-          'Amazon, eBay, and Etsy rules are built into validation and output sizing for faster approvals.',
-      },
-    ],
-    workflowTitle: 'How the new flow works',
-    workflow: [
-      {
-        title: '1. Queue from listing or upload',
-        detail: 'Drag, paste, or click the injected Fix badge to push assets into the sidepanel queue.',
-      },
-      {
-        title: '2. Analyze before processing',
-        detail: 'Instant checks score white background coverage, framing ratio, size, and accepted file format.',
-      },
-      {
-        title: '3. Process with auto fallback',
-        detail: 'Runs local GPU if available, then safely falls back to browser inference without stopping the batch.',
-      },
-      {
-        title: '4. Export approved assets',
-        detail: 'Download one image or a full ZIP package once compliance metrics pass the target preset.',
-      },
-    ],
-    checksTitle: 'Compliance baseline on every output',
-    checks: [
-      { label: 'Background', value: 'Pure white target (<=1.00% off-white)' },
-      { label: 'Framing', value: 'Subject fill target around 85%' },
-      { label: 'Resolution', value: '2000 x 2000 master canvas' },
-      { label: 'Formats', value: 'JPEG/PNG/WEBP input with optimized JPEG export' },
-    ],
-    enginesTitle: 'Processing engine modes',
-    engineModes: [
-      {
-        title: 'Local GPU mode',
-        detail:
-          'Secure localhost handshake to 127.0.0.1:8765 with rotating session tokens for high-throughput teams.',
-      },
-      {
-        title: 'Browser worker mode',
-        detail:
-          'Zero-infra fallback path in the extension worker, so operations continue even when local service is offline.',
-      },
-    ],
-    testimonial: {
-      quote:
-        '"The new queue and fallback architecture removed blockers for our catalog ops team. We process batches without babysitting the pipeline."',
-      author: 'Megan Ortiz',
-      role: 'Head of Merch Ops, Multi-brand Seller',
-    },
-    faqs: [
-      {
-        question: 'Can we run without a local GPU service?',
-        answer:
-          'Yes. Browser worker inference is the default path and local GPU mode is optional when speed or volume requires it.',
-      },
-      {
-        question: 'Does batch export keep names organized?',
-        answer:
-          'Yes. Single downloads keep generated filenames and batch export builds a dated ZIP archive for handoff.',
-      },
-      {
-        question: 'Which marketplaces are currently tuned?',
-        answer:
-          'Preset logic is currently tuned for Amazon, eBay, and Etsy with strict-white and resolution differences handled in checks.',
-      },
-    ],
-    finalTitle: 'Ship cleaner product media without adding headcount',
-    finalSubtitle: 'Move from upload to compliant export in a single operator workflow.',
+const proofCases = [
+  {
+    name: 'Electronics',
+    before:
+      'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?auto=format&fit=crop&w=1200&q=80',
+    after:
+      'https://images.unsplash.com/photo-1585060544812-6b45742d762f?auto=format&fit=crop&w=1200&q=80',
   },
-  ES: {
-    trustBadge: 'Nuevo release: GPU local + exportacion por lotes',
-    productName: 'fix.pictures',
-    headline: 'Pipeline de imagenes para marketplaces, mas rapido y controlable.',
-    subheadline:
-      'El flujo actual integra boton Fix en pagina, auditoria instantanea, motores duales de inferencia y exportacion por lotes para equipos de catalogo.',
-    primaryCta: { label: 'Probar Gratis', href: 'https://fix.pictures' },
-    secondaryCta: { label: 'Ver Flujo Nuevo', href: '#workflow' },
-    markets: ['Amazon', 'eBay', 'Etsy'],
-    stats: [
-      { value: '2', label: 'Trabajos paralelos en cola' },
-      { value: '2000px', label: 'Canvas maestro de salida' },
-      { value: '25MB', label: 'Limite de carga por archivo' },
-    ],
-    releaseTitle: 'Disenado para operaciones de listado modernas',
-    releaseSubtitle: 'Alineado con la arquitectura y QA del sidepanel actual.',
-    features: [
-      {
-        title: 'Captura inteligente en pagina',
-        detail:
-          'Inserta un chip Fix dentro del editor del marketplace para encolar imagenes sin salir del flujo de publicacion.',
-      },
-      {
-        title: 'Panel de analisis instantaneo',
-        detail:
-          'Ejecuta pre-chequeos antes del proceso IA para detectar fondo, encuadre, dimensiones y formato.',
-      },
-      {
-        title: 'Motores duales de inferencia',
-        detail:
-          'Usa worker del navegador por defecto y puede cambiar a GPU localhost segura con handshake por token.',
-      },
-      {
-        title: 'Control de sombra de contacto',
-        detail:
-          'Modo automatico para sombras realistas y control manual de intensidad o apagado en casos especiales.',
-      },
-      {
-        title: 'Cola + ZIP por lotes',
-        detail:
-          'Procesa varios archivos en paralelo y exporta seleccionados o un paquete comprimido con un clic.',
-      },
-      {
-        title: 'Presets por marketplace',
-        detail:
-          'Reglas de Amazon, eBay y Etsy incluidas en validacion y tamano de salida para aprobar mas rapido.',
-      },
-    ],
-    workflowTitle: 'Como funciona el nuevo flujo',
-    workflow: [
-      {
-        title: '1. Encola desde listing o carga',
-        detail: 'Arrastra, pega o usa el badge Fix inyectado para enviar archivos al sidepanel.',
-      },
-      {
-        title: '2. Analiza antes de procesar',
-        detail: 'Chequeos instantaneos validan fondo blanco, encuadre, tamano y formato permitido.',
-      },
-      {
-        title: '3. Procesa con fallback automatico',
-        detail: 'Usa GPU local si esta disponible y vuelve al navegador sin detener el lote.',
-      },
-      {
-        title: '4. Exporta activos aprobados',
-        detail: 'Descarga una imagen o un ZIP completo cuando los indicadores de cumplimiento pasan.',
-      },
-    ],
-    checksTitle: 'Base de cumplimiento en cada salida',
-    checks: [
-      { label: 'Fondo', value: 'Objetivo blanco puro (<=1.00% fuera de blanco)' },
-      { label: 'Encuadre', value: 'Objetivo de relleno cercano a 85%' },
-      { label: 'Resolucion', value: 'Canvas maestro de 2000 x 2000' },
-      { label: 'Formatos', value: 'Entrada JPEG/PNG/WEBP y salida JPEG optimizada' },
-    ],
-    enginesTitle: 'Modos de procesamiento',
-    engineModes: [
-      {
-        title: 'Modo GPU local',
-        detail:
-          'Handshake seguro con 127.0.0.1:8765 y tokens de sesion rotativos para operaciones de alto volumen.',
-      },
-      {
-        title: 'Modo worker del navegador',
-        detail:
-          'Ruta de respaldo sin infraestructura para seguir operando cuando el servicio local no esta disponible.',
-      },
-    ],
-    testimonial: {
-      quote:
-        '"La nueva cola con fallback elimino bloqueos del equipo. Procesamos lotes completos sin supervisar cada imagen."',
-      author: 'Megan Ortiz',
-      role: 'Head of Merch Ops, Multi-brand Seller',
-    },
-    faqs: [
-      {
-        question: 'Podemos usarlo sin servicio GPU local?',
-        answer:
-          'Si. El worker del navegador es el camino por defecto y el modo GPU local es opcional para mayor velocidad.',
-      },
-      {
-        question: 'La exportacion por lotes conserva nombres?',
-        answer:
-          'Si. La descarga individual mantiene nombres generados y el ZIP crea un paquete fechado para el equipo.',
-      },
-      {
-        question: 'Que marketplaces estan optimizados hoy?',
-        answer:
-          'Actualmente esta optimizado para Amazon, eBay y Etsy con diferencias de fondo y resolucion en los presets.',
-      },
-    ],
-    finalTitle: 'Publica imagenes limpias sin ampliar equipo',
-    finalSubtitle: 'Pasa de carga a exportacion cumplida en un solo flujo operativo.',
+  {
+    name: 'Cosmetics',
+    before:
+      'https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?auto=format&fit=crop&w=1200&q=80',
+    after:
+      'https://images.unsplash.com/photo-1612817288484-6f916006741a?auto=format&fit=crop&w=1200&q=80',
   },
-};
+  {
+    name: 'Packaging',
+    before:
+      'https://images.unsplash.com/photo-1586880244406-556ebe35f282?auto=format&fit=crop&w=1200&q=80',
+    after:
+      'https://images.unsplash.com/photo-1611930022073-b7a4ba5fcccd?auto=format&fit=crop&w=1200&q=80',
+  },
+  {
+    name: 'Tools',
+    before:
+      'https://images.unsplash.com/photo-1504148455328-c376907d081c?auto=format&fit=crop&w=1200&q=80',
+    after:
+      'https://images.unsplash.com/photo-1581147036324-c1c2a8c2e4b7?auto=format&fit=crop&w=1200&q=80',
+  },
+];
 
-const CheckIcon = () => (
-  <svg
-    className="h-4 w-4"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth={2}
-    strokeLinecap="round"
-    strokeLinejoin="round"
-    aria-hidden="true"
-  >
-    <path d="M20 6 9 17l-5-5" />
-  </svg>
-);
+interface BeforeAfterSliderProps {
+  beforeSrc: string;
+  afterSrc: string;
+  label: string;
+  autoPlay?: boolean;
+  className?: string;
+  startSplit?: number;
+}
 
-function App() {
-  const [locale, setLocale] = useState<Locale>('EN');
-  const content = useMemo(() => localizedContent[locale], [locale]);
+function BeforeAfterSlider({
+  beforeSrc,
+  afterSrc,
+  label,
+  autoPlay = false,
+  className = '',
+  startSplit = 52,
+}: BeforeAfterSliderProps) {
+  const [split, setSplit] = useState(startSplit);
+  const [isInteracting, setIsInteracting] = useState(false);
+  const directionRef = useRef(1);
+
+  useEffect(() => {
+    if (!autoPlay || isInteracting) return;
+
+    const interval = window.setInterval(() => {
+      setSplit((previous) => {
+        let next = previous + directionRef.current * 0.32;
+        if (next >= 82) {
+          next = 82;
+          directionRef.current = -1;
+        }
+        if (next <= 18) {
+          next = 18;
+          directionRef.current = 1;
+        }
+        return next;
+      });
+    }, 28);
+
+    return () => window.clearInterval(interval);
+  }, [autoPlay, isInteracting]);
 
   return (
-    <div className={`min-h-screen overflow-hidden bg-gradient-to-br ${palette.gradient} text-white`}>
-      <div className="pointer-events-none absolute inset-0 opacity-70">
-        <div className="absolute -top-40 left-1/2 h-[26rem] w-[26rem] -translate-x-1/2 rounded-full bg-fuchsia-300/25 blur-3xl" />
-        <div className="absolute bottom-0 left-0 h-[24rem] w-[24rem] rounded-full bg-pink-300/15 blur-3xl" />
-        <div className="absolute right-0 top-0 h-[20rem] w-[20rem] rounded-full bg-orange-300/20 blur-3xl" />
+    <div className={`relative overflow-hidden rounded-2xl border border-zinc-200 bg-zinc-100 shadow-sm ${className}`}>
+      <img src={beforeSrc} alt={`${label} before`} className="h-full w-full object-cover" loading="lazy" />
+
+      <div
+        className="absolute inset-0 overflow-hidden"
+        style={{ clipPath: `inset(0 ${100 - split}% 0 0)` }}
+        aria-hidden="true"
+      >
+        <img src={afterSrc} alt={`${label} after`} className="h-full w-full object-cover" loading="lazy" />
       </div>
 
-      <div className="relative mx-auto max-w-6xl space-y-16 px-6 py-10 md:px-8 md:py-14">
-        <header className="flex flex-col gap-6 rounded-3xl border border-white/15 bg-white/5 p-5 backdrop-blur-xl md:flex-row md:items-center md:justify-between">
-          <div>
-            <div className="mb-3 flex items-center gap-3">
-              <img src="/logo.png" alt="fix.pictures logo" className="h-10 w-10 rounded-xl object-cover" />
-              <span className="text-xs font-bold uppercase tracking-[0.25em] text-white/80">fix.pictures</span>
-            </div>
-            <p className="text-xs font-semibold uppercase tracking-[0.3em] text-pink-100">{content.trustBadge}</p>
-            <h1 className="mt-3 max-w-3xl text-4xl font-black tracking-tight drop-shadow-2xl md:text-6xl">
-              {content.headline}
-            </h1>
+      <div className="pointer-events-none absolute inset-y-0" style={{ left: `${split}%` }}>
+        <div className="h-full w-0.5 bg-white shadow-[0_0_0_1px_rgba(0,0,0,0.25)]" />
+        <div className="absolute left-1/2 top-1/2 h-8 w-8 -translate-x-1/2 -translate-y-1/2 rounded-full border border-zinc-200 bg-white shadow-md" />
+      </div>
+
+      <div className="pointer-events-none absolute left-3 top-3 rounded-full bg-black/65 px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-white">
+        Before
+      </div>
+      <div className="pointer-events-none absolute right-3 top-3 rounded-full bg-[#e636a4]/90 px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-white">
+        After
+      </div>
+
+      <input
+        type="range"
+        min={0}
+        max={100}
+        value={split}
+        onChange={(event) => setSplit(Number(event.target.value))}
+        onPointerDown={() => setIsInteracting(true)}
+        onPointerUp={() => setIsInteracting(false)}
+        onPointerLeave={() => setIsInteracting(false)}
+        className="absolute inset-0 h-full w-full cursor-ew-resize opacity-0"
+        aria-label={`Adjust ${label} before and after comparison`}
+      />
+    </div>
+  );
+}
+
+function App() {
+  return (
+    <main className="min-h-screen bg-[#fcfcfd] text-zinc-900">
+      <div className="mx-auto max-w-7xl px-6 py-8 md:px-10 md:py-10">
+        <header className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <img src="/logo.png" alt="fix.pictures logo" className="h-10 w-10 rounded-xl object-cover" />
+            <span className="text-sm font-semibold tracking-wide text-zinc-800">fix.pictures</span>
           </div>
-          <div className="flex items-center gap-2">
-            {(Object.keys(localizedContent) as Locale[]).map((code) => (
-              <button
-                key={code}
-                type="button"
-                onClick={() => setLocale(code)}
-                className={`h-12 w-14 rounded-2xl border text-sm font-black tracking-wide transition ${
-                  locale === code
-                    ? 'border-white/60 bg-white/20 text-white'
-                    : 'border-white/20 text-white/75 hover:bg-white/10'
-                }`}
-                aria-pressed={locale === code}
-              >
-                {code}
-              </button>
-            ))}
-          </div>
+          <a
+            href={INSTALL_EXTENSION_URL}
+            className="rounded-xl bg-zinc-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-zinc-800"
+          >
+            Install Extension
+          </a>
         </header>
 
-        <section className="grid items-center gap-10 md:grid-cols-[1.05fr_0.95fr]">
-          <div className="space-y-6">
-            <p className="text-xl leading-relaxed text-white/85 md:text-2xl">{content.subheadline}</p>
-            <div className="flex flex-wrap gap-2">
-              {content.markets.map((market) => (
-                <span
-                  key={market}
-                  className="rounded-full border border-pink-200/30 bg-fuchsia-300/15 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-pink-50"
-                >
-                  {market}
-                </span>
-              ))}
-            </div>
-            <div className="flex flex-col gap-3 sm:flex-row">
-              <a
-                href={content.primaryCta.href}
-                className="rounded-2xl px-6 py-3 text-center text-lg font-semibold shadow-lg transition hover:brightness-110 sm:w-auto"
-                style={{ backgroundColor: palette.accent, color: '#0F172A' }}
-              >
-                {content.primaryCta.label}
-              </a>
-              <a
-                href={content.secondaryCta.href}
-                className={`rounded-2xl border border-white/30 px-6 py-3 text-center text-lg font-semibold ${palette.surface}`}
-              >
-                {content.secondaryCta.label}
-              </a>
-            </div>
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-              {content.stats.map((stat) => (
-                <div key={stat.label} className="rounded-2xl border border-white/10 bg-white/5 p-4">
-                  <span className="text-3xl font-black">{stat.value}</span>
-                  <p className="mt-1 text-sm text-white/70">{stat.label}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div className="relative">
-            <div className={`${palette.surfaceStrong} rounded-[2.2rem] border border-white/20 p-4 backdrop-blur-xl`}>
-              <img
-                src="/hero-dashboard.png"
-                alt="fix.pictures workflow preview"
-                className="aspect-[4/3] w-full rounded-[1.8rem] object-cover object-top"
-                loading="eager"
-              />
-            </div>
-            <div
-              className={`animate-float absolute -bottom-6 -left-4 rounded-2xl border border-white/10 p-4 backdrop-blur ${palette.surfaceStrong}`}
-            >
-              <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-white/80">Queue + ZIP exports</p>
-              <p className="text-sm text-white/70">Batch-ready pipeline</p>
-            </div>
-            <div
-              className={`animate-float-delayed absolute -right-4 top-6 rounded-2xl border border-white/10 p-4 backdrop-blur ${palette.surfaceStrong}`}
-            >
-              <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-white/80">GPU fallback</p>
-              <p className="text-sm text-white/70">Local + browser worker</p>
-            </div>
-          </div>
-        </section>
-
-        <section id="features" className="space-y-6">
+        <section className="mt-8 grid min-h-[78vh] items-center gap-8 md:grid-cols-[0.95fr_1.05fr]">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.26em] text-white/65">{content.releaseSubtitle}</p>
-            <h2 className="mt-2 text-3xl font-black md:text-4xl">{content.releaseTitle}</h2>
-          </div>
-          <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
-            {content.features.map((feature, index) => (
-              <article
-                key={feature.title}
-                className={`animate-rise rounded-3xl border border-white/10 p-6 backdrop-blur ${palette.surface}`}
-                style={{ animationDelay: `${index * 80}ms` }}
+            <h1 className="text-4xl font-black leading-tight text-zinc-950 md:text-6xl">
+              Fix Amazon product images instantly.
+            </h1>
+            <p className="mt-4 max-w-xl text-base leading-relaxed text-zinc-600 md:text-lg">
+              Remove backgrounds, fix framing, add grounding. Export Amazon-ready images automatically.
+            </p>
+
+            <div className="mt-6 flex flex-col gap-3 sm:flex-row">
+              <a
+                href={INSTALL_EXTENSION_URL}
+                className="rounded-xl bg-gradient-to-r from-[#e636a4] to-[#ff7a2f] px-6 py-3 text-center text-base font-semibold text-white shadow-sm transition hover:brightness-105"
               >
-                <div
-                  className="mb-4 flex h-10 w-10 items-center justify-center rounded-2xl"
-                  style={{ backgroundColor: `${palette.accent}24`, color: palette.accent }}
-                >
-                  <CheckIcon />
-                </div>
-                <h3 className="mb-2 text-xl font-bold">{feature.title}</h3>
-                <p className="text-sm leading-relaxed text-white/75">{feature.detail}</p>
+                Install Chrome Extension
+              </a>
+              <a
+                href="#proof"
+                className="rounded-xl border border-zinc-300 bg-white px-6 py-3 text-center text-base font-semibold text-zinc-800 transition hover:bg-zinc-50"
+              >
+                View Demo
+              </a>
+            </div>
+          </div>
+
+          <BeforeAfterSlider
+            beforeSrc={heroExample.before}
+            afterSrc={heroExample.after}
+            label="Hero product"
+            autoPlay
+            className="aspect-[4/3]"
+            startSplit={58}
+          />
+        </section>
+
+        <section id="proof" className="mt-2">
+          <div className="grid gap-4 md:grid-cols-2">
+            {proofCases.map((item, index) => (
+              <article key={item.name} className="space-y-2">
+                <BeforeAfterSlider
+                  beforeSrc={item.before}
+                  afterSrc={item.after}
+                  label={`${item.name} example`}
+                  className="aspect-[4/3]"
+                  startSplit={46 + index * 4}
+                />
+                <p className="text-sm font-semibold text-zinc-700">{item.name}</p>
               </article>
             ))}
           </div>
         </section>
 
-        <section id="workflow" className={`rounded-[2.5rem] border border-white/10 p-8 md:p-10 ${palette.surface}`}>
-          <h2 className="text-3xl font-black md:text-4xl">{content.workflowTitle}</h2>
-          <div className="mt-6 grid gap-4 md:grid-cols-2">
-            {content.workflow.map((step) => (
-              <article key={step.title} className={`rounded-3xl border border-white/10 p-5 ${palette.surfaceStrong}`}>
-                <h3 className="text-lg font-bold">{step.title}</h3>
-                <p className="mt-2 text-sm leading-relaxed text-white/75">{step.detail}</p>
-              </article>
-            ))}
+        <section className="mt-14 rounded-3xl border border-zinc-200 bg-white p-8 shadow-sm">
+          <h2 className="text-3xl font-black text-zinc-950">Built for Amazon sellers.</h2>
+          <div className="mt-6 space-y-3 text-lg font-medium text-zinc-700 md:text-xl">
+            <p>Fix backgrounds automatically</p>
+            <p>Frame products correctly</p>
+            <p>Export compliant images</p>
           </div>
         </section>
 
-        <section className="grid gap-6 md:grid-cols-2">
-          <article className={`rounded-[2.2rem] border border-white/10 p-7 ${palette.surface}`}>
-            <h3 className="text-2xl font-black">{content.checksTitle}</h3>
-            <div className="mt-5 space-y-3">
-              {content.checks.map((check) => (
-                <div key={check.label} className="flex items-start justify-between gap-3 rounded-2xl bg-white/10 px-4 py-3">
-                  <span className="text-sm font-semibold text-white">{check.label}</span>
-                  <span className="text-right text-sm text-white/75">{check.value}</span>
-                </div>
-              ))}
+        <section className="mt-12 grid gap-6 rounded-3xl border border-zinc-200 bg-white p-8 shadow-sm md:grid-cols-[0.95fr_1.05fr]">
+          <div>
+            <h2 className="text-3xl font-black text-zinc-950">Fix images while uploading to Amazon.</h2>
+            <div className="mt-6 space-y-3">
+              <div className="rounded-xl border border-zinc-200 bg-zinc-50 px-4 py-3 text-sm font-medium text-zinc-700">
+                Amazon listing page
+              </div>
+              <p className="text-center text-zinc-400">↓</p>
+              <div className="rounded-xl border border-zinc-200 bg-zinc-50 px-4 py-3 text-sm font-medium text-zinc-700">
+                Extension button appears
+              </div>
+              <p className="text-center text-zinc-400">↓</p>
+              <div className="rounded-xl border border-zinc-200 bg-zinc-50 px-4 py-3 text-sm font-medium text-zinc-700">
+                Click Fix Image
+              </div>
+              <p className="text-center text-zinc-400">↓</p>
+              <div className="rounded-xl border border-zinc-200 bg-zinc-50 px-4 py-3 text-sm font-medium text-zinc-700">
+                Download compliant image
+              </div>
             </div>
-          </article>
 
-          <article className={`rounded-[2.2rem] border border-white/10 p-7 ${palette.surface}`}>
-            <h3 className="text-2xl font-black">{content.enginesTitle}</h3>
-            <div className="mt-5 space-y-4">
-              {content.engineModes.map((engine) => (
-                <div key={engine.title} className="rounded-2xl border border-white/10 bg-white/10 p-4">
-                  <h4 className="font-bold text-white">{engine.title}</h4>
-                  <p className="mt-2 text-sm leading-relaxed text-white/75">{engine.detail}</p>
-                </div>
-              ))}
-            </div>
-          </article>
-        </section>
-
-        <section
-          id="social-proof"
-          className={`rounded-[2.5rem] border border-white/10 p-8 backdrop-blur-xl md:p-10 ${palette.surface}`}
-        >
-          <p className="text-lg text-white/90">{content.testimonial.quote}</p>
-          <div className="mt-4 flex items-center gap-3">
-            <div className={`h-11 w-11 rounded-2xl ${palette.surfaceStrong}`} />
-            <div>
-              <p className="font-semibold">{content.testimonial.author}</p>
-              <p className="text-sm text-white/65">{content.testimonial.role}</p>
-            </div>
-          </div>
-        </section>
-
-        <section id="faq" className="grid gap-4">
-          {content.faqs.map((item) => (
-            <details key={item.question} className={`rounded-3xl border border-white/10 ${palette.surface}`}>
-              <summary className="cursor-pointer p-6 text-lg font-semibold">{item.question}</summary>
-              <p className="px-6 pb-6 text-white/75">{item.answer}</p>
-            </details>
-          ))}
-        </section>
-
-        <section id="cta" className="space-y-6 rounded-[2.5rem] border border-white/10 bg-white/5 px-6 py-12 text-center">
-          <h2 className="text-3xl font-black md:text-5xl">{content.finalTitle}</h2>
-          <p className="mx-auto max-w-3xl text-base text-white/75 md:text-lg">{content.finalSubtitle}</p>
-          <div className="flex flex-col justify-center gap-3 sm:flex-row">
             <a
-              href={content.primaryCta.href}
-              className="rounded-2xl px-8 py-4 text-lg font-semibold text-[#0f172a] shadow-xl transition hover:brightness-110"
-              style={{
-                backgroundImage: `linear-gradient(135deg, ${palette.highlight}, #FDE047)`,
-              }}
+              href={INSTALL_EXTENSION_URL}
+              className="mt-7 inline-flex rounded-xl bg-zinc-900 px-6 py-3 text-base font-semibold text-white transition hover:bg-zinc-800"
             >
-              {content.primaryCta.label}
-            </a>
-            <a
-              href={content.secondaryCta.href}
-              className="rounded-2xl border border-white/30 px-8 py-4 text-lg font-semibold"
-            >
-              {content.secondaryCta.label}
+              Install Extension
             </a>
           </div>
+
+          <div className="rounded-2xl border border-zinc-200 bg-zinc-50 p-4">
+            <img
+              src="/hero-dashboard.png"
+              alt="Extension workflow preview"
+              className="h-full w-full rounded-xl object-cover object-top"
+            />
+          </div>
+        </section>
+
+        <section className="mt-12 rounded-3xl border border-zinc-200 bg-gradient-to-r from-[#fdf2fa] via-white to-[#fff3ea] p-10 text-center shadow-sm">
+          <h2 className="text-4xl font-black text-zinc-950">Fix your Amazon images now.</h2>
+          <a
+            href={INSTALL_EXTENSION_URL}
+            className="mt-6 inline-flex rounded-xl bg-gradient-to-r from-[#e636a4] to-[#ff7a2f] px-7 py-3 text-base font-semibold text-white shadow-sm transition hover:brightness-105"
+          >
+            Install Chrome Extension
+          </a>
         </section>
       </div>
-    </div>
+    </main>
   );
 }
 
