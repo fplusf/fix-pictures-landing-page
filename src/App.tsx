@@ -164,14 +164,45 @@ function App() {
             </div>
           </div>
 
-          <BeforeAfterSlider
-            beforeSrc={heroExample.before}
-            afterSrc={heroExample.after}
-            label="Hero product"
-            autoPlay
-            className="aspect-[4/3]"
-            startSplit={58}
-          />
+          <div className="space-y-4">
+            <BeforeAfterSlider
+              beforeSrc={heroExample.before}
+              afterSrc={heroExample.after}
+              label="Hero product"
+              autoPlay
+              className="aspect-[4/3]"
+              startSplit={58}
+            />
+            <div className="rounded-2xl border border-zinc-200 bg-white p-4 shadow-sm">
+              <p className="text-sm font-semibold text-zinc-900">Fixed for Amazon compliance:</p>
+              <ul className="mt-3 grid gap-2 text-sm text-zinc-700 sm:grid-cols-2">
+                <li className="flex items-center gap-2">
+                  <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-emerald-500 text-xs font-bold text-white">
+                    ✓
+                  </span>
+                  Pure white background
+                </li>
+                <li className="flex items-center gap-2">
+                  <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-emerald-500 text-xs font-bold text-white">
+                    ✓
+                  </span>
+                  Correct product framing
+                </li>
+                <li className="flex items-center gap-2">
+                  <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-emerald-500 text-xs font-bold text-white">
+                    ✓
+                  </span>
+                  Natural grounding shadow
+                </li>
+                <li className="flex items-center gap-2">
+                  <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-emerald-500 text-xs font-bold text-white">
+                    ✓
+                  </span>
+                  High-resolution output
+                </li>
+              </ul>
+            </div>
+          </div>
         </section>
 
         <section id="proof" className="mt-2">
