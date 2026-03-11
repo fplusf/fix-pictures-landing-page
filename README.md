@@ -1,16 +1,13 @@
-# fix.pictures Landing Page
+# fix.pictures App
 
-Selling landing page for `fix.pictures`, built from the `product-landing-builder` template pattern:
-
-- Gradient hero + glassmorphism cards
-- Product-specific proof stats and feature cards
-- EN/ES language toggle
-- FAQ and conversion-focused CTA blocks
+Marketing landing + image-fixing web app for `fix.pictures`.
 
 ## Stack
 
 - React + TypeScript + Vite
 - Tailwind CSS 3
+- Web Worker pipeline (`@imgly/background-removal`)
+- Optional localhost inference service (`local-inference/`)
 
 ## Local Development
 
@@ -26,7 +23,9 @@ npm run build
 npm run preview
 ```
 
-## Notes
+## Routes
 
-- Hero image is sourced from current product UI (`public/hero-dashboard.png`).
-- Copy and palette are customized for marketplace image compliance workflows.
+- `/` landing page
+- `/app` image processing app
+- `/terms` terms page
+- `/privacy` privacy page

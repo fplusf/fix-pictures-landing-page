@@ -4,6 +4,25 @@
 @tailwind utilities;
 
 :root {
+  --background: 0 0% 100%;
+  --foreground: 222 47% 11%;
+  --card: 0 0% 100%;
+  --card-foreground: 222 47% 11%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 222 47% 11%;
+  --primary: 142 71% 45%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 210 20% 96%;
+  --secondary-foreground: 222 47% 11%;
+  --muted: 210 16% 93%;
+  --muted-foreground: 215 14% 45%;
+  --accent: 142 71% 45%;
+  --accent-foreground: 0 0% 100%;
+  --destructive: 0 84% 60%;
+  --destructive-foreground: 0 0% 100%;
+  --border: 210 17% 88%;
+  --input: 210 17% 90%;
+  --ring: 142 71% 45%;
   font-family: 'Manrope', sans-serif;
   line-height: 1.5;
   font-weight: 500;
@@ -15,6 +34,12 @@
 
 * {
   box-sizing: border-box;
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
 }
 
 h1,

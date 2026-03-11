@@ -1,0 +1,1802 @@
+[
+  {
+    "filename": "electronics_001.jpg",
+    "category": "electronics",
+    "status": "pass",
+    "failure_reason": null,
+    "image": "/sessions/zen-jolly-thompson/mnt/fix-pictures-app/benchmark/images/electronics/electronics_001.jpg",
+    "output": "/sessions/zen-jolly-thompson/mnt/fix-pictures-app/benchmark/output/electronics/electronics_001_out.png",
+    "processing_ms": 339,
+    "width": 800,
+    "height": 800,
+    "bounds": {
+      "minX": 318,
+      "minY": 303,
+      "maxX": 435,
+      "maxY": 437
+    },
+    "transparency_ratio": 0.9986
+  },
+  {
+    "filename": "electronics_002.jpg",
+    "category": "electronics",
+    "status": "pass",
+    "failure_reason": null,
+    "image": "/sessions/zen-jolly-thompson/mnt/fix-pictures-app/benchmark/images/electronics/electronics_002.jpg",
+    "output": "/sessions/zen-jolly-thompson/mnt/fix-pictures-app/benchmark/output/electronics/electronics_002_out.png",
+    "processing_ms": 212,
+    "width": 800,
+    "height": 800,
+    "bounds": {
+      "minX": 291,
+      "minY": 271,
+      "maxX": 395,
+      "maxY": 479
+    },
+    "transparency_ratio": 0.9669
+  },
+  {
+    "filename": "electronics_003.jpg",
+    "category": "electronics",
+    "status": "pass",
+    "failure_reason": null,
+    "image": "/sessions/zen-jolly-thompson/mnt/fix-pictures-app/benchmark/images/electronics/electronics_003.jpg",
+    "output": "/sessions/zen-jolly-thompson/mnt/fix-pictures-app/benchmark/output/electronics/electronics_003_out.png",
+    "processing_ms": 330,
+    "width": 1000,
+    "height": 1000,
+    "bounds": {
+      "minX": 511,
+      "minY": 530,
+      "maxX": 590,
+      "maxY": 542
+    },
+    "transparency_ratio": 1.0
+  },
+  {
+    "filename": "electronics_004.jpg",
+    "category": "electronics",
+    "status": "pass",
+    "failure_reason": null,
+    "image": "/sessions/zen-jolly-thompson/mnt/fix-pictures-app/benchmark/images/electronics/electronics_004.jpg",
+    "output": "/sessions/zen-jolly-thompson/mnt/fix-pictures-app/benchmark/output/electronics/electronics_004_out.png",
+    "processing_ms": 325,
+    "width": 1000,
+    "height": 1000,
+    "bounds": {
+      "minX": 404,
+      "minY": 495,
+      "maxX": 506,
+      "maxY": 695
+    },
+    "transparency_ratio": 0.9803
+  },
+  {
+    "filename": "electronics_005.jpg",
+    "category": "electronics",
+    "status": "pass",
+    "failure_reason": null,
+    "image": "/sessions/zen-jolly-thompson/mnt/fix-pictures-app/benchmark/images/electronics/electronics_005.jpg",
+    "output": "/sessions/zen-jolly-thompson/mnt/fix-pictures-app/benchmark/output/electronics/electronics_005_out.png",
+    "processing_ms": 209,
+    "width": 800,
+    "height": 800,
+    "bounds": {
+      "minX": 324,
+      "minY": 278,
+      "maxX": 450,
+      "maxY": 417
+    },
+    "transparency_ratio": 0.9983
+  },
+  {
+    "filename": "electronics_006.jpg",
+    "category": "electronics",
+    "status": "pass",
+    "failure_reason": null,
+    "image": "/sessions/zen-jolly-thompson/mnt/fix-pictures-app/benchmark/images/electronics/electronics_006.jpg",
+    "output": "/sessions/zen-jolly-thompson/mnt/fix-pictures-app/benchmark/output/electronics/electronics_006_out.png",
+    "processing_ms": 159,
+    "width": 800,
+    "height": 600,
+    "bounds": {
+      "minX": 429,
+      "minY": 307,
+      "maxX": 528,
+      "maxY": 428
+    },
+    "transparency_ratio": 0.9991
+  },
+  {
+    "filename": "electronics_007.jpg",
+    "category": "electronics",
+    "status": "pass",
+    "failure_reason": null,
+    "image": "/sessions/zen-jolly-thompson/mnt/fix-pictures-app/benchmark/images/electronics/electronics_007.jpg",
+    "output": "/sessions/zen-jolly-thompson/mnt/fix-pictures-app/benchmark/output/electronics/electronics_007_out.png",
+    "processing_ms": 211,
+    "width": 800,
+    "height": 800,
+    "bounds": {
+      "minX": 285,
+      "minY": 330,
+      "maxX": 395,
+      "maxY": 458
+    },
+    "transparency_ratio": 0.9988
+  },
+  {
+    "filename": "electronics_008.jpg",
+    "category": "electronics",
+    "status": "pass",
+    "failure_reason": null,
+    "image": "/sessions/zen-jolly-thompson/mnt/fix-pictures-app/benchmark/images/electronics/electronics_008.jpg",
+    "output": "/sessions/zen-jolly-thompson/mnt/fix-pictures-app/benchmark/output/electronics/electronics_008_out.png",
+    "processing_ms": 158,
+    "width": 800,
+    "height": 600,
+    "bounds": {
+      "minX": 328,
+      "minY": 234,
+      "maxX": 418,
+      "maxY": 416
+    },
+    "transparency_ratio": 0.9666
+  },
+  {
+    "filename": "electronics_009.jpg",
+    "category": "electronics",
+    "status": "pass",
+    "failure_reason": null,
+    "image": "/sessions/zen-jolly-thompson/mnt/fix-pictures-app/benchmark/images/electronics/electronics_009.jpg",
+    "output": "/sessions/zen-jolly-thompson/mnt/fix-pictures-app/benchmark/output/electronics/electronics_009_out.png",
+    "processing_ms": 211,
+    "width": 800,
+    "height": 800,
+    "bounds": {
+      "minX": 324,
+      "minY": 247,
+      "maxX": 440,
+      "maxY": 475
+    },
+    "transparency_ratio": 0.9601
+  },
+  {
+    "filename": "electronics_010.jpg",
+    "category": "electronics",
+    "status": "pass",
+    "failure_reason": null,
+    "image": "/sessions/zen-jolly-thompson/mnt/fix-pictures-app/benchmark/images/electronics/electronics_010.jpg",
+    "output": "/sessions/zen-jolly-thompson/mnt/fix-pictures-app/benchmark/output/electronics/electronics_010_out.png",
+    "processing_ms": 316,
+    "width": 1000,
+    "height": 1000,
+    "bounds": {
+      "minX": 396,
+      "minY": 358,
+      "maxX": 520,
+      "maxY": 494
+    },
+    "transparency_ratio": 0.999
+  },
+  {
+    "filename": "clothing_001.jpg",
+    "category": "clothing",
+    "status": "pass",
+    "failure_reason": null,
+    "image": "/sessions/zen-jolly-thompson/mnt/fix-pictures-app/benchmark/images/clothing/clothing_001.jpg",
+    "output": "/sessions/zen-jolly-thompson/mnt/fix-pictures-app/benchmark/output/clothing/clothing_001_out.png",
+    "processing_ms": 228,
+    "width": 800,
+    "height": 800,
+    "bounds": {
+      "minX": 241,
+      "minY": 273,
+      "maxX": 559,
+      "maxY": 470
+    },
+    "transparency_ratio": 0.9432
+  },
+  {
+    "filename": "clothing_002.jpg",
+    "category": "clothing",
+    "status": "pass",
+    "failure_reason": null,
+    "image": "/sessions/zen-jolly-thompson/mnt/fix-pictures-app/benchmark/images/clothing/clothing_002.jpg",
+    "output": "/sessions/zen-jolly-thompson/mnt/fix-pictures-app/benchmark/output/clothing/clothing_002_out.png",
+    "processing_ms": 168,
+    "width": 800,
+    "height": 600,
+    "bounds": {
+      "minX": 333,
+      "minY": 226,
+      "maxX": 593,
+      "maxY": 387
+    },
+    "transparency_ratio": 0.9494
+  },
+  {
+    "filename": "clothing_003.jpg",
+    "category": "clothing",
+    "status": "pass",
+    "failure_reason": null,
+    "image": "/sessions/zen-jolly-thompson/mnt/fix-pictures-app/benchmark/images/clothing/clothing_003.jpg",
+    "output": "/sessions/zen-jolly-thompson/mnt/fix-pictures-app/benchmark/output/clothing/clothing_003_out.png",
+    "processing_ms": 171,
+    "width": 800,
+    "height": 600,
+    "bounds": {
+      "minX": 218,
+      "minY": 217,
+      "maxX": 491,
+      "maxY": 388
+    },
+    "transparency_ratio": 0.944
+  },
+  {
+    "filename": "clothing_004.jpg",
+    "category": "clothing",
+    "status": "pass",
+    "failure_reason": null,
+    "image": "/sessions/zen-jolly-thompson/mnt/fix-pictures-app/benchmark/images/clothing/clothing_004.jpg",
+    "output": "/sessions/zen-jolly-thompson/mnt/fix-pictures-app/benchmark/output/clothing/clothing_004_out.png",
+    "processing_ms": 218,
+    "width": 800,
+    "height": 800,
+    "bounds": {
+      "minX": 303,
+      "minY": 393,
+      "maxX": 553,
+      "maxY": 548
+    },
+    "transparency_ratio": 0.965
+  },
+  {
+    "filename": "clothing_005.jpg",
+    "category": "clothing",
+    "status": "pass",
+    "failure_reason": null,
+    "image": "/sessions/zen-jolly-thompson/mnt/fix-pictures-app/benchmark/images/clothing/clothing_005.jpg",
+    "output": "/sessions/zen-jolly-thompson/mnt/fix-pictures-app/benchmark/output/clothing/clothing_005_out.png",
+    "processing_ms": 170,
+    "width": 800,
+    "height": 600,
+    "bounds": {
+      "minX": 192,
+      "minY": 245,
+      "maxX": 452,
+      "maxY": 405
+    },
+    "transparency_ratio": 0.9497
+  },
+  {
+    "filename": "clothing_006.jpg",
+    "category": "clothing",
+    "status": "pass",
+    "failure_reason": null,
+    "image": "/sessions/zen-jolly-thompson/mnt/fix-pictures-app/benchmark/images/clothing/clothing_006.jpg",
+    "output": "/sessions/zen-jolly-thompson/mnt/fix-pictures-app/benchmark/output/clothing/clothing_006_out.png",
+    "processing_ms": 132,
+    "width": 600,
+    "height": 600,
+    "bounds": {
+      "minX": 137,
+      "minY": 219,
+      "maxX": 383,
+      "maxY": 373
+    },
+    "transparency_ratio": 0.9391
+  },
+  {
+    "filename": "clothing_007.jpg",
+    "category": "clothing",
+    "status": "pass",
+    "failure_reason": null,
+    "image": "/sessions/zen-jolly-thompson/mnt/fix-pictures-app/benchmark/images/clothing/clothing_007.jpg",
+    "output": "/sessions/zen-jolly-thompson/mnt/fix-pictures-app/benchmark/output/clothing/clothing_007_out.png",
+    "processing_ms": 140,
+    "width": 600,
+    "height": 600,
+    "bounds": {
+      "minX": 203,
+      "minY": 156,
+      "maxX": 509,
+      "maxY": 345
+    },
+    "transparency_ratio": 0.9071
+  },
+  {
+    "filename": "clothing_008.jpg",
+    "category": "clothing",
+    "status": "pass",
+    "failure_reason": null,
+    "image": "/sessions/zen-jolly-thompson/mnt/fix-pictures-app/benchmark/images/clothing/clothing_008.jpg",
+    "output": "/sessions/zen-jolly-thompson/mnt/fix-pictures-app/benchmark/output/clothing/clothing_008_out.png",
+    "processing_ms": 329,
+    "width": 1000,
+    "height": 1000,
+    "bounds": {
+      "minX": 404,
+      "minY": 514,
+      "maxX": 672,
+      "maxY": 681
+    },
+    "transparency_ratio": 0.974
+  },
+  {
+    "filename": "clothing_009.jpg",
+    "category": "clothing",
+    "status": "pass",
+    "failure_reason": null,
+    "image": "/sessions/zen-jolly-thompson/mnt/fix-pictures-app/benchmark/images/clothing/clothing_009.jpg",
+    "output": "/sessions/zen-jolly-thompson/mnt/fix-pictures-app/benchmark/output/clothing/clothing_009_out.png",
+    "processing_ms": 128,
+    "width": 600,
+    "height": 600,
+    "bounds": {
+      "minX": 232,
+      "minY": 269,
+      "maxX": 471,
+      "maxY": 419
+    },
+    "transparency_ratio": 0.9417
+  },
+  {
+    "filename": "clothing_010.jpg",
+    "category": "clothing",
+    "status": "pass",
+    "failure_reason": null,
+    "image": "/sessions/zen-jolly-thompson/mnt/fix-pictures-app/benchmark/images/clothing/clothing_010.jpg",
+    "output": "/sessions/zen-jolly-thompson/mnt/fix-pictures-app/benchmark/output/clothing/clothing_010_out.png",
+    "processing_ms": 338,
+    "width": 1000,
+    "height": 1000,
+    "bounds": {
+      "minX": 427,
+      "minY": 422,
+      "maxX": 747,
+      "maxY": 621
+    },
+    "transparency_ratio": 0.963
+  },
+  {
+    "filename": "shoes_001.jpg",
+    "category": "shoes",
+    "status": "pass",
+    "failure_reason": null,
+    "image": "/sessions/zen-jolly-thompson/mnt/fix-pictures-app/benchmark/images/shoes/shoes_001.jpg",
+    "output": "/sessions/zen-jolly-thompson/mnt/fix-pictures-app/benchmark/output/shoes/shoes_001_out.png",
+    "processing_ms": 326,
+    "width": 1000,
+    "height": 1000,
+    "bounds": {
+      "minX": 347,
+      "minY": 423,
+      "maxX": 537,
+      "maxY": 546
+    },
+    "transparency_ratio": 0.9951
+  },
+  {
+    "filename": "shoes_002.jpg",
+    "category": "shoes",
+    "status": "pass",
+    "failure_reason": null,
+    "image": "/sessions/zen-jolly-thompson/mnt/fix-pictures-app/benchmark/images/shoes/shoes_002.jpg",
+    "output": "/sessions/zen-jolly-thompson/mnt/fix-pictures-app/benchmark/output/shoes/shoes_002_out.png",
+    "processing_ms": 162,
+    "width": 800,
+    "height": 600,
+    "bounds": {
+      "minX": 296,
+      "minY": 244,
+      "maxX": 502,
+      "maxY": 376
+    },
+    "transparency_ratio": 0.9878
+  },
+  {
+    "filename": "shoes_003.jpg",
+    "category": "shoes",
+    "status": "pass",
+    "failure_reason": null,
+    "image": "/sessions/zen-jolly-thompson/mnt/fix-pictures-app/benchmark/images/shoes/shoes_003.jpg",
+    "output": "/sessions/zen-jolly-thompson/mnt/fix-pictures-app/benchmark/output/shoes/shoes_003_out.png",
+    "processing_ms": 125,
+    "width": 600,
+    "height": 600,
+    "bounds": {
+      "minX": 157,
+      "minY": 222,
+      "maxX": 357,
+      "maxY": 356
+    },
+    "transparency_ratio": 0.9959
+  },
+  {
+    "filename": "shoes_004.jpg",
+    "category": "shoes",
+    "status": "pass",
+    "failure_reason": null,
+    "image": "/sessions/zen-jolly-thompson/mnt/fix-pictures-app/benchmark/images/shoes/shoes_004.jpg",
+    "output": "/sessions/zen-jolly-thompson/mnt/fix-pictures-app/benchmark/output/shoes/shoes_004_out.png",
+    "processing_ms": 122,
+    "width": 600,
+    "height": 600,
+    "bounds": {
+      "minX": 222,
+      "minY": 223,
+      "maxX": 409,
+      "maxY": 346
+    },
+    "transparency_ratio": 0.9866
+  },
+  {
+    "filename": "shoes_005.jpg",
+    "category": "shoes",
+    "status": "pass",
+    "failure_reason": null,
+    "image": "/sessions/zen-jolly-thompson/mnt/fix-pictures-app/benchmark/images/shoes/shoes_005.jpg",
+    "output": "/sessions/zen-jolly-thompson/mnt/fix-pictures-app/benchmark/output/shoes/shoes_005_out.png",
+    "processing_ms": 209,
+    "width": 800,
+    "height": 800,
+    "bounds": {
+      "minX": 323,
+      "minY": 302,
+      "maxX": 484,
+      "maxY": 404
+    },
+    "transparency_ratio": 0.9955
+  },
+  {
+    "filename": "shoes_006.jpg",
+    "category": "shoes",
+    "status": "pass",
+    "failure_reason": null,
+    "image": "/sessions/zen-jolly-thompson/mnt/fix-pictures-app/benchmark/images/shoes/shoes_006.jpg",
+    "output": "/sessions/zen-jolly-thompson/mnt/fix-pictures-app/benchmark/output/shoes/shoes_006_out.png",
+    "processing_ms": 121,
+    "width": 600,
+    "height": 600,
+    "bounds": {
+      "minX": 255,
+      "minY": 321,
+      "maxX": 416,
+      "maxY": 428
+    },
+    "transparency_ratio": 0.9989
+  },
+  {
+    "filename": "shoes_007.jpg",
+    "category": "shoes",
+    "status": "pass",
+    "failure_reason": null,
+    "image": "/sessions/zen-jolly-thompson/mnt/fix-pictures-app/benchmark/images/shoes/shoes_007.jpg",
+    "output": "/sessions/zen-jolly-thompson/mnt/fix-pictures-app/benchmark/output/shoes/shoes_007_out.png",
+    "processing_ms": 161,
+    "width": 800,
+    "height": 600,
+    "bounds": {
+      "minX": 270,
+      "minY": 206,
+      "maxX": 467,
+      "maxY": 334
+    },
+    "transparency_ratio": 0.9887
+  },
+  {
+    "filename": "shoes_008.jpg",
+    "category": "shoes",
+    "status": "pass",
+    "failure_reason": null,
+    "image": "/sessions/zen-jolly-thompson/mnt/fix-pictures-app/benchmark/images/shoes/shoes_008.jpg",
+    "output": "/sessions/zen-jolly-thompson/mnt/fix-pictures-app/benchmark/output/shoes/shoes_008_out.png",
+    "processing_ms": 159,
+    "width": 800,
+    "height": 600,
+    "bounds": {
+      "minX": 244,
+      "minY": 285,
+      "maxX": 422,
+      "maxY": 400
+    },
+    "transparency_ratio": 0.9915
+  },
+  {
+    "filename": "shoes_009.jpg",
+    "category": "shoes",
+    "status": "pass",
+    "failure_reason": null,
+    "image": "/sessions/zen-jolly-thompson/mnt/fix-pictures-app/benchmark/images/shoes/shoes_009.jpg",
+    "output": "/sessions/zen-jolly-thompson/mnt/fix-pictures-app/benchmark/output/shoes/shoes_009_out.png",
+    "processing_ms": 209,
+    "width": 800,
+    "height": 800,
+    "bounds": {
+      "minX": 259,
+      "minY": 340,
+      "maxX": 437,
+      "maxY": 457
+    },
+    "transparency_ratio": 0.9935
+  },
+  {
+    "filename": "shoes_010.jpg",
+    "category": "shoes",
+    "status": "pass",
+    "failure_reason": null,
+    "image": "/sessions/zen-jolly-thompson/mnt/fix-pictures-app/benchmark/images/shoes/shoes_010.jpg",
+    "output": "/sessions/zen-jolly-thompson/mnt/fix-pictures-app/benchmark/output/shoes/shoes_010_out.png",
+    "processing_ms": 158,
+    "width": 800,
+    "height": 600,
+    "bounds": {
+      "minX": 349,
+      "minY": 230,
+      "maxX": 527,
+      "maxY": 345
+    },
+    "transparency_ratio": 0.9915
+  },
+  {
+    "filename": "bags_001.jpg",
+    "category": "bags",
+    "status": "pass",
+    "failure_reason": null,
+    "image": "/sessions/zen-jolly-thompson/mnt/fix-pictures-app/benchmark/images/bags/bags_001.jpg",
+    "output": "/sessions/zen-jolly-thompson/mnt/fix-pictures-app/benchmark/output/bags/bags_001_out.png",
+    "processing_ms": 214,
+    "width": 800,
+    "height": 800,
+    "bounds": {
+      "minX": 269,
+      "minY": 228,
+      "maxX": 421,
+      "maxY": 410
+    },
+    "transparency_ratio": 0.9725
+  },
+  {
+    "filename": "bags_002.jpg",
+    "category": "bags",
+    "status": "pass",
+    "failure_reason": null,
+    "image": "/sessions/zen-jolly-thompson/mnt/fix-pictures-app/benchmark/images/bags/bags_002.jpg",
+    "output": "/sessions/zen-jolly-thompson/mnt/fix-pictures-app/benchmark/output/bags/bags_002_out.png",
+    "processing_ms": 223,
+    "width": 800,
+    "height": 800,
+    "bounds": {
+      "minX": 284,
+      "minY": 317,
+      "maxX": 440,
+      "maxY": 505
+    },
+    "transparency_ratio": 0.9702
+  },
+  {
+    "filename": "bags_003.jpg",
+    "category": "bags",
+    "status": "pass",
+    "failure_reason": null,
+    "image": "/sessions/zen-jolly-thompson/mnt/fix-pictures-app/benchmark/images/bags/bags_003.jpg",
+    "output": "/sessions/zen-jolly-thompson/mnt/fix-pictures-app/benchmark/output/bags/bags_003_out.png",
+    "processing_ms": 327,
+    "width": 1000,
+    "height": 1000,
+    "bounds": {
+      "minX": 419,
+      "minY": 294,
+      "maxX": 575,
+      "maxY": 480
+    },
+    "transparency_ratio": 0.9813
+  },
+  {
+    "filename": "bags_004.jpg",
+    "category": "bags",
+    "status": "pass",
+    "failure_reason": null,
+    "image": "/sessions/zen-jolly-thompson/mnt/fix-pictures-app/benchmark/images/bags/bags_004.jpg",
+    "output": "/sessions/zen-jolly-thompson/mnt/fix-pictures-app/benchmark/output/bags/bags_004_out.png",
+    "processing_ms": 124,
+    "width": 600,
+    "height": 600,
+    "bounds": {
+      "minX": 259,
+      "minY": 241,
+      "maxX": 389,
+      "maxY": 395
+    },
+    "transparency_ratio": 0.9645
+  },
+  {
+    "filename": "bags_005.jpg",
+    "category": "bags",
+    "status": "pass",
+    "failure_reason": null,
+    "image": "/sessions/zen-jolly-thompson/mnt/fix-pictures-app/benchmark/images/bags/bags_005.jpg",
+    "output": "/sessions/zen-jolly-thompson/mnt/fix-pictures-app/benchmark/output/bags/bags_005_out.png",
+    "processing_ms": 325,
+    "width": 1000,
+    "height": 1000,
+    "bounds": {
+      "minX": 484,
+      "minY": 500,
+      "maxX": 612,
+      "maxY": 653
+    },
+    "transparency_ratio": 0.9877
+  },
+  {
+    "filename": "bags_006.jpg",
+    "category": "bags",
+    "status": "pass",
+    "failure_reason": null,
+    "image": "/sessions/zen-jolly-thompson/mnt/fix-pictures-app/benchmark/images/bags/bags_006.jpg",
+    "output": "/sessions/zen-jolly-thompson/mnt/fix-pictures-app/benchmark/output/bags/bags_006_out.png",
+    "processing_ms": 124,
+    "width": 600,
+    "height": 600,
+    "bounds": {
+      "minX": 243,
+      "minY": 274,
+      "maxX": 365,
+      "maxY": 418
+    },
+    "transparency_ratio": 0.9694
+  },
+  {
+    "filename": "bags_007.jpg",
+    "category": "bags",
+    "status": "pass",
+    "failure_reason": null,
+    "image": "/sessions/zen-jolly-thompson/mnt/fix-pictures-app/benchmark/images/bags/bags_007.jpg",
+    "output": "/sessions/zen-jolly-thompson/mnt/fix-pictures-app/benchmark/output/bags/bags_007_out.png",
+    "processing_ms": 333,
+    "width": 1000,
+    "height": 1000,
+    "bounds": {
+      "minX": 368,
+      "minY": 309,
+      "maxX": 526,
+      "maxY": 499
+    },
+    "transparency_ratio": 0.9803
+  },
+  {
+    "filename": "bags_008.jpg",
+    "category": "bags",
+    "status": "pass",
+    "failure_reason": null,
+    "image": "/sessions/zen-jolly-thompson/mnt/fix-pictures-app/benchmark/images/bags/bags_008.jpg",
+    "output": "/sessions/zen-jolly-thompson/mnt/fix-pictures-app/benchmark/output/bags/bags_008_out.png",
+    "processing_ms": 327,
+    "width": 1000,
+    "height": 1000,
+    "bounds": {
+      "minX": 401,
+      "minY": 464,
+      "maxX": 525,
+      "maxY": 611
+    },
+    "transparency_ratio": 0.9886
+  },
+  {
+    "filename": "bags_009.jpg",
+    "category": "bags",
+    "status": "pass",
+    "failure_reason": null,
+    "image": "/sessions/zen-jolly-thompson/mnt/fix-pictures-app/benchmark/images/bags/bags_009.jpg",
+    "output": "/sessions/zen-jolly-thompson/mnt/fix-pictures-app/benchmark/output/bags/bags_009_out.png",
+    "processing_ms": 212,
+    "width": 800,
+    "height": 800,
+    "bounds": {
+      "minX": 380,
+      "minY": 301,
+      "maxX": 526,
+      "maxY": 475
+    },
+    "transparency_ratio": 0.9746
+  },
+  {
+    "filename": "bags_010.jpg",
+    "category": "bags",
+    "status": "pass",
+    "failure_reason": null,
+    "image": "/sessions/zen-jolly-thompson/mnt/fix-pictures-app/benchmark/images/bags/bags_010.jpg",
+    "output": "/sessions/zen-jolly-thompson/mnt/fix-pictures-app/benchmark/output/bags/bags_010_out.png",
+    "processing_ms": 322,
+    "width": 1000,
+    "height": 1000,
+    "bounds": {
+      "minX": 369,
+      "minY": 483,
+      "maxX": 497,
+      "maxY": 636
+    },
+    "transparency_ratio": 0.9877
+  },
+  {
+    "filename": "furniture_001.jpg",
+    "category": "furniture",
+    "status": "pass",
+    "failure_reason": null,
+    "image": "/sessions/zen-jolly-thompson/mnt/fix-pictures-app/benchmark/images/furniture/furniture_001.jpg",
+    "output": "/sessions/zen-jolly-thompson/mnt/fix-pictures-app/benchmark/output/furniture/furniture_001_out.png",
+    "processing_ms": 172,
+    "width": 800,
+    "height": 600,
+    "bounds": {
+      "minX": 240,
+      "minY": 111,
+      "maxX": 404,
+      "maxY": 400
+    },
+    "transparency_ratio": 0.9329
+  },
+  {
+    "filename": "furniture_002.jpg",
+    "category": "furniture",
+    "status": "pass",
+    "failure_reason": null,
+    "image": "/sessions/zen-jolly-thompson/mnt/fix-pictures-app/benchmark/images/furniture/furniture_002.jpg",
+    "output": "/sessions/zen-jolly-thompson/mnt/fix-pictures-app/benchmark/output/furniture/furniture_002_out.png",
+    "processing_ms": 218,
+    "width": 800,
+    "height": 800,
+    "bounds": {
+      "minX": 315,
+      "minY": 188,
+      "maxX": 459,
+      "maxY": 443
+    },
+    "transparency_ratio": 0.9608
+  },
+  {
+    "filename": "furniture_003.jpg",
+    "category": "furniture",
+    "status": "pass",
+    "failure_reason": null,
+    "image": "/sessions/zen-jolly-thompson/mnt/fix-pictures-app/benchmark/images/furniture/furniture_003.jpg",
+    "output": "/sessions/zen-jolly-thompson/mnt/fix-pictures-app/benchmark/output/furniture/furniture_003_out.png",
+    "processing_ms": 243,
+    "width": 800,
+    "height": 800,
+    "bounds": {
+      "minX": 364,
+      "minY": 303,
+      "maxX": 500,
+      "maxY": 543
+    },
+    "transparency_ratio": 0.9659
+  },
+  {
+    "filename": "furniture_004.jpg",
+    "category": "furniture",
+    "status": "pass",
+    "failure_reason": null,
+    "image": "/sessions/zen-jolly-thompson/mnt/fix-pictures-app/benchmark/images/furniture/furniture_004.jpg",
+    "output": "/sessions/zen-jolly-thompson/mnt/fix-pictures-app/benchmark/output/furniture/furniture_004_out.png",
+    "processing_ms": 213,
+    "width": 800,
+    "height": 800,
+    "bounds": {
+      "minX": 288,
+      "minY": 234,
+      "maxX": 420,
+      "maxY": 470
+    },
+    "transparency_ratio": 0.9673
+  },
+  {
+    "filename": "furniture_005.jpg",
+    "category": "furniture",
+    "status": "pass",
+    "failure_reason": null,
+    "image": "/sessions/zen-jolly-thompson/mnt/fix-pictures-app/benchmark/images/furniture/furniture_005.jpg",
+    "output": "/sessions/zen-jolly-thompson/mnt/fix-pictures-app/benchmark/output/furniture/furniture_005_out.png",
+    "processing_ms": 218,
+    "width": 800,
+    "height": 800,
+    "bounds": {
+      "minX": 411,
+      "minY": 229,
+      "maxX": 537,
+      "maxY": 451
+    },
+    "transparency_ratio": 0.9714
+  },
+  {
+    "filename": "furniture_006.jpg",
+    "category": "furniture",
+    "status": "pass",
+    "failure_reason": null,
+    "image": "/sessions/zen-jolly-thompson/mnt/fix-pictures-app/benchmark/images/furniture/furniture_006.jpg",
+    "output": "/sessions/zen-jolly-thompson/mnt/fix-pictures-app/benchmark/output/furniture/furniture_006_out.png",
+    "processing_ms": 334,
+    "width": 1000,
+    "height": 1000,
+    "bounds": {
+      "minX": 342,
+      "minY": 260,
+      "maxX": 484,
+      "maxY": 512
+    },
+    "transparency_ratio": 0.9758
+  },
+  {
+    "filename": "furniture_007.jpg",
+    "category": "furniture",
+    "status": "pass",
+    "failure_reason": null,
+    "image": "/sessions/zen-jolly-thompson/mnt/fix-pictures-app/benchmark/images/furniture/furniture_007.jpg",
+    "output": "/sessions/zen-jolly-thompson/mnt/fix-pictures-app/benchmark/output/furniture/furniture_007_out.png",
+    "processing_ms": 124,
+    "width": 600,
+    "height": 600,
+    "bounds": {
+      "minX": 262,
+      "minY": 137,
+      "maxX": 380,
+      "maxY": 348
+    },
+    "transparency_ratio": 0.953
+  },
+  {
+    "filename": "furniture_008.jpg",
+    "category": "furniture",
+    "status": "pass",
+    "failure_reason": null,
+    "image": "/sessions/zen-jolly-thompson/mnt/fix-pictures-app/benchmark/images/furniture/furniture_008.jpg",
+    "output": "/sessions/zen-jolly-thompson/mnt/fix-pictures-app/benchmark/output/furniture/furniture_008_out.png",
+    "processing_ms": 169,
+    "width": 800,
+    "height": 600,
+    "bounds": {
+      "minX": 246,
+      "minY": 79,
+      "maxX": 398,
+      "maxY": 350
+    },
+    "transparency_ratio": 0.9416
+  },
+  {
+    "filename": "furniture_009.jpg",
+    "category": "furniture",
+    "status": "pass",
+    "failure_reason": null,
+    "image": "/sessions/zen-jolly-thompson/mnt/fix-pictures-app/benchmark/images/furniture/furniture_009.jpg",
+    "output": "/sessions/zen-jolly-thompson/mnt/fix-pictures-app/benchmark/output/furniture/furniture_009_out.png",
+    "processing_ms": 324,
+    "width": 1000,
+    "height": 1000,
+    "bounds": {
+      "minX": 489,
+      "minY": 404,
+      "maxX": 609,
+      "maxY": 617
+    },
+    "transparency_ratio": 0.983
+  },
+  {
+    "filename": "furniture_010.jpg",
+    "category": "furniture",
+    "status": "pass",
+    "failure_reason": null,
+    "image": "/sessions/zen-jolly-thompson/mnt/fix-pictures-app/benchmark/images/furniture/furniture_010.jpg",
+    "output": "/sessions/zen-jolly-thompson/mnt/fix-pictures-app/benchmark/output/furniture/furniture_010_out.png",
+    "processing_ms": 330,
+    "width": 1000,
+    "height": 1000,
+    "bounds": {
+      "minX": 424,
+      "minY": 300,
+      "maxX": 558,
+      "maxY": 536
+    },
+    "transparency_ratio": 0.979
+  },
+  {
+    "filename": "kitchen_001.jpg",
+    "category": "kitchen",
+    "status": "pass",
+    "failure_reason": null,
+    "image": "/sessions/zen-jolly-thompson/mnt/fix-pictures-app/benchmark/images/kitchen/kitchen_001.jpg",
+    "output": "/sessions/zen-jolly-thompson/mnt/fix-pictures-app/benchmark/output/kitchen/kitchen_001_out.png",
+    "processing_ms": 212,
+    "width": 800,
+    "height": 800,
+    "bounds": {
+      "minX": 412,
+      "minY": 265,
+      "maxX": 544,
+      "maxY": 462
+    },
+    "transparency_ratio": 0.9839
+  },
+  {
+    "filename": "kitchen_002.jpg",
+    "category": "kitchen",
+    "status": "pass",
+    "failure_reason": null,
+    "image": "/sessions/zen-jolly-thompson/mnt/fix-pictures-app/benchmark/images/kitchen/kitchen_002.jpg",
+    "output": "/sessions/zen-jolly-thompson/mnt/fix-pictures-app/benchmark/output/kitchen/kitchen_002_out.png",
+    "processing_ms": 334,
+    "width": 1000,
+    "height": 1000,
+    "bounds": {
+      "minX": 435,
+      "minY": 307,
+      "maxX": 575,
+      "maxY": 515
+    },
+    "transparency_ratio": 0.9765
+  },
+  {
+    "filename": "kitchen_003.jpg",
+    "category": "kitchen",
+    "status": "pass",
+    "failure_reason": null,
+    "image": "/sessions/zen-jolly-thompson/mnt/fix-pictures-app/benchmark/images/kitchen/kitchen_003.jpg",
+    "output": "/sessions/zen-jolly-thompson/mnt/fix-pictures-app/benchmark/output/kitchen/kitchen_003_out.png",
+    "processing_ms": 125,
+    "width": 600,
+    "height": 600,
+    "bounds": {
+      "minX": 208,
+      "minY": 165,
+      "maxX": 340,
+      "maxY": 364
+    },
+    "transparency_ratio": 0.9713
+  },
+  {
+    "filename": "kitchen_004.jpg",
+    "category": "kitchen",
+    "status": "pass",
+    "failure_reason": null,
+    "image": "/sessions/zen-jolly-thompson/mnt/fix-pictures-app/benchmark/images/kitchen/kitchen_004.jpg",
+    "output": "/sessions/zen-jolly-thompson/mnt/fix-pictures-app/benchmark/output/kitchen/kitchen_004_out.png",
+    "processing_ms": 215,
+    "width": 800,
+    "height": 800,
+    "bounds": {
+      "minX": 309,
+      "minY": 275,
+      "maxX": 443,
+      "maxY": 477
+    },
+    "transparency_ratio": 0.9832
+  },
+  {
+    "filename": "kitchen_005.jpg",
+    "category": "kitchen",
+    "status": "pass",
+    "failure_reason": null,
+    "image": "/sessions/zen-jolly-thompson/mnt/fix-pictures-app/benchmark/images/kitchen/kitchen_005.jpg",
+    "output": "/sessions/zen-jolly-thompson/mnt/fix-pictures-app/benchmark/output/kitchen/kitchen_005_out.png",
+    "processing_ms": 160,
+    "width": 800,
+    "height": 600,
+    "bounds": {
+      "minX": 320,
+      "minY": 161,
+      "maxX": 434,
+      "maxY": 333
+    },
+    "transparency_ratio": 0.9839
+  },
+  {
+    "filename": "kitchen_006.jpg",
+    "category": "kitchen",
+    "status": "pass",
+    "failure_reason": null,
+    "image": "/sessions/zen-jolly-thompson/mnt/fix-pictures-app/benchmark/images/kitchen/kitchen_006.jpg",
+    "output": "/sessions/zen-jolly-thompson/mnt/fix-pictures-app/benchmark/output/kitchen/kitchen_006_out.png",
+    "processing_ms": 157,
+    "width": 800,
+    "height": 600,
+    "bounds": {
+      "minX": 334,
+      "minY": 203,
+      "maxX": 448,
+      "maxY": 374
+    },
+    "transparency_ratio": 0.9838
+  },
+  {
+    "filename": "kitchen_007.jpg",
+    "category": "kitchen",
+    "status": "pass",
+    "failure_reason": null,
+    "image": "/sessions/zen-jolly-thompson/mnt/fix-pictures-app/benchmark/images/kitchen/kitchen_007.jpg",
+    "output": "/sessions/zen-jolly-thompson/mnt/fix-pictures-app/benchmark/output/kitchen/kitchen_007_out.png",
+    "processing_ms": 158,
+    "width": 800,
+    "height": 600,
+    "bounds": {
+      "minX": 291,
+      "minY": 269,
+      "maxX": 407,
+      "maxY": 443
+    },
+    "transparency_ratio": 0.9837
+  },
+  {
+    "filename": "kitchen_008.jpg",
+    "category": "kitchen",
+    "status": "pass",
+    "failure_reason": null,
+    "image": "/sessions/zen-jolly-thompson/mnt/fix-pictures-app/benchmark/images/kitchen/kitchen_008.jpg",
+    "output": "/sessions/zen-jolly-thompson/mnt/fix-pictures-app/benchmark/output/kitchen/kitchen_008_out.png",
+    "processing_ms": 58520,
+    "width": 1000,
+    "height": 1000,
+    "bounds": {
+      "minX": 83,
+      "minY": 320,
+      "maxX": 916,
+      "maxY": 916
+    },
+    "transparency_ratio": 0.7045
+  },
+  {
+    "filename": "kitchen_009.jpg",
+    "category": "kitchen",
+    "status": "pass",
+    "failure_reason": null,
+    "image": "/sessions/zen-jolly-thompson/mnt/fix-pictures-app/benchmark/images/kitchen/kitchen_009.jpg",
+    "output": "/sessions/zen-jolly-thompson/mnt/fix-pictures-app/benchmark/output/kitchen/kitchen_009_out.png",
+    "processing_ms": 124,
+    "width": 600,
+    "height": 600,
+    "bounds": {
+      "minX": 229,
+      "minY": 270,
+      "maxX": 349,
+      "maxY": 449
+    },
+    "transparency_ratio": 0.9763
+  },
+  {
+    "filename": "kitchen_010.jpg",
+    "category": "kitchen",
+    "status": "pass",
+    "failure_reason": null,
+    "image": "/sessions/zen-jolly-thompson/mnt/fix-pictures-app/benchmark/images/kitchen/kitchen_010.jpg",
+    "output": "/sessions/zen-jolly-thompson/mnt/fix-pictures-app/benchmark/output/kitchen/kitchen_010_out.png",
+    "processing_ms": 124,
+    "width": 600,
+    "height": 600,
+    "bounds": {
+      "minX": 242,
+      "minY": 266,
+      "maxX": 370,
+      "maxY": 459
+    },
+    "transparency_ratio": 0.9439
+  },
+  {
+    "filename": "tools_001.jpg",
+    "category": "tools",
+    "status": "pass",
+    "failure_reason": null,
+    "image": "/sessions/zen-jolly-thompson/mnt/fix-pictures-app/benchmark/images/tools/tools_001.jpg",
+    "output": "/sessions/zen-jolly-thompson/mnt/fix-pictures-app/benchmark/output/tools/tools_001_out.png",
+    "processing_ms": 324,
+    "width": 1000,
+    "height": 1000,
+    "bounds": {
+      "minX": 510,
+      "minY": 447,
+      "maxX": 656,
+      "maxY": 579
+    },
+    "transparency_ratio": 0.9916
+  },
+  {
+    "filename": "tools_002.jpg",
+    "category": "tools",
+    "status": "pass",
+    "failure_reason": null,
+    "image": "/sessions/zen-jolly-thompson/mnt/fix-pictures-app/benchmark/images/tools/tools_002.jpg",
+    "output": "/sessions/zen-jolly-thompson/mnt/fix-pictures-app/benchmark/output/tools/tools_002_out.png",
+    "processing_ms": 220,
+    "width": 800,
+    "height": 800,
+    "bounds": {
+      "minX": 352,
+      "minY": 389,
+      "maxX": 502,
+      "maxY": 525
+    },
+    "transparency_ratio": 0.986
+  },
+  {
+    "filename": "tools_003.jpg",
+    "category": "tools",
+    "status": "pass",
+    "failure_reason": null,
+    "image": "/sessions/zen-jolly-thompson/mnt/fix-pictures-app/benchmark/images/tools/tools_003.jpg",
+    "output": "/sessions/zen-jolly-thompson/mnt/fix-pictures-app/benchmark/output/tools/tools_003_out.png",
+    "processing_ms": 328,
+    "width": 1000,
+    "height": 1000,
+    "bounds": {
+      "minX": 524,
+      "minY": 558,
+      "maxX": 670,
+      "maxY": 690
+    },
+    "transparency_ratio": 0.9916
+  },
+  {
+    "filename": "tools_004.jpg",
+    "category": "tools",
+    "status": "pass",
+    "failure_reason": null,
+    "image": "/sessions/zen-jolly-thompson/mnt/fix-pictures-app/benchmark/images/tools/tools_004.jpg",
+    "output": "/sessions/zen-jolly-thompson/mnt/fix-pictures-app/benchmark/output/tools/tools_004_out.png",
+    "processing_ms": 129,
+    "width": 600,
+    "height": 600,
+    "bounds": {
+      "minX": 227,
+      "minY": 242,
+      "maxX": 403,
+      "maxY": 379
+    },
+    "transparency_ratio": 0.9745
+  },
+  {
+    "filename": "tools_005.jpg",
+    "category": "tools",
+    "status": "pass",
+    "failure_reason": null,
+    "image": "/sessions/zen-jolly-thompson/mnt/fix-pictures-app/benchmark/images/tools/tools_005.jpg",
+    "output": "/sessions/zen-jolly-thompson/mnt/fix-pictures-app/benchmark/output/tools/tools_005_out.png",
+    "processing_ms": 126,
+    "width": 600,
+    "height": 600,
+    "bounds": {
+      "minX": 256,
+      "minY": 267,
+      "maxX": 403,
+      "maxY": 399
+    },
+    "transparency_ratio": 0.9767
+  },
+  {
+    "filename": "tools_006.jpg",
+    "category": "tools",
+    "status": "pass",
+    "failure_reason": null,
+    "image": "/sessions/zen-jolly-thompson/mnt/fix-pictures-app/benchmark/images/tools/tools_006.jpg",
+    "output": "/sessions/zen-jolly-thompson/mnt/fix-pictures-app/benchmark/output/tools/tools_006_out.png",
+    "processing_ms": 321,
+    "width": 1000,
+    "height": 1000,
+    "bounds": {
+      "minX": 438,
+      "minY": 392,
+      "maxX": 577,
+      "maxY": 517
+    },
+    "transparency_ratio": 0.9925
+  },
+  {
+    "filename": "tools_007.jpg",
+    "category": "tools",
+    "status": "pass",
+    "failure_reason": null,
+    "image": "/sessions/zen-jolly-thompson/mnt/fix-pictures-app/benchmark/images/tools/tools_007.jpg",
+    "output": "/sessions/zen-jolly-thompson/mnt/fix-pictures-app/benchmark/output/tools/tools_007_out.png",
+    "processing_ms": 322,
+    "width": 1000,
+    "height": 1000,
+    "bounds": {
+      "minX": 391,
+      "minY": 376,
+      "maxX": 548,
+      "maxY": 499
+    },
+    "transparency_ratio": 0.9926
+  },
+  {
+    "filename": "tools_008.jpg",
+    "category": "tools",
+    "status": "pass",
+    "failure_reason": null,
+    "image": "/sessions/zen-jolly-thompson/mnt/fix-pictures-app/benchmark/images/tools/tools_008.jpg",
+    "output": "/sessions/zen-jolly-thompson/mnt/fix-pictures-app/benchmark/output/tools/tools_008_out.png",
+    "processing_ms": 696,
+    "width": 800,
+    "height": 600,
+    "bounds": {
+      "minX": 122,
+      "minY": 224,
+      "maxX": 719,
+      "maxY": 527
+    },
+    "transparency_ratio": 0.9136
+  },
+  {
+    "filename": "tools_009.jpg",
+    "category": "tools",
+    "status": "pass",
+    "failure_reason": null,
+    "image": "/sessions/zen-jolly-thompson/mnt/fix-pictures-app/benchmark/images/tools/tools_009.jpg",
+    "output": "/sessions/zen-jolly-thompson/mnt/fix-pictures-app/benchmark/output/tools/tools_009_out.png",
+    "processing_ms": 532,
+    "width": 600,
+    "height": 600,
+    "bounds": {
+      "minX": 91,
+      "minY": 64,
+      "maxX": 496,
+      "maxY": 549
+    },
+    "transparency_ratio": 0.9147
+  },
+  {
+    "filename": "tools_010.jpg",
+    "category": "tools",
+    "status": "pass",
+    "failure_reason": null,
+    "image": "/sessions/zen-jolly-thompson/mnt/fix-pictures-app/benchmark/images/tools/tools_010.jpg",
+    "output": "/sessions/zen-jolly-thompson/mnt/fix-pictures-app/benchmark/output/tools/tools_010_out.png",
+    "processing_ms": 215,
+    "width": 800,
+    "height": 800,
+    "bounds": {
+      "minX": 385,
+      "minY": 331,
+      "maxX": 567,
+      "maxY": 473
+    },
+    "transparency_ratio": 0.9844
+  },
+  {
+    "filename": "beauty_001.jpg",
+    "category": "beauty",
+    "status": "pass",
+    "failure_reason": null,
+    "image": "/sessions/zen-jolly-thompson/mnt/fix-pictures-app/benchmark/images/beauty/beauty_001.jpg",
+    "output": "/sessions/zen-jolly-thompson/mnt/fix-pictures-app/benchmark/output/beauty/beauty_001_out.png",
+    "processing_ms": 151,
+    "width": 800,
+    "height": 600,
+    "bounds": {
+      "minX": 392,
+      "minY": 280,
+      "maxX": 420,
+      "maxY": 393
+    },
+    "transparency_ratio": 0.9942
+  },
+  {
+    "filename": "beauty_002.jpg",
+    "category": "beauty",
+    "status": "pass",
+    "failure_reason": null,
+    "image": "/sessions/zen-jolly-thompson/mnt/fix-pictures-app/benchmark/images/beauty/beauty_002.jpg",
+    "output": "/sessions/zen-jolly-thompson/mnt/fix-pictures-app/benchmark/output/beauty/beauty_002_out.png",
+    "processing_ms": 153,
+    "width": 800,
+    "height": 600,
+    "bounds": {
+      "minX": 306,
+      "minY": 260,
+      "maxX": 342,
+      "maxY": 410
+    },
+    "transparency_ratio": 0.99
+  },
+  {
+    "filename": "beauty_003.jpg",
+    "category": "beauty",
+    "status": "pass",
+    "failure_reason": null,
+    "image": "/sessions/zen-jolly-thompson/mnt/fix-pictures-app/benchmark/images/beauty/beauty_003.jpg",
+    "output": "/sessions/zen-jolly-thompson/mnt/fix-pictures-app/benchmark/output/beauty/beauty_003_out.png",
+    "processing_ms": 113,
+    "width": 600,
+    "height": 600,
+    "bounds": {
+      "minX": 319,
+      "minY": 174,
+      "maxX": 353,
+      "maxY": 312
+    },
+    "transparency_ratio": 0.9885
+  },
+  {
+    "filename": "beauty_004.jpg",
+    "category": "beauty",
+    "status": "pass",
+    "failure_reason": null,
+    "image": "/sessions/zen-jolly-thompson/mnt/fix-pictures-app/benchmark/images/beauty/beauty_004.jpg",
+    "output": "/sessions/zen-jolly-thompson/mnt/fix-pictures-app/benchmark/output/beauty/beauty_004_out.png",
+    "processing_ms": 198,
+    "width": 800,
+    "height": 800,
+    "bounds": {
+      "minX": 428,
+      "minY": 295,
+      "maxX": 454,
+      "maxY": 403
+    },
+    "transparency_ratio": 0.9962
+  },
+  {
+    "filename": "beauty_005.jpg",
+    "category": "beauty",
+    "status": "pass",
+    "failure_reason": null,
+    "image": "/sessions/zen-jolly-thompson/mnt/fix-pictures-app/benchmark/images/beauty/beauty_005.jpg",
+    "output": "/sessions/zen-jolly-thompson/mnt/fix-pictures-app/benchmark/output/beauty/beauty_005_out.png",
+    "processing_ms": 150,
+    "width": 800,
+    "height": 600,
+    "bounds": {
+      "minX": 457,
+      "minY": 244,
+      "maxX": 493,
+      "maxY": 390
+    },
+    "transparency_ratio": 0.9903
+  },
+  {
+    "filename": "beauty_006.jpg",
+    "category": "beauty",
+    "status": "pass",
+    "failure_reason": null,
+    "image": "/sessions/zen-jolly-thompson/mnt/fix-pictures-app/benchmark/images/beauty/beauty_006.jpg",
+    "output": "/sessions/zen-jolly-thompson/mnt/fix-pictures-app/benchmark/output/beauty/beauty_006_out.png",
+    "processing_ms": 390,
+    "width": 1000,
+    "height": 1000,
+    "bounds": {
+      "minX": 466,
+      "minY": 494,
+      "maxX": 492,
+      "maxY": 600
+    },
+    "transparency_ratio": 0.9976
+  },
+  {
+    "filename": "beauty_007.jpg",
+    "category": "beauty",
+    "status": "pass",
+    "failure_reason": null,
+    "image": "/sessions/zen-jolly-thompson/mnt/fix-pictures-app/benchmark/images/beauty/beauty_007.jpg",
+    "output": "/sessions/zen-jolly-thompson/mnt/fix-pictures-app/benchmark/output/beauty/beauty_007_out.png",
+    "processing_ms": 317,
+    "width": 1000,
+    "height": 1000,
+    "bounds": {
+      "minX": 410,
+      "minY": 511,
+      "maxX": 442,
+      "maxY": 645
+    },
+    "transparency_ratio": 0.9962
+  },
+  {
+    "filename": "beauty_008.jpg",
+    "category": "beauty",
+    "status": "pass",
+    "failure_reason": null,
+    "image": "/sessions/zen-jolly-thompson/mnt/fix-pictures-app/benchmark/images/beauty/beauty_008.jpg",
+    "output": "/sessions/zen-jolly-thompson/mnt/fix-pictures-app/benchmark/output/beauty/beauty_008_out.png",
+    "processing_ms": 201,
+    "width": 800,
+    "height": 800,
+    "bounds": {
+      "minX": 438,
+      "minY": 355,
+      "maxX": 474,
+      "maxY": 502
+    },
+    "transparency_ratio": 0.9926
+  },
+  {
+    "filename": "beauty_009.jpg",
+    "category": "beauty",
+    "status": "pass",
+    "failure_reason": null,
+    "image": "/sessions/zen-jolly-thompson/mnt/fix-pictures-app/benchmark/images/beauty/beauty_009.jpg",
+    "output": "/sessions/zen-jolly-thompson/mnt/fix-pictures-app/benchmark/output/beauty/beauty_009_out.png",
+    "processing_ms": 113,
+    "width": 600,
+    "height": 600,
+    "bounds": {
+      "minX": 235,
+      "minY": 220,
+      "maxX": 271,
+      "maxY": 370
+    },
+    "transparency_ratio": 0.9867
+  },
+  {
+    "filename": "beauty_010.jpg",
+    "category": "beauty",
+    "status": "pass",
+    "failure_reason": null,
+    "image": "/sessions/zen-jolly-thompson/mnt/fix-pictures-app/benchmark/images/beauty/beauty_010.jpg",
+    "output": "/sessions/zen-jolly-thompson/mnt/fix-pictures-app/benchmark/output/beauty/beauty_010_out.png",
+    "processing_ms": 148,
+    "width": 800,
+    "height": 600,
+    "bounds": {
+      "minX": 374,
+      "minY": 255,
+      "maxX": 404,
+      "maxY": 381
+    },
+    "transparency_ratio": 0.9931
+  },
+  {
+    "filename": "toys_001.jpg",
+    "category": "toys",
+    "status": "pass",
+    "failure_reason": null,
+    "image": "/sessions/zen-jolly-thompson/mnt/fix-pictures-app/benchmark/images/toys/toys_001.jpg",
+    "output": "/sessions/zen-jolly-thompson/mnt/fix-pictures-app/benchmark/output/toys/toys_001_out.png",
+    "processing_ms": 687,
+    "width": 800,
+    "height": 600,
+    "bounds": {
+      "minX": 84,
+      "minY": 247,
+      "maxX": 687,
+      "maxY": 433
+    },
+    "transparency_ratio": 0.9161
+  },
+  {
+    "filename": "toys_002.jpg",
+    "category": "toys",
+    "status": "pass",
+    "failure_reason": null,
+    "image": "/sessions/zen-jolly-thompson/mnt/fix-pictures-app/benchmark/images/toys/toys_002.jpg",
+    "output": "/sessions/zen-jolly-thompson/mnt/fix-pictures-app/benchmark/output/toys/toys_002_out.png",
+    "processing_ms": 992,
+    "width": 800,
+    "height": 600,
+    "bounds": {
+      "minX": 66,
+      "minY": 223,
+      "maxX": 733,
+      "maxY": 359
+    },
+    "transparency_ratio": 0.9484
+  },
+  {
+    "filename": "toys_003.jpg",
+    "category": "toys",
+    "status": "pass",
+    "failure_reason": null,
+    "image": "/sessions/zen-jolly-thompson/mnt/fix-pictures-app/benchmark/images/toys/toys_003.jpg",
+    "output": "/sessions/zen-jolly-thompson/mnt/fix-pictures-app/benchmark/output/toys/toys_003_out.png",
+    "processing_ms": 159,
+    "width": 800,
+    "height": 600,
+    "bounds": {
+      "minX": 274,
+      "minY": 281,
+      "maxX": 426,
+      "maxY": 400
+    },
+    "transparency_ratio": 0.9791
+  },
+  {
+    "filename": "toys_004.jpg",
+    "category": "toys",
+    "status": "pass",
+    "failure_reason": null,
+    "image": "/sessions/zen-jolly-thompson/mnt/fix-pictures-app/benchmark/images/toys/toys_004.jpg",
+    "output": "/sessions/zen-jolly-thompson/mnt/fix-pictures-app/benchmark/output/toys/toys_004_out.png",
+    "processing_ms": 20477,
+    "width": 800,
+    "height": 800,
+    "bounds": {
+      "minX": 66,
+      "minY": 303,
+      "maxX": 733,
+      "maxY": 733
+    },
+    "transparency_ratio": 0.7106
+  },
+  {
+    "filename": "toys_005.jpg",
+    "category": "toys",
+    "status": "pass",
+    "failure_reason": null,
+    "image": "/sessions/zen-jolly-thompson/mnt/fix-pictures-app/benchmark/images/toys/toys_005.jpg",
+    "output": "/sessions/zen-jolly-thompson/mnt/fix-pictures-app/benchmark/output/toys/toys_005_out.png",
+    "processing_ms": 539,
+    "width": 600,
+    "height": 600,
+    "bounds": {
+      "minX": 50,
+      "minY": 207,
+      "maxX": 549,
+      "maxY": 359
+    },
+    "transparency_ratio": 0.9351
+  },
+  {
+    "filename": "toys_006.jpg",
+    "category": "toys",
+    "status": "pass",
+    "failure_reason": null,
+    "image": "/sessions/zen-jolly-thompson/mnt/fix-pictures-app/benchmark/images/toys/toys_006.jpg",
+    "output": "/sessions/zen-jolly-thompson/mnt/fix-pictures-app/benchmark/output/toys/toys_006_out.png",
+    "processing_ms": 316,
+    "width": 1000,
+    "height": 1000,
+    "bounds": {
+      "minX": 404,
+      "minY": 354,
+      "maxX": 550,
+      "maxY": 469
+    },
+    "transparency_ratio": 0.9907
+  },
+  {
+    "filename": "toys_007.jpg",
+    "category": "toys",
+    "status": "pass",
+    "failure_reason": null,
+    "image": "/sessions/zen-jolly-thompson/mnt/fix-pictures-app/benchmark/images/toys/toys_007.jpg",
+    "output": "/sessions/zen-jolly-thompson/mnt/fix-pictures-app/benchmark/output/toys/toys_007_out.png",
+    "processing_ms": 321,
+    "width": 1000,
+    "height": 1000,
+    "bounds": {
+      "minX": 473,
+      "minY": 429,
+      "maxX": 609,
+      "maxY": 535
+    },
+    "transparency_ratio": 0.992
+  },
+  {
+    "filename": "toys_008.jpg",
+    "category": "toys",
+    "status": "pass",
+    "failure_reason": null,
+    "image": "/sessions/zen-jolly-thompson/mnt/fix-pictures-app/benchmark/images/toys/toys_008.jpg",
+    "output": "/sessions/zen-jolly-thompson/mnt/fix-pictures-app/benchmark/output/toys/toys_008_out.png",
+    "processing_ms": 1505,
+    "width": 1000,
+    "height": 1000,
+    "bounds": {
+      "minX": 116,
+      "minY": 188,
+      "maxX": 900,
+      "maxY": 911
+    },
+    "transparency_ratio": 0.9559
+  },
+  {
+    "filename": "toys_009.jpg",
+    "category": "toys",
+    "status": "pass",
+    "failure_reason": null,
+    "image": "/sessions/zen-jolly-thompson/mnt/fix-pictures-app/benchmark/images/toys/toys_009.jpg",
+    "output": "/sessions/zen-jolly-thompson/mnt/fix-pictures-app/benchmark/output/toys/toys_009_out.png",
+    "processing_ms": 210,
+    "width": 800,
+    "height": 800,
+    "bounds": {
+      "minX": 265,
+      "minY": 310,
+      "maxX": 413,
+      "maxY": 426
+    },
+    "transparency_ratio": 0.9848
+  },
+  {
+    "filename": "toys_010.jpg",
+    "category": "toys",
+    "status": "pass",
+    "failure_reason": null,
+    "image": "/sessions/zen-jolly-thompson/mnt/fix-pictures-app/benchmark/images/toys/toys_010.jpg",
+    "output": "/sessions/zen-jolly-thompson/mnt/fix-pictures-app/benchmark/output/toys/toys_010_out.png",
+    "processing_ms": 903,
+    "width": 800,
+    "height": 600,
+    "bounds": {
+      "minX": 66,
+      "minY": 207,
+      "maxX": 733,
+      "maxY": 368
+    },
+    "transparency_ratio": 0.9462
+  },
+  {
+    "filename": "watches_001.jpg",
+    "category": "watches",
+    "status": "pass",
+    "failure_reason": null,
+    "image": "/sessions/zen-jolly-thompson/mnt/fix-pictures-app/benchmark/images/watches/watches_001.jpg",
+    "output": "/sessions/zen-jolly-thompson/mnt/fix-pictures-app/benchmark/output/watches/watches_001_out.png",
+    "processing_ms": 157,
+    "width": 800,
+    "height": 600,
+    "bounds": {
+      "minX": 440,
+      "minY": 227,
+      "maxX": 526,
+      "maxY": 403
+    },
+    "transparency_ratio": 0.9903
+  },
+  {
+    "filename": "watches_002.jpg",
+    "category": "watches",
+    "status": "pass",
+    "failure_reason": null,
+    "image": "/sessions/zen-jolly-thompson/mnt/fix-pictures-app/benchmark/images/watches/watches_002.jpg",
+    "output": "/sessions/zen-jolly-thompson/mnt/fix-pictures-app/benchmark/output/watches/watches_002_out.png",
+    "processing_ms": 324,
+    "width": 1000,
+    "height": 1000,
+    "bounds": {
+      "minX": 534,
+      "minY": 369,
+      "maxX": 601,
+      "maxY": 507
+    },
+    "transparency_ratio": 0.9973
+  },
+  {
+    "filename": "watches_003.jpg",
+    "category": "watches",
+    "status": "pass",
+    "failure_reason": null,
+    "image": "/sessions/zen-jolly-thompson/mnt/fix-pictures-app/benchmark/images/watches/watches_003.jpg",
+    "output": "/sessions/zen-jolly-thompson/mnt/fix-pictures-app/benchmark/output/watches/watches_003_out.png",
+    "processing_ms": 319,
+    "width": 1000,
+    "height": 1000,
+    "bounds": {
+      "minX": 522,
+      "minY": 524,
+      "maxX": 587,
+      "maxY": 658
+    },
+    "transparency_ratio": 0.9973
+  },
+  {
+    "filename": "watches_004.jpg",
+    "category": "watches",
+    "status": "pass",
+    "failure_reason": null,
+    "image": "/sessions/zen-jolly-thompson/mnt/fix-pictures-app/benchmark/images/watches/watches_004.jpg",
+    "output": "/sessions/zen-jolly-thompson/mnt/fix-pictures-app/benchmark/output/watches/watches_004_out.png",
+    "processing_ms": 116,
+    "width": 600,
+    "height": 600,
+    "bounds": {
+      "minX": 298,
+      "minY": 221,
+      "maxX": 365,
+      "maxY": 361
+    },
+    "transparency_ratio": 0.9925
+  },
+  {
+    "filename": "watches_005.jpg",
+    "category": "watches",
+    "status": "pass",
+    "failure_reason": null,
+    "image": "/sessions/zen-jolly-thompson/mnt/fix-pictures-app/benchmark/images/watches/watches_005.jpg",
+    "output": "/sessions/zen-jolly-thompson/mnt/fix-pictures-app/benchmark/output/watches/watches_005_out.png",
+    "processing_ms": 152,
+    "width": 800,
+    "height": 600,
+    "bounds": {
+      "minX": 399,
+      "minY": 266,
+      "maxX": 466,
+      "maxY": 402
+    },
+    "transparency_ratio": 0.9948
+  },
+  {
+    "filename": "watches_006.jpg",
+    "category": "watches",
+    "status": "pass",
+    "failure_reason": null,
+    "image": "/sessions/zen-jolly-thompson/mnt/fix-pictures-app/benchmark/images/watches/watches_006.jpg",
+    "output": "/sessions/zen-jolly-thompson/mnt/fix-pictures-app/benchmark/output/watches/watches_006_out.png",
+    "processing_ms": 116,
+    "width": 600,
+    "height": 600,
+    "bounds": {
+      "minX": 284,
+      "minY": 173,
+      "maxX": 351,
+      "maxY": 311
+    },
+    "transparency_ratio": 0.9925
+  },
+  {
+    "filename": "watches_007.jpg",
+    "category": "watches",
+    "status": "pass",
+    "failure_reason": null,
+    "image": "/sessions/zen-jolly-thompson/mnt/fix-pictures-app/benchmark/images/watches/watches_007.jpg",
+    "output": "/sessions/zen-jolly-thompson/mnt/fix-pictures-app/benchmark/output/watches/watches_007_out.png",
+    "processing_ms": 805,
+    "width": 600,
+    "height": 600,
+    "bounds": {
+      "minX": 50,
+      "minY": 224,
+      "maxX": 549,
+      "maxY": 384
+    },
+    "transparency_ratio": 0.9553
+  },
+  {
+    "filename": "watches_008.jpg",
+    "category": "watches",
+    "status": "pass",
+    "failure_reason": null,
+    "image": "/sessions/zen-jolly-thompson/mnt/fix-pictures-app/benchmark/images/watches/watches_008.jpg",
+    "output": "/sessions/zen-jolly-thompson/mnt/fix-pictures-app/benchmark/output/watches/watches_008_out.png",
+    "processing_ms": 132,
+    "width": 600,
+    "height": 600,
+    "bounds": {
+      "minX": 274,
+      "minY": 246,
+      "maxX": 373,
+      "maxY": 442
+    },
+    "transparency_ratio": 0.9851
+  },
+  {
+    "filename": "watches_009.jpg",
+    "category": "watches",
+    "status": "pass",
+    "failure_reason": null,
+    "image": "/sessions/zen-jolly-thompson/mnt/fix-pictures-app/benchmark/images/watches/watches_009.jpg",
+    "output": "/sessions/zen-jolly-thompson/mnt/fix-pictures-app/benchmark/output/watches/watches_009_out.png",
+    "processing_ms": 214,
+    "width": 800,
+    "height": 800,
+    "bounds": {
+      "minX": 367,
+      "minY": 269,
+      "maxX": 442,
+      "maxY": 423
+    },
+    "transparency_ratio": 0.9948
+  },
+  {
+    "filename": "watches_010.jpg",
+    "category": "watches",
+    "status": "pass",
+    "failure_reason": null,
+    "image": "/sessions/zen-jolly-thompson/mnt/fix-pictures-app/benchmark/images/watches/watches_010.jpg",
+    "output": "/sessions/zen-jolly-thompson/mnt/fix-pictures-app/benchmark/output/watches/watches_010_out.png",
+    "processing_ms": 120,
+    "width": 600,
+    "height": 600,
+    "bounds": {
+      "minX": 284,
+      "minY": 272,
+      "maxX": 370,
+      "maxY": 448
+    },
+    "transparency_ratio": 0.9876
+  }
+]
