@@ -5,27 +5,28 @@ import { Button } from '@/src/components/ui/button';
 import { Slider } from '@/src/components/ui/slider';
 import { analyzeImageFile, type AuditSnapshot } from '@/src/lib/auditor';
 import {
-  composeCompliantImage,
-  type CompositorMetrics,
-  type ShadowMode,
+    composeCompliantImage,
+    type CompositorMetrics,
+    type ShadowMode,
 } from '@/src/lib/compositor';
+import { hasProcessedMetadata, looksLikeOurOutput } from '@/src/lib/exif-metadata';
 import { localInferenceClient } from '@/src/lib/local-inference-client';
 import { cn } from '@/src/lib/utils';
 import { smartWorkerClient } from '@/src/lib/worker-client';
 import type { ProcessedPayload, WorkerProgress } from '@/src/workers/ai.worker';
 import JSZip from 'jszip';
 import {
-  CheckCircle2,
-  ChevronDown,
-  ChevronUp,
-  CircleAlert,
-  Download,
-  ImagePlus,
-  LoaderCircle,
-  Package,
-  RefreshCw,
-  Sparkles,
-  Trash2,
+    CheckCircle2,
+    ChevronDown,
+    ChevronUp,
+    CircleAlert,
+    Download,
+    ImagePlus,
+    LoaderCircle,
+    Package,
+    RefreshCw,
+    Sparkles,
+    Trash2,
 } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
@@ -53,6 +54,7 @@ interface BatchItem {
   analysisState: AnalysisState;
   analysisError: string | null;
   inferenceBackend: InferenceBackend | null;
+  forceProcess?: boolean;
 }
 
 const ALLOWED_TYPES = new Set(['image/jpeg', 'image/jpg', 'image/png', 'image/webp']);
@@ -263,7 +265,7 @@ function App() {
           }
         }
 
-        const shouldSkip = await shouldSkipProcessing(item.file, precheckSnapshot);
+        const shouldSkip = await shouldSkipProcessing(item.file, precheckSnapshot, item.forceProcess ?? false);
         if (shouldSkip) {
           const previousItem = batchItemsRef.current.find((entry) => entry.id === itemId);
           if (previousItem?.outputUrl) {
@@ -348,6 +350,7 @@ function App() {
           shadowMode,
           shadowIntensity,
           quality: 0.9,
+          wasEdgeEnhanced: payload.wasEdgeEnhanced,
         });
         applyComposedResult(itemId, payload, result, renderKey, inferenceBackend);
       } catch (error) {
@@ -433,7 +436,7 @@ function App() {
           analysisError = (error as Error).message ?? 'Could not run pre-check.';
         }
 
-        const alreadyCompliant = await shouldSkipProcessing(file, snapshot);
+        const alreadyCompliant = await shouldSkipProcessing(file, snapshot, false);
         const sourceUrl = URL.createObjectURL(file);
         const outputBlob = alreadyCompliant ? file.slice(0, file.size, file.type || 'image/jpeg') : null;
         const outputUrl = outputBlob ? URL.createObjectURL(outputBlob) : null;
@@ -510,6 +513,26 @@ function App() {
       inferenceBackend: null,
     }));
   }, [updateBatchItem]);
+ 
+  const forceProcessItem = useCallback((itemId: string) => {
+    updateBatchItem(itemId, (item) => ({
+      ...item,
+      status: 'queued',
+      forceProcess: true,
+      error: null,
+      startedAt: null,
+      completedAt: null,
+      progressLogs: [],
+      outputUrl: null,
+      outputBlob: null,
+      outputName: null,
+      payload: null,
+      metrics: null,
+      renderKey: null,
+      inferenceBackend: null,
+    }));
+  }, [updateBatchItem]);
+
 
   const cancelProcessing = useCallback(() => {
     const processingIds = batchItemsRef.current
@@ -654,6 +677,7 @@ function App() {
           shadowMode,
           shadowIntensity,
           quality: 0.9,
+          wasEdgeEnhanced: payload.wasEdgeEnhanced,
         });
 
         if (cancelled) return;
@@ -898,7 +922,24 @@ function App() {
                 )}
               </div>
             )}
-
+ 
+            {activeItem?.status === 'completed' && !activeItem.payload && (
+              <div className="mt-4">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="w-full border-amber-300 bg-amber-50 text-amber-800 hover:bg-amber-100 hover:text-amber-900"
+                  onClick={() => forceProcessItem(activeItem.id)}
+                >
+                  <Sparkles className="mr-2 h-4 w-4" />
+                  Force Process This Image
+                </Button>
+                <p className="mt-2 text-xs text-amber-700">
+                  Bypass all skip gates and reprocess this image, even if already compliant.
+                </p>
+              </div>
+            )}
+ 
           </article>
 
                 <aside className="flex h-full min-h-0 flex-col overflow-hidden rounded-2xl border border-zinc-200 bg-white p-4 shadow-[0_16px_52px_-42px_rgba(15,23,42,0.5)] sm:p-5">
@@ -911,12 +952,11 @@ function App() {
 
             <div className="flex-1 space-y-2 overflow-y-auto pr-1">
               {batchItems.map((item) => (
-                <button
+                <div
                   key={item.id}
-                  type="button"
                   onClick={() => setActiveItemId(item.id)}
                   className={cn(
-                    'w-full rounded-2xl border border-zinc-200 bg-zinc-50 p-2 text-left transition hover:border-zinc-300 hover:bg-zinc-100',
+                    'w-full cursor-pointer rounded-2xl border border-zinc-200 bg-zinc-50 p-2 text-left transition hover:border-zinc-300 hover:bg-zinc-100',
                     activeItem?.id === item.id && 'border-emerald-300 bg-emerald-50 hover:border-emerald-400 hover:bg-emerald-100',
                   )}
                 >
@@ -954,18 +994,20 @@ function App() {
                       </Button>
                     )}
                     {item.status === 'completed' && (
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="h-8 border-zinc-300 px-3"
-                        onClick={(event) => {
-                          event.stopPropagation();
-                          downloadItem(item.id);
-                        }}
-                      >
-                        <Download className="mr-1.5 h-3.5 w-3.5" />
-                        Download
-                      </Button>
+                      <>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="h-8 border-zinc-300 px-3"
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            downloadItem(item.id);
+                          }}
+                        >
+                          <Download className="mr-1.5 h-3.5 w-3.5" />
+                          Download
+                        </Button>
+                      </>
                     )}
                     <Button
                       size="sm"
@@ -980,7 +1022,7 @@ function App() {
                       Remove
                     </Button>
                   </div>
-                </button>
+                </div>
               ))}
             </div>
 
@@ -1281,8 +1323,19 @@ const getFailedCheckIds = (snapshot: AuditSnapshot) =>
 const hasHardFailure = (failedCheckIds: AuditCheckId[]) =>
   failedCheckIds.some((id) => id === 'dimensions' || id === 'file-format' || id === 'file-size');
 
-const shouldSkipByQuickLayer = (snapshot: AuditSnapshot, failedCheckIds: AuditCheckId[]) => {
-  if (failedCheckIds.length === 0) return true;
+const shouldSkipByQuickLayer = (snapshot: AuditSnapshot, failedCheckIds: AuditCheckId[], hasOurMetadata: boolean) => {
+  // If all checks pass, ONLY skip if we have EXPLICIT proof it's already processed
+  if (failedCheckIds.length === 0) {
+    // MUST have our metadata to skip - don't trust visual analysis alone
+    if (hasOurMetadata) {
+      console.log('[Skip] All checks pass + has our metadata - safe to skip');
+      return true;
+    }
+    // Even if it looks like our output, process it to be safe
+    // (might have text overlays, watermarks, secondary objects, etc.)
+    console.log('[Skip rejected] All checks pass but NO metadata - processing for safety (may have overlays/watermarks)');
+    return false;
+  }
   if (hasHardFailure(failedCheckIds)) return false;
 
   const onlySoftFailures = failedCheckIds.every((id) => id === 'white-background' || id === 'product-fill');
@@ -1291,11 +1344,26 @@ const shouldSkipByQuickLayer = (snapshot: AuditSnapshot, failedCheckIds: AuditCh
   // Product-fill is advisory for this tool; avoid destructive re-runs for this alone.
   if (!failedCheckIds.includes('white-background')) return true;
 
+  // CRITICAL: Never skip if background is heavily non-white (colored, dark, etc.)
+  // Only skip for near-white backgrounds or light shadows
+  if (snapshot.nonWhiteBackgroundRatio > 0.35) {
+    console.log('[Skip rejected] Background is heavily non-white (ratio:', snapshot.nonWhiteBackgroundRatio.toFixed(3), ') - must process');
+    return false;
+  }
+
+  // Layer 1: Fast skip for obvious shadow-only or near-white cases
   const veryLikelyShadowOnly =
     failedCheckIds.length === 1 &&
     snapshot.backgroundDiagnostics.shadowLikely &&
-    snapshot.nonWhiteBackgroundRatio <= 0.12;
-  return veryLikelyShadowOnly;
+    snapshot.nonWhiteBackgroundRatio <= 0.15;
+
+  // Also skip if the non-white ratio is very low, even without shadow pattern
+  // (likely just sensor noise, JPEG artifacts, or very subtle near-white)
+  const likelyNearWhiteOnly =
+    failedCheckIds.length === 1 &&
+    snapshot.nonWhiteBackgroundRatio <= 0.08;
+
+  return veryLikelyShadowOnly || likelyNearWhiteOnly;
 };
 
 const shouldRunBackgroundVerificationLayer = (failedCheckIds: AuditCheckId[]) => {
@@ -1303,12 +1371,43 @@ const shouldRunBackgroundVerificationLayer = (failedCheckIds: AuditCheckId[]) =>
   return failedCheckIds.every((id) => id === 'white-background' || id === 'product-fill');
 };
 
-const shouldSkipProcessing = async (file: File, snapshot: AuditSnapshot | null) => {
+const shouldSkipProcessing = async (file: File, snapshot: AuditSnapshot | null, forceProcess: boolean = false) => {
+  // Force processing override - bypass all skip gates
+  if (forceProcess) {
+    console.log('[Force] Force processing enabled - bypassing all skip gates');
+    return false;
+  }
+
+  // Phase 2 Safety Gate #1: Check for our own EXIF metadata marker
+  let hasOurMetadata = false;
+  try {
+    hasOurMetadata = await hasProcessedMetadata(file);
+    if (hasOurMetadata) {
+      console.log('[Skip] Image has ProcessedByFixPicturesApp metadata - already processed');
+      return true;
+    }
+  } catch (error) {
+    console.warn('Failed to check EXIF metadata:', error);
+  }
+
+  // Phase 2 Safety Gate #2: Check if it looks like our output (2000x2000 + uniform white bg)
+  // NOTE: We still check this for informational purposes but DON'T skip based on it alone
+  // Only metadata is trustworthy proof of processing
+  let looksLikeOurs = false;
+  try {
+    looksLikeOurs = await looksLikeOurOutput(file);
+    if (looksLikeOurs) {
+      console.log('[Info] Image looks like our output (2000x2000 + uniform white) but no metadata - will still process');
+    }
+  } catch (error) {
+    console.warn('Failed to check image characteristics:', error);
+  }
+
   if (!snapshot) return false;
 
   const failedCheckIds = getFailedCheckIds(snapshot);
   if (hasHardFailure(failedCheckIds)) return false;
-  if (shouldSkipByQuickLayer(snapshot, failedCheckIds)) return true;
+  if (shouldSkipByQuickLayer(snapshot, failedCheckIds, hasOurMetadata)) return true;
   if (!shouldRunBackgroundVerificationLayer(failedCheckIds)) return false;
 
   try {
@@ -1319,6 +1418,12 @@ const shouldSkipProcessing = async (file: File, snapshot: AuditSnapshot | null) 
 };
 
 const isBackgroundLikelyAlreadyCompliant = async (file: File, snapshot: AuditSnapshot) => {
+  // Safety check: Never skip if background is heavily non-white
+  if (snapshot.nonWhiteBackgroundRatio > 0.35) {
+    console.log('[Layer 2] Background ratio too high (', snapshot.nonWhiteBackgroundRatio.toFixed(3), ') - rejecting skip');
+    return false;
+  }
+
   const frame = await readImageFrame(file);
   const { width, height, data } = frame;
   const total = width * height;
@@ -1355,10 +1460,11 @@ const isBackgroundLikelyAlreadyCompliant = async (file: File, snapshot: AuditSna
     const chroma = max - min;
     const saturation = max === 0 ? 0 : chroma / max;
 
+    // More lenient thresholds: accept lighter grays and near-white tints
     const problematic =
-      brightness < 188 ||
-      chroma > 28 ||
-      (saturation > 0.18 && brightness < 235);
+      brightness < 178 ||
+      chroma > 35 ||
+      (saturation > 0.22 && brightness < 230);
     if (problematic) {
       problematicCount += 1;
     }
@@ -1381,23 +1487,34 @@ const isBackgroundLikelyAlreadyCompliant = async (file: File, snapshot: AuditSna
   const nonWhiteRatio = nonWhiteCount / backgroundCount;
   const problematicRatio = problematicCount / backgroundCount;
 
+  // Layer 2: More lenient thresholds for "do no harm" policy
   if (!bounds) {
-    return nonWhiteRatio <= 0.18 && problematicRatio <= 0.01;
+    // No foreground detected - accept if mostly white/near-white
+    return nonWhiteRatio <= 0.25 && problematicRatio <= 0.015;
   }
 
   const belowRatio = belowCount / nonWhiteCount;
   const aboveRatio = aboveCount / nonWhiteCount;
   const nearBottomRatio = nearBottomCount / nonWhiteCount;
 
+  // Relaxed shadow detection: softer distribution requirements
   const shadowLikeDistribution =
-    belowRatio >= 0.58 &&
-    aboveRatio <= 0.22 &&
-    nearBottomRatio >= 0.45 &&
-    problematicRatio <= 0.018;
+    belowRatio >= 0.52 &&
+    aboveRatio <= 0.28 &&
+    nearBottomRatio >= 0.38 &&
+    problematicRatio <= 0.025;
 
-  const likelyStaticFalseNegative = nonWhiteRatio <= 0.24 && problematicRatio <= 0.012;
+  // Expanded acceptance for near-white backgrounds (likely already compliant)
+  const likelyStaticFalseNegative = nonWhiteRatio <= 0.32 && problematicRatio <= 0.02;
 
-  return shadowLikeDistribution || likelyStaticFalseNegative;
+  // Accept diffuse/soft shadows that don't meet strict distribution but are still benign
+  const softShadowPattern =
+    belowRatio >= 0.45 &&
+    aboveRatio <= 0.35 &&
+    nonWhiteRatio <= 0.28 &&
+    problematicRatio <= 0.03;
+
+  return shadowLikeDistribution || likelyStaticFalseNegative || softShadowPattern;
 };
 
 const readImageFrame = (file: File) =>

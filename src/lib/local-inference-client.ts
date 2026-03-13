@@ -197,6 +197,7 @@ class LocalInferenceClient {
       maskedImageBuffer,
       bounds: payload.bounds,
       histogram: payload.histogram,
+      wasEdgeEnhanced: false, // Local inference doesn't use edge enhancement yet
     };
   }
 }

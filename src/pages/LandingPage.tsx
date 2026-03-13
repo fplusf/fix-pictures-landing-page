@@ -243,42 +243,6 @@ function App() {
           </div>
         </section>
 
-        <section className="mt-14 rounded-3xl border border-zinc-200 bg-white p-8 shadow-sm">
-          <h2 className="text-3xl font-black text-zinc-950">Built for Amazon sellers.</h2>
-          <div className="mt-6 space-y-3 text-lg font-medium text-zinc-700 md:text-xl">
-            <p>Fix backgrounds automatically</p>
-            <p>Frame products correctly</p>
-            <p>Export compliant images</p>
-          </div>
-        </section>
-
-        <section className="mt-12 grid gap-6 rounded-3xl border border-zinc-200 bg-white p-8 shadow-sm md:grid-cols-[0.95fr_1.05fr]">
-          <div>
-              <h2 className="text-3xl font-black text-zinc-950">Fix images directly in the web app.</h2>
-            <div className="mt-6 space-y-3">
-                <div className="rounded-xl border border-zinc-200 bg-zinc-50 px-4 py-3 text-sm font-medium text-zinc-700">Open fix.pictures app</div>
-                <p className="text-center text-zinc-400">↓</p>
-                <div className="rounded-xl border border-zinc-200 bg-zinc-50 px-4 py-3 text-sm font-medium text-zinc-700">Drop or paste product image</div>
-                <p className="text-center text-zinc-400">↓</p>
-                <div className="rounded-xl border border-zinc-200 bg-zinc-50 px-4 py-3 text-sm font-medium text-zinc-700">Auto-process with AI</div>
-                <p className="text-center text-zinc-400">↓</p>
-                <div className="rounded-xl border border-zinc-200 bg-zinc-50 px-4 py-3 text-sm font-medium text-zinc-700">Download compliant image</div>
-              </div>
-
-              <a href={APP_ROUTE} className="mt-7 inline-flex rounded-xl bg-zinc-900 px-6 py-3 text-base font-semibold text-white transition hover:bg-zinc-800">
-                Open App
-              </a>
-            </div>
-
-          <div className="rounded-2xl border border-zinc-200 bg-zinc-50 p-4">
-            <img
-              src="/hero-dashboard.png"
-              alt="Web app workflow preview"
-              className="h-full w-full rounded-xl object-cover object-top"
-            />
-          </div>
-        </section>
-
         <section
           id="pricing"
           className="relative mt-12 overflow-hidden rounded-[2rem] border border-zinc-200 bg-gradient-to-br from-white via-[#fff7fb] to-[#fff1e8] p-8 shadow-sm md:p-10"

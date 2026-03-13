@@ -1,6 +1,7 @@
 /// <reference lib="webworker" />
 
 import { removeBackground as imglyRemoveBackground } from '@imgly/background-removal';
+import { needsEdgeEnhancement, applyEdgeEnhancement, imageDataToBlob } from '../lib/preprocessing';
 
 export type WorkerRequest = {
   id: string;
@@ -36,6 +37,7 @@ export type ProcessedPayload = {
   maskedImageBuffer: ArrayBuffer;
   bounds: Bounds;
   histogram: Histogram;
+  wasEdgeEnhanced: boolean;
 };
 
 export type Bounds = {
@@ -95,7 +97,18 @@ const processFile = async (request: WorkerRequest): Promise<ProcessedPayload> =>
     type: normalizeMimeType(request.mimeType, request.fileName),
   });
 
-  const outputBlob = await imglyRemoveBackground(sourceBlob, {
+  // PREPROCESSING: Check if image needs edge enhancement (white-on-white detection)
+  const sourceFrame = await blobToImageData(sourceBlob);
+  const needsEnhancement = needsEdgeEnhancement(sourceFrame);
+
+  let aiInputBlob = sourceBlob;
+  if (needsEnhancement) {
+    postProgress(request.id, 'loading', 'Applying edge enhancement for white-on-white detection');
+    const enhanced = applyEdgeEnhancement(sourceFrame);
+    aiInputBlob = await imageDataToBlob(enhanced);
+  }
+
+  const outputBlob = await imglyRemoveBackground(aiInputBlob, {
     progress: (key: string, current: number, total: number) => {
       const normalized = total > 0 ? Math.round((current / total) * 100) : 0;
       const isDownload = key.startsWith('fetch:');
@@ -104,25 +117,34 @@ const processFile = async (request: WorkerRequest): Promise<ProcessedPayload> =>
         isDownload ? 'loading' : 'segmenting',
         isDownload
           ? `Downloading model assets (${normalized}%)`
-          : `Running segmentation (${normalized}%)`,
+          : `Running segmentation (${normalized}%)${needsEnhancement ? ' [edge-enhanced]' : ''}`,
       );
     },
   });
 
   postProgress(request.id, 'refining', 'Finalizing cutout');
 
-  const sourceFrame = await blobToImageData(sourceBlob);
   const cutoutFrame = await blobToImageData(outputBlob);
 
   if (sourceFrame.width !== cutoutFrame.width || sourceFrame.height !== cutoutFrame.height) {
     throw new Error('Unexpected output dimensions from background removal library.');
   }
 
+  // CRITICAL: If we used edge enhancement, apply the AI's mask to the ORIGINAL image
+  // This prevents filter artifacts in the final output
+  let finalBlob = outputBlob;
+  if (needsEnhancement) {
+    postProgress(request.id, 'refining', 'Applying mask to original image');
+    const alpha = extractAlpha(cutoutFrame);
+    const originalMasked = applyMaskToOriginal(sourceFrame, alpha);
+    finalBlob = await imageDataToBlob(originalMasked);
+  }
+
   const alpha = extractAlpha(cutoutFrame);
   const bounds = computeRobustBounds(alpha, cutoutFrame.width, cutoutFrame.height, BOUNDS_ALPHA_THRESHOLD);
 
   postProgress(request.id, 'packaging', 'Packaging transparent cutout');
-  const maskedImageBuffer = await outputBlob.arrayBuffer();
+  const maskedImageBuffer = await finalBlob.arrayBuffer();
 
   return {
     fileName: request.fileName,
@@ -131,6 +153,7 @@ const processFile = async (request: WorkerRequest): Promise<ProcessedPayload> =>
     maskedImageBuffer,
     bounds,
     histogram: computeHistogram(sourceFrame),
+    wasEdgeEnhanced: needsEnhancement,
   };
 };
 
@@ -153,6 +176,18 @@ const blobToImageData = async (blob: Blob): Promise<ImageData> => {
   } finally {
     bitmap.close();
   }
+};
+
+const applyMaskToOriginal = (original: ImageData, mask: Uint8Array): ImageData => {
+  const { width, height, data } = original;
+  const output = new Uint8ClampedArray(data);
+
+  for (let i = 0; i < mask.length; i += 1) {
+    const offset = i * 4;
+    output[offset + 3] = mask[i]; // Replace alpha with AI's mask
+  }
+
+  return new ImageData(output, width, height);
 };
 
 const extractAlpha = (image: ImageData) => {

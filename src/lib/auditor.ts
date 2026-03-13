@@ -308,10 +308,10 @@ const analyzePixels = (image: ImageData): PixelAnalysis => {
   const shadowLikely =
     hasForeground &&
     nonWhiteBackgroundCount > 0 &&
-    belowForegroundRatio >= 0.7 &&
-    nearObjectBottomRatio >= 0.65 &&
-    aboveForegroundRatio <= 0.1 &&
-    nonWhiteBackgroundCount / Math.max(backgroundCount, 1) <= 0.25;
+    belowForegroundRatio >= 0.6 &&
+    nearObjectBottomRatio >= 0.55 &&
+    aboveForegroundRatio <= 0.15 &&
+    nonWhiteBackgroundCount / Math.max(backgroundCount, 1) <= 0.3;
 
   return {
     nonWhiteBackgroundRatio: backgroundCount > 0 ? nonWhiteBackgroundCount / backgroundCount : 1,
@@ -354,8 +354,7 @@ const sampleCornerMean = (data: Uint8ClampedArray, width: number, height: number
 const isBackgroundLike = (r: number, g: number, b: number, reference: [number, number, number]) =>
   Math.abs(r - reference[0]) <= BACKGROUND_TOLERANCE &&
   Math.abs(g - reference[1]) <= BACKGROUND_TOLERANCE &&
-  Math.abs(b - reference[2]) <= BACKGROUND_TOLERANCE &&
-  (r + g + b) / 3 >= 170;
+  Math.abs(b - reference[2]) <= BACKGROUND_TOLERANCE;
 
 const isPureWhite = (r: number, g: number, b: number) => r >= WHITE_THRESHOLD && g >= WHITE_THRESHOLD && b >= WHITE_THRESHOLD;
 

@@ -1,5 +1,6 @@
 import { CANVAS_SIZE, TARGET_SCALE } from '@/src/lib/constants';
 import type { Bounds, ProcessedPayload } from '@/src/workers/ai.worker';
+import { embedProcessedMetadata } from '@/src/lib/exif-metadata';
 
 export type ShadowMode = 'auto' | 'off';
 
@@ -7,6 +8,7 @@ export interface CompositorOptions {
   shadowMode: ShadowMode;
   shadowIntensity: number; // 0-100
   quality?: number; // 0-1
+  wasEdgeEnhanced?: boolean; // Skip aggressive cleanup for white-on-white
 }
 
 export interface CompositorMetrics {
@@ -61,7 +63,7 @@ export const composeCompliantImage = async (
     }
     sourceContext.drawImage(image, 0, 0);
     const sourceFrame = sourceContext.getImageData(0, 0, image.width, image.height);
-    const complianceRefinement = refineForegroundForCompliance(sourceFrame);
+    const complianceRefinement = refineForegroundForCompliance(sourceFrame, options.wasEdgeEnhanced ?? false);
     sourceContext.putImageData(complianceRefinement.image, 0, 0);
 
     const canvas = document.createElement('canvas');
@@ -145,7 +147,8 @@ export const composeCompliantImage = async (
 
     context.drawImage(sourceCanvas, left, top, image.width * scale, image.height * scale);
 
-    const blob = await canvasToBlob(canvas, quality);
+    const rawBlob = await canvasToBlob(canvas, quality);
+    const blob = await embedProcessedMetadata(rawBlob);
     const previewDataUrl = canvas.toDataURL('image/jpeg', quality);
 
     return {
@@ -280,7 +283,7 @@ interface ForegroundRefinementResult {
   diagnostics: ComplianceDiagnostics;
 }
 
-const refineForegroundForCompliance = (source: ImageData): ForegroundRefinementResult => {
+const refineForegroundForCompliance = (source: ImageData, skipAggressiveCleanup: boolean = false): ForegroundRefinementResult => {
   const { width, height, data } = source;
   const total = width * height;
   const alphaMask = extractAlphaMask(data, total, FOREGROUND_ALPHA_THRESHOLD);
@@ -290,6 +293,26 @@ const refineForegroundForCompliance = (source: ImageData): ForegroundRefinementR
     maxX: width - 1,
     maxY: height - 1,
   };
+
+  // For white-on-white images (edge-enhanced), skip aggressive cleanup entirely
+  // to preserve product components like control panels, gauges, etc.
+  if (skipAggressiveCleanup) {
+    const simpleBounds = computeBoundsFromMask(alphaMask, width, height) ?? fallbackBounds;
+    return {
+      image: source,
+      bounds: simpleBounds,
+      diagnostics: {
+        keptComponents: 1,
+        removedSecondaryComponents: 0,
+        removedHumanLikeRegions: 0,
+        removedOverlayRegions: 0,
+        productAreaRatio: 1,
+        suitableForMainListing: true,
+        notices: ['White-on-white mode: aggressive cleanup disabled to preserve product details.'],
+      },
+    };
+  }
+
   const initialAnalysis = collectComponents(alphaMask, width, height);
   const initialPrimary = selectPrimaryComponent(initialAnalysis.components, width, height, total, {
     labels: initialAnalysis.labels,
@@ -376,9 +399,11 @@ const refineForegroundForCompliance = (source: ImageData): ForegroundRefinementR
   }
 
   // Safety: if cleanup removed too much of the retained foreground, roll back to safer mask.
+  // CRITICAL: Use conservative threshold to preserve product components (buttons, panels, etc.)
   if (baseForegroundPixels > 0) {
     const retainedRatio = countMaskPixels(keepMask) / baseForegroundPixels;
-    if (retainedRatio < 0.58) {
+    // Increased from 0.58 to 0.85 - if we remove more than 15% of foreground, it's too aggressive
+    if (retainedRatio < 0.85) {
       keepMask.fill(0);
       keepMask.set(baseKeepMask);
       removedSecondaryComponents = 0;
