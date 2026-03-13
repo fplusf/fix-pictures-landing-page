@@ -1,4 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '@/src/contexts/AuthContext';
 
 const APP_ROUTE = '/app';
 
@@ -153,6 +155,25 @@ function BeforeAfterSlider({
 }
 
 function App() {
+  const { user, signInWithGoogle, loading } = useAuth();
+  const navigate = useNavigate();
+
+  // If user is already logged in, redirect to app
+  useEffect(() => {
+    if (user && !loading) {
+      navigate(APP_ROUTE);
+    }
+  }, [user, loading, navigate]);
+
+  const handleStartClick = async (e: React.MouseEvent<HTMLAnchorElement>) => {
+    e.preventDefault();
+    try {
+      await signInWithGoogle();
+    } catch (error) {
+      console.error('Failed to sign in:', error);
+    }
+  };
+
   return (
     <main className="min-h-screen bg-[#fcfcfd] text-zinc-900">
       <div className="mx-auto max-w-7xl px-6 py-8 md:px-10 md:py-10">
@@ -173,8 +194,12 @@ function App() {
             </p>
 
             <div className="mt-6 flex flex-col items-center gap-4 sm:flex-row">
-              <a href={APP_ROUTE} className="h-[56px] flex items-center justify-center rounded-xl bg-gradient-to-r from-[#e636a4] to-[#ff7a2f] px-8 text-base font-semibold text-white shadow-sm transition hover:brightness-105">
-                Start Fixing Images
+              <a
+                href={APP_ROUTE}
+                onClick={handleStartClick}
+                className="h-[56px] flex items-center justify-center rounded-xl bg-gradient-to-r from-[#e636a4] to-[#ff7a2f] px-8 text-base font-semibold text-white shadow-sm transition hover:brightness-105"
+              >
+                {loading ? 'Loading...' : 'Start Fixing Images'}
               </a>
               <a
                 href="#proof"
@@ -295,6 +320,7 @@ function App() {
 
                     <a
                       href={APP_ROUTE}
+                      onClick={handleStartClick}
                       className={`mt-6 inline-flex w-full items-center justify-center rounded-xl px-4 py-3 text-sm font-semibold transition ${
                         plan.featured
                           ? 'bg-gradient-to-r from-[#e636a4] to-[#ff7a2f] text-white hover:brightness-105'
@@ -312,7 +338,11 @@ function App() {
 
         <section className="mt-12 rounded-3xl border border-zinc-200 bg-gradient-to-r from-[#fdf2fa] via-white to-[#fff3ea] p-10 text-center shadow-sm">
           <h2 className="text-4xl font-black text-zinc-950">Fix your Amazon images now.</h2>
-          <a href={APP_ROUTE} className="mt-6 inline-flex rounded-xl bg-gradient-to-r from-[#e636a4] to-[#ff7a2f] px-7 py-3 text-base font-semibold text-white shadow-sm transition hover:brightness-105">
+          <a
+            href={APP_ROUTE}
+            onClick={handleStartClick}
+            className="mt-6 inline-flex rounded-xl bg-gradient-to-r from-[#e636a4] to-[#ff7a2f] px-7 py-3 text-base font-semibold text-white shadow-sm transition hover:brightness-105"
+          >
             Open fix.pictures App
           </a>
         </section>

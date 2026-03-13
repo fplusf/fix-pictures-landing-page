@@ -1,13 +1,15 @@
 import { BeforeAfterSlider } from '@/src/components/before-after-slider';
+import { ConfirmDialog } from '@/src/components/ConfirmDialog';
 import { Dropzone } from '@/src/components/dropzone';
 import { ProcessingSteps } from '@/src/components/processing-steps';
 import { Button } from '@/src/components/ui/button';
 import { Slider } from '@/src/components/ui/slider';
+import { useAuth } from '@/src/contexts/AuthContext';
 import { analyzeImageFile, type AuditSnapshot } from '@/src/lib/auditor';
 import {
-    composeCompliantImage,
-    type CompositorMetrics,
-    type ShadowMode,
+  composeCompliantImage,
+  type CompositorMetrics,
+  type ShadowMode,
 } from '@/src/lib/compositor';
 import { hasProcessedMetadata, looksLikeOurOutput } from '@/src/lib/exif-metadata';
 import { localInferenceClient } from '@/src/lib/local-inference-client';
@@ -16,19 +18,20 @@ import { smartWorkerClient } from '@/src/lib/worker-client';
 import type { ProcessedPayload, WorkerProgress } from '@/src/workers/ai.worker';
 import JSZip from 'jszip';
 import {
-    CheckCircle2,
-    ChevronDown,
-    ChevronUp,
-    CircleAlert,
-    Download,
-    ImagePlus,
-    LoaderCircle,
-    Package,
-    RefreshCw,
-    Sparkles,
-    Trash2,
+  CheckCircle2,
+  ChevronDown,
+  ChevronUp,
+  CircleAlert,
+  Download,
+  ImagePlus,
+  LoaderCircle,
+  Package,
+  RefreshCw,
+  Sparkles,
+  Trash2,
 } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 type ItemStatus = 'queued' | 'processing' | 'completed' | 'error';
 type AnalysisState = 'idle' | 'loading' | 'ready' | 'error';
@@ -64,6 +67,8 @@ const MAX_PARALLEL_JOBS = 2;
 const DEFAULT_SHADOW_INTENSITY = 55;
 
 function App() {
+  const { signOut, user } = useAuth();
+  const navigate = useNavigate();
   const [batchItems, setBatchItems] = useState<BatchItem[]>([]);
   const [activeItemId, setActiveItemId] = useState<string | null>(null);
   const [sessionError, setSessionError] = useState<string | null>(null);
@@ -74,7 +79,17 @@ function App() {
   const [downloadingSelected, setDownloadingSelected] = useState(false);
   const [zipExporting, setZipExporting] = useState(false);
   const [localProbeState, setLocalProbeState] = useState<LocalProbeState>('checking');
+  const [showSignOutDialog, setShowSignOutDialog] = useState(false);
   const preferLocalInference = localProbeState === 'connected';
+
+  const handleSignOut = async () => {
+    try {
+      await signOut();
+      navigate('/');
+    } catch (error) {
+      console.error('Sign out error:', error);
+    }
+  };
 
   const batchItemsRef = useRef<BatchItem[]>([]);
   const cancelledItemIdsRef = useRef<Set<string>>(new Set());
@@ -716,6 +731,14 @@ function App() {
               <MetricPill label="Queue" value={String(batchItems.length)} />
               <MetricPill label="Completed" value={String(completedItems.length)} accent />
               <MetricPill label="Processing" value={String(processingCount)} />
+                <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowSignOutDialog(true)}
+                className="ml-2 h-8 border-zinc-300 px-3 text-xs"
+              >
+                Sign Out
+              </Button>
             </div>
           </div>
         </header>
@@ -1079,6 +1102,17 @@ function App() {
           }}
         />
       </div>
+
+      <ConfirmDialog
+        open={showSignOutDialog}
+        onOpenChange={setShowSignOutDialog}
+        title="Sign Out"
+        description="Are you sure you want to sign out? You'll need to sign in again to access the app."
+        confirmText="Sign Out"
+        cancelText="Cancel"
+        onConfirm={handleSignOut}
+        variant="destructive"
+      />
     </div>
   );
 }
