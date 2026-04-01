@@ -16,6 +16,10 @@ dist-ssr
 .env
 .env.local
 .env.*.local
+backend/.env
+
+# Azure secrets — never commit these
+azure/secrets.sh
 
 # Editor directories and files
 .vscode/*

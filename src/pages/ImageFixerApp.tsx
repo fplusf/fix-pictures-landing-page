@@ -12,7 +12,6 @@ import {
   type ShadowMode,
 } from '@/src/lib/compositor';
 import { hasProcessedMetadata, looksLikeOurOutput } from '@/src/lib/exif-metadata';
-import { localInferenceClient } from '@/src/lib/local-inference-client';
 import { cn } from '@/src/lib/utils';
 import { smartWorkerClient } from '@/src/lib/worker-client';
 import type { ProcessedPayload, WorkerProgress } from '@/src/workers/ai.worker';
@@ -35,8 +34,7 @@ import { useNavigate } from 'react-router-dom';
 
 type ItemStatus = 'queued' | 'processing' | 'completed' | 'error';
 type AnalysisState = 'idle' | 'loading' | 'ready' | 'error';
-type InferenceBackend = 'local-gpu' | 'browser-worker';
-type LocalProbeState = 'checking' | 'connected' | 'unavailable' | 'error';
+type InferenceBackend = 'browser-worker';
 
 interface BatchItem {
   id: string;
@@ -63,11 +61,11 @@ interface BatchItem {
 const ALLOWED_TYPES = new Set(['image/jpeg', 'image/jpg', 'image/png', 'image/webp']);
 const MAX_FILE_SIZE_BYTES = 25 * 1024 * 1024;
 const MIN_DIMENSION = 500;
-const MAX_PARALLEL_JOBS = 2;
+const MAX_PARALLEL_JOBS = 2; // Browser ONNX runtime — keep parallel low to avoid memory pressure
 const DEFAULT_SHADOW_INTENSITY = 55;
 
 function App() {
-  const { signOut, user } = useAuth();
+  const { signOut, user: _user } = useAuth();
   const navigate = useNavigate();
   const [batchItems, setBatchItems] = useState<BatchItem[]>([]);
   const [activeItemId, setActiveItemId] = useState<string | null>(null);
@@ -78,9 +76,7 @@ function App() {
   const [renderingShadow, setRenderingShadow] = useState(false);
   const [downloadingSelected, setDownloadingSelected] = useState(false);
   const [zipExporting, setZipExporting] = useState(false);
-  const [localProbeState, setLocalProbeState] = useState<LocalProbeState>('checking');
   const [showSignOutDialog, setShowSignOutDialog] = useState(false);
-  const preferLocalInference = localProbeState === 'connected';
 
   const handleSignOut = async () => {
     try {
@@ -97,32 +93,6 @@ function App() {
   useEffect(() => {
     batchItemsRef.current = batchItems;
   }, [batchItems]);
-
-  useEffect(() => {
-    let cancelled = false;
-    setLocalProbeState('checking');
-
-    void (async () => {
-      try {
-        const probe = await localInferenceClient.probe();
-        if (cancelled) return;
-        if (probe.available) {
-          setLocalProbeState('connected');
-          return;
-        }
-        setLocalProbeState('unavailable');
-        console.warn(probe.reason ?? 'Local service is not reachable.');
-      } catch (error) {
-        if (cancelled) return;
-        setLocalProbeState('error');
-        console.warn((error as Error).message ?? 'Unable to probe local inference service.');
-      }
-    })();
-
-    return () => {
-      cancelled = true;
-    };
-  }, []);
 
   const activeItem = useMemo(() => {
     if (!activeItemId) return batchItems[0] ?? null;
@@ -157,6 +127,10 @@ function App() {
       setActiveItemId(batchItems[0].id);
     }
   }, [activeItemId, batchItems]);
+
+  useEffect(() => {
+    smartWorkerClient.warmup();
+  }, []);
 
   useEffect(
     () => () => {
@@ -321,30 +295,11 @@ function App() {
           }));
         };
 
-        let payload: ProcessedPayload | null = null;
-        let inferenceBackend: InferenceBackend = 'browser-worker';
+        const inferenceBackend: InferenceBackend = 'browser-worker';
 
-        if (preferLocalInference && localProbeState === 'connected') {
-          try {
-            payload = await localInferenceClient.process(item.file, { onProgress: pushProgress });
-            inferenceBackend = 'local-gpu';
-          } catch (error) {
-            console.warn('fix.pictures: local inference failed, falling back to browser worker', error);
-            pushProgress({
-              id: crypto.randomUUID(),
-              type: 'progress',
-              stage: 'loading',
-              message: 'Local service unavailable, falling back to browser runtime',
-            });
-          }
-        }
-
-        if (!payload) {
-          payload = await smartWorkerClient.process(item.file, {
-            onProgress: pushProgress,
-          });
-          inferenceBackend = 'browser-worker';
-        }
+        const payload = await smartWorkerClient.process(item.file, {
+          onProgress: pushProgress,
+        });
 
         updateBatchItem(itemId, (entry) => ({
           ...entry,
@@ -396,7 +351,7 @@ function App() {
         }));
       }
     },
-    [applyComposedResult, localProbeState, preferLocalInference, shadowIntensity, shadowMode, updateBatchItem],
+    [applyComposedResult, shadowIntensity, shadowMode, updateBatchItem],
   );
 
   useEffect(() => {
@@ -835,6 +790,20 @@ function App() {
                           value={activeItem.metrics.shadowApplied ? `${Math.round(activeItem.metrics.shadowOpacity * 100)}% opacity` : 'Off'}
                         />
                       </div>
+
+                      {activeItem.analysisSnapshot?.hasPeopleWarning ? (
+                        <div className="mt-2">
+                          <StaticAnalysisBox
+                            label="No People / Body Parts"
+                            value="WARN"
+                            detail={
+                              activeItem.analysisSnapshot.checks.find((c) => c.id === 'people-in-image')?.detail ??
+                              'Hands or skin detected in subject.'
+                            }
+                            status="warn"
+                          />
+                        </div>
+                      ) : null}
 
                       {activeItem.metrics.compliance.notices.length ? (
                         <div className="mt-2 space-y-1.5">
@@ -1323,6 +1292,17 @@ const buildStaticAnalysisRows = (snapshot: AuditSnapshot | null): StaticAnalysis
       detail: fileSize?.detail ?? 'File size check unavailable.',
       status: fileSize?.pass ? 'pass' : 'fail',
     },
+    ...(snapshot.hasPeopleWarning
+      ? [
+          {
+            id: 'people-in-image',
+            label: 'No People / Body Parts',
+            value: 'WARN',
+            detail: snapshot.checks.find((c) => c.id === 'people-in-image')?.detail ?? 'Skin detected in subject.',
+            status: 'warn' as StaticAnalysisRow['status'],
+          },
+        ]
+      : []),
   ];
 };
 
@@ -1372,7 +1352,9 @@ const shouldSkipByQuickLayer = (snapshot: AuditSnapshot, failedCheckIds: AuditCh
   }
   if (hasHardFailure(failedCheckIds)) return false;
 
-  const onlySoftFailures = failedCheckIds.every((id) => id === 'white-background' || id === 'product-fill');
+  const onlySoftFailures = failedCheckIds.every(
+    (id) => id === 'white-background' || id === 'product-fill' || id === 'people-in-image',
+  );
   if (!onlySoftFailures) return false;
 
   // Product-fill is advisory for this tool; avoid destructive re-runs for this alone.
@@ -1402,7 +1384,7 @@ const shouldSkipByQuickLayer = (snapshot: AuditSnapshot, failedCheckIds: AuditCh
 
 const shouldRunBackgroundVerificationLayer = (failedCheckIds: AuditCheckId[]) => {
   if (!failedCheckIds.includes('white-background')) return false;
-  return failedCheckIds.every((id) => id === 'white-background' || id === 'product-fill');
+  return failedCheckIds.every((id) => id === 'white-background' || id === 'product-fill' || id === 'people-in-image');
 };
 
 const shouldSkipProcessing = async (file: File, snapshot: AuditSnapshot | null, forceProcess: boolean = false) => {

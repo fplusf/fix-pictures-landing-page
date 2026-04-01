@@ -28,10 +28,12 @@ export type AuditSnapshot = {
     maxX: number;
     maxY: number;
   } | null;
+  skinRatioInForeground: number;
+  hasPeopleWarning: boolean;
 };
 
 export type AuditCheck = {
-  id: 'white-background' | 'product-fill' | 'dimensions' | 'file-format' | 'file-size';
+  id: 'white-background' | 'product-fill' | 'dimensions' | 'file-format' | 'file-size' | 'people-in-image';
   label: string;
   pass: boolean;
   valueLabel: string;
@@ -105,7 +107,11 @@ type PixelAnalysis = {
   minPaddingRatio: number;
   bounds: AuditSnapshot['foregroundBounds'];
   overlay: ImageData;
+  skinRatioInForeground: number;
 };
+
+// Skin ratio above this threshold triggers the people-in-image warning.
+const SKIN_RATIO_THRESHOLD = 0.06;
 
 const buildSnapshot = (file: File, width: number, height: number, analysis: PixelAnalysis): AuditSnapshot => {
   const formatLabel = detectFormatLabel(file);
@@ -114,6 +120,7 @@ const buildSnapshot = (file: File, width: number, height: number, analysis: Pixe
   const dimensionsPass = Math.max(width, height) >= MIN_DIMENSION;
   const formatPass = ACCEPTED_MIME_TYPES.has(file.type.toLowerCase());
   const fileSizePass = file.size <= MAX_FILE_BYTES;
+  const hasPeopleWarning = analysis.skinRatioInForeground > SKIN_RATIO_THRESHOLD;
 
   const checks: AuditCheck[] = [
     {
@@ -151,6 +158,15 @@ const buildSnapshot = (file: File, width: number, height: number, analysis: Pixe
       valueLabel: fileSizePass ? 'PASS' : 'FAIL',
       detail: `${formatFileSizeMb(file.size)} MB (max 10.00 MB).`,
     },
+    {
+      id: 'people-in-image',
+      label: 'No People / Body Parts',
+      pass: !hasPeopleWarning,
+      valueLabel: hasPeopleWarning ? 'WARN' : 'PASS',
+      detail: hasPeopleWarning
+        ? `Hands or skin detected in foreground (${(analysis.skinRatioInForeground * 100).toFixed(1)}% of subject). Amazon main images must show the product only — no body parts allowed.`
+        : 'No hands or skin-tone areas detected in subject.',
+    },
   ];
 
   const passCount = checks.filter((check) => check.pass).length;
@@ -174,6 +190,8 @@ const buildSnapshot = (file: File, width: number, height: number, analysis: Pixe
       hasFailures: passCount !== checks.length,
     },
     foregroundBounds: analysis.bounds,
+    skinRatioInForeground: analysis.skinRatioInForeground,
+    hasPeopleWarning,
   };
 };
 
@@ -262,6 +280,23 @@ const analyzePixels = (image: ImageData): PixelAnalysis => {
 
   const hasForeground = maxX >= minX && maxY >= minY;
   const bounds = hasForeground ? { minX, minY, maxX, maxY } : null;
+
+  // ── Skin-tone detection ──────────────────────────────────────────────────────
+  // Sample foreground pixels (those not reached by background flood-fill).
+  // Uses HSV heuristic: hue 0–25°, sat 0.12–0.65, val 0.25–0.97, R dominant.
+  let foregroundPixelCount = 0;
+  let skinPixelCount = 0;
+  for (let i = 0; i < total; i += 1) {
+    if (reachable[i]) continue; // background pixel
+    foregroundPixelCount += 1;
+    const index = i * 4;
+    const r = data[index];
+    const g = data[index + 1];
+    const b = data[index + 2];
+    if (isSkinPixel(r, g, b)) skinPixelCount += 1;
+  }
+  const skinRatioInForeground = foregroundPixelCount > 0 ? skinPixelCount / foregroundPixelCount : 0;
+  // ────────────────────────────────────────────────────────────────────────────
   const longestEdge = Math.max(width, height);
   const coverageRatio = hasForeground ? Math.max(maxX - minX + 1, maxY - minY + 1) / longestEdge : 0;
 
@@ -326,6 +361,7 @@ const analyzePixels = (image: ImageData): PixelAnalysis => {
     minPaddingRatio,
     bounds,
     overlay: new ImageData(overlay, width, height),
+    skinRatioInForeground,
   };
 };
 
@@ -359,6 +395,36 @@ const isBackgroundLike = (r: number, g: number, b: number, reference: [number, n
 const isPureWhite = (r: number, g: number, b: number) => r >= WHITE_THRESHOLD && g >= WHITE_THRESHOLD && b >= WHITE_THRESHOLD;
 
 const isNearWhite = (r: number, g: number, b: number) => r >= 236 && g >= 236 && b >= 236;
+
+/**
+ * Returns true if (r,g,b) looks like human skin.
+ * Uses a loose HSV heuristic tuned to cover a range of skin tones under
+ * typical product-photography lighting:
+ *   hue   0–25°  (orange-red band)
+ *   sat   0.12–0.65  (desaturated skin to vivid tan)
+ *   val   0.25–0.97  (not near-black, not pure-white)
+ *   R channel must be dominant
+ */
+const isSkinPixel = (r: number, g: number, b: number): boolean => {
+  const rN = r / 255;
+  const gN = g / 255;
+  const bN = b / 255;
+  const max = Math.max(rN, gN, bN);
+  const min = Math.min(rN, gN, bN);
+  const delta = max - min;
+  if (max < 0.25 || max > 0.97) return false;          // too dark / too bright
+  if (delta < 0.01) return false;                       // achromatic (grey / white)
+  const sat = delta / max;
+  if (sat < 0.12 || sat > 0.65) return false;
+  // Hue in degrees (0–360)
+  let hue = 0;
+  if (max === rN) hue = 60 * (((gN - bN) / delta) % 6);
+  else if (max === gN) hue = 60 * ((bN - rN) / delta + 2);
+  else hue = 60 * ((rN - gN) / delta + 4);
+  if (hue < 0) hue += 360;
+  if (hue > 25 && hue < 335) return false;             // outside red-orange-pink band
+  return rN > gN && rN > bN;                            // R must dominate
+};
 
 const detectFormatLabel = (file: File) => {
   const mime = file.type.toLowerCase();

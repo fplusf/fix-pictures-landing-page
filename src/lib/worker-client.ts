@@ -157,6 +157,14 @@ class SmartWorkerClient {
     this.rejectAll(error);
     this.resetWorker();
   }
+
+  public warmup() {
+    const worker = this.ensureWorker();
+    worker.postMessage({
+      id: crypto.randomUUID(),
+      type: 'warmup',
+    } satisfies WorkerRequest);
+  }
 }
 
 export const smartWorkerClient = new SmartWorkerClient();

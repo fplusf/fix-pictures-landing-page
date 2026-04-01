@@ -17,40 +17,42 @@ export default function TermsOfService() {
           <section>
             <h2 className="text-xl font-bold text-zinc-950">1. Acceptance of Terms</h2>
             <p className="mt-3">
-              By accessing or using fix.pictures, you agree to be bound by these Terms of Service. 
-              If you do not agree, please do not use our services.
+              By accessing or using fix.pictures ("the Service"), you agree to be bound by these Terms of Service and all applicable laws and regulations. If you do not agree with any of these terms, you are prohibited from using or accessing this site.
             </p>
           </section>
 
           <section>
-            <h2 className="text-xl font-bold text-zinc-950">2. Use of Service</h2>
+            <h2 className="text-xl font-bold text-zinc-950">2. Service Description</h2>
             <p className="mt-3">
-              Our service is provided "as is". We aim to provide high-quality image corrections for Amazon sellers, 
-              but we do not guarantee specific results or compliance with Amazon's ever-changing policies.
+              fix.pictures provides an AI-powered image processing tool designed to help users create product images that comply with Amazon's marketplace requirements. While we strive for 100% compliance, the final responsibility for ensuring images meet platform-specific rules rests with the user.
             </p>
           </section>
 
           <section>
-            <h2 className="text-xl font-bold text-zinc-950">3. Intellectual Property</h2>
+            <h2 className="text-xl font-bold text-zinc-950">3. User Content & Privacy</h2>
             <p className="mt-3">
-              The fix.pictures logo, branding, and application code are the property of fix.pictures. 
-              You retain ownership of the images you process through our service.
+              You retain all ownership rights to the images you upload to the Service. By using the Service, you grant us a limited license to process your images solely for the purpose of providing the requested output. We do not sell or share your image data with third parties.
             </p>
           </section>
 
           <section>
-            <h2 className="text-xl font-bold text-zinc-950">4. Limitation of Liability</h2>
+            <h2 className="text-xl font-bold text-zinc-950">4. Prohibited Use</h2>
             <p className="mt-3">
-              fix.pictures shall not be liable for any indirect, incidental, special, consequential, or punitive damages 
-              resulting from your use of the service.
+              You agree not to use the Service for any unlawful purpose, including but not limited to processing copyrighted material without permission, or generating offensive or harmful content.
             </p>
           </section>
 
           <section>
-            <h2 className="text-xl font-bold text-zinc-950">5. Changes to Terms</h2>
+            <h2 className="text-xl font-bold text-zinc-950">5. Limitation of Liability</h2>
             <p className="mt-3">
-              We reserve the right to modify these terms at any time. Your continued use of the service 
-              after such changes constitutes acceptance of the new terms.
+              In no event shall fix.pictures or its suppliers be liable for any damages (including, without limitation, damages for loss of data or profit, or due to business interruption) arising out of the use or inability to use the Service, even if fix.pictures has been notified of the possibility of such damage.
+            </p>
+          </section>
+
+          <section>
+            <h2 className="text-xl font-bold text-zinc-950">6. Modifications</h2>
+            <p className="mt-3">
+              fix.pictures may revise these terms of service for its website at any time without notice. By using this website you are agreeing to be bound by the then current version of these terms of service.
             </p>
           </section>
         </div>

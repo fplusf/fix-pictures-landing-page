@@ -13,23 +13,23 @@ type Stage = WorkerProgress['stage'];
 const STAGES: Array<{ id: Stage; title: string; fallback: string }> = [
   {
     id: 'loading',
-    title: 'Loading',
-    fallback: 'Preparing AI runtime',
+    title: 'Analysing',
+    fallback: 'Detecting background complexity…',
   },
   {
     id: 'segmenting',
     title: 'Segmenting',
-    fallback: 'Removing background',
+    fallback: 'Removing background…',
   },
   {
     id: 'refining',
     title: 'Refining',
-    fallback: 'Cleaning edges and halos',
+    fallback: 'Finalising cutout edges…',
   },
   {
     id: 'packaging',
     title: 'Packaging',
-    fallback: 'Preparing transparent cutout',
+    fallback: 'Building compliance canvas…',
   },
 ];
 
@@ -48,8 +48,8 @@ export const ProcessingSteps = ({ logs, onCancel }: ProcessingStepsProps) => {
 
   return (
     <div className="w-full rounded-2xl border border-zinc-200 bg-white p-4 shadow-lg">
-      <p className="text-sm font-semibold text-zinc-900">Running compliance autopilot...</p>
-      <p className="mt-1 text-xs text-zinc-500">Background segmentation and refinement in progress</p>
+      <p className="text-sm font-semibold text-zinc-900">Running compliance autopilot…</p>
+      <p className="mt-1 text-xs text-zinc-500">Smart model selection · in-browser · no upload</p>
       <div className="mt-4 space-y-2">
         {STAGES.map((stage, index) => {
           const entry = latestByStage(logs, stage.id);

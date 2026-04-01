@@ -15,23 +15,37 @@ export default function PrivacyPolicy() {
 
         <div className="space-y-8 text-base leading-relaxed text-zinc-600">
           <section>
-            <h2 className="text-xl font-bold text-zinc-950">1. What We Process</h2>
+            <h2 className="text-xl font-bold text-zinc-950">1. Information Collection</h2>
             <p className="mt-3">
-              fix.pictures processes images you upload to generate compliant outputs. Processing runs in your browser worker runtime or in your own localhost service when enabled.
+              We collect minimal information required to provide our service. This includes account information via Google OAuth (email and name) to manage your subscription and usage quotas.
             </p>
           </section>
 
           <section>
-            <h2 className="text-xl font-bold text-zinc-950">2. Data Storage</h2>
+            <h2 className="text-xl font-bold text-zinc-950">2. Image Processing</h2>
             <p className="mt-3">
-              Uploaded images are handled in-session for processing and export. No cloud upload is required for the default browser-worker mode.
+              Your images are processed locally in your browser using Web Workers. We do *not* store your original or processed images on our servers. All image data is transient and exists only during your active session.
             </p>
           </section>
 
           <section>
-            <h2 className="text-xl font-bold text-zinc-950">3. Local Inference Option</h2>
+            <h2 className="text-xl font-bold text-zinc-950">3. Data Security</h2>
             <p className="mt-3">
-              If you run the optional local inference service on your machine, requests are sent only to loopback addresses (`127.0.0.1` / `localhost`) using short-lived session tokens.
+              We use industry-standard security measures to protect your account data. Access to your account is managed via Supabase, ensuring secure authentication and data handling.
+            </p>
+          </section>
+
+          <section>
+            <h2 className="text-xl font-bold text-zinc-950">4. Cookies & Analytics</h2>
+            <p className="mt-3">
+              We may use cookies to maintain your session and improve user experience. We may also use anonymous analytics to track Service performance and usage patterns.
+            </p>
+          </section>
+
+          <section>
+            <h2 className="text-xl font-bold text-zinc-950">5. Contact Us</h2>
+            <p className="mt-3">
+              If you have any questions about this Privacy Policy, please contact us at support@fix.pictures.
             </p>
           </section>
         </div>

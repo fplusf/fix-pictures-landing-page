@@ -1,0 +1,6 @@
+User-agent: *
+Allow: /
+Disallow: /app
+Disallow: /auth/callback
+
+Sitemap: https://fix.pictures/sitemap.xml
