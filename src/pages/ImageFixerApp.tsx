@@ -12,6 +12,7 @@ import {
   type ShadowMode,
 } from '@/src/lib/compositor';
 import { hasProcessedMetadata, looksLikeOurOutput } from '@/src/lib/exif-metadata';
+import { trackEvent } from '@/src/lib/posthog';
 import { cn } from '@/src/lib/utils';
 import { smartWorkerClient } from '@/src/lib/worker-client';
 import type { ProcessedPayload, WorkerProgress } from '@/src/workers/ai.worker';
@@ -65,7 +66,7 @@ const MAX_PARALLEL_JOBS = 2; // Browser ONNX runtime — keep parallel low to av
 const DEFAULT_SHADOW_INTENSITY = 55;
 
 function App() {
-  const { signOut, user: _user } = useAuth();
+  const { signOut } = useAuth();
   const navigate = useNavigate();
   const [batchItems, setBatchItems] = useState<BatchItem[]>([]);
   const [activeItemId, setActiveItemId] = useState<string | null>(null);
@@ -323,6 +324,12 @@ function App() {
           wasEdgeEnhanced: payload.wasEdgeEnhanced,
         });
         applyComposedResult(itemId, payload, result, renderKey, inferenceBackend);
+        
+        trackEvent('image_processed', {
+          backend: inferenceBackend,
+          was_compliant: false,
+          file_size: item.file.size
+        });
       } catch (error) {
         const err = error as Error;
 
@@ -682,7 +689,7 @@ function App() {
               </div>
             </div>
 
-            <div className="flex flex-wrap items-center justify-end gap-2 text-sm text-zinc-700">
+            <div className="flex flex-wrap items-center justify-end gap-1.5 text-sm text-zinc-700 sm:gap-2">
               <MetricPill label="Queue" value={String(batchItems.length)} />
               <MetricPill label="Completed" value={String(completedItems.length)} accent />
               <MetricPill label="Processing" value={String(processingCount)} />
@@ -1172,7 +1179,7 @@ const StaticAnalysisBox = ({
 const MetricPill = ({ label, value, accent }: { label: string; value: string; accent?: boolean }) => (
   <div
     className={cn(
-      'flex items-center justify-between gap-3 rounded-full border px-3 py-1.5 text-xs',
+      'flex items-center justify-between gap-2 rounded-full border px-2.5 py-1 text-[10px] sm:gap-3 sm:px-3 sm:py-1.5 sm:text-xs',
       accent ? 'border-emerald-200 bg-emerald-50 text-emerald-700' : 'border-zinc-200 bg-zinc-50 text-zinc-700',
     )}
   >

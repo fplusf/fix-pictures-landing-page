@@ -63,7 +63,7 @@ export const composeCompliantImage = async (
     }
     sourceContext.drawImage(image, 0, 0);
     const sourceFrame = sourceContext.getImageData(0, 0, image.width, image.height);
-    const complianceRefinement = refineForegroundForCompliance(sourceFrame, options.wasEdgeEnhanced ?? false);
+    const complianceRefinement = refineForegroundForCompliance(sourceFrame);
     sourceContext.putImageData(complianceRefinement.image, 0, 0);
 
     const canvas = document.createElement('canvas');
@@ -181,10 +181,12 @@ interface ShadowDrawParams {
 const drawContactShadow = (context: CanvasRenderingContext2D, params: ShadowDrawParams) => {
   const bboxWidth = Math.max(params.bbox.maxX - params.bbox.minX + 1, 1) * params.scale;
   const bboxHeight = Math.max(params.bbox.maxY - params.bbox.minY + 1, 1) * params.scale;
-  const blurRadius = clamp(bboxHeight * 0.04, 14, 68);
-  const offsetY = clamp(bboxHeight * 0.015, 5, 26);
-  const radiusX = clamp(bboxWidth * 0.38, 32, 640);
-  const radiusY = clamp(bboxHeight * 0.08, 10, 150);
+  // Shadow ellipse: narrower than the bbox so it looks like a point-contact, not a slab.
+  const radiusX = clamp(bboxWidth * 0.28, 24, 420);
+  const radiusY = clamp(bboxHeight * 0.04, 6, 50);
+  // Blur must exceed radiusY — otherwise the ellipse edge stays visible as a hard line.
+  const blurRadius = clamp(radiusY * 1.8, 14, 80);
+  const offsetY = clamp(bboxHeight * 0.01, 3, 18);
   const centerX = params.left + ((params.bbox.minX + params.bbox.maxX + 1) / 2) * params.scale;
   const centerY = params.floorY + offsetY;
 
@@ -240,8 +242,12 @@ const computeShadowSignals = (
   }
 
   const transparencyRatio = semiTransparent / Math.max(foreground, 1);
+  // A product is "grounded" only when its bottom edge has broad horizontal coverage —
+  // indicating a real flat base (bag, bottle, box). A narrow strap tail or diagonal edge
+  // typically covers < 20% of the bbox width, so raising from 0.08 → 0.25 suppresses
+  // unnatural shadows on flat/coiled/hanging products.
   return {
-    grounded: bottomCoverage >= 0.08,
+    grounded: bottomCoverage >= 0.25,
     transparent: transparencyRatio >= 0.58,
   };
 };
@@ -267,15 +273,7 @@ interface ComponentAnalysis {
   components: ForegroundComponent[];
 }
 
-interface PrimarySelectOptions {
-  labels?: Int32Array;
-  rgba?: Uint8ClampedArray;
-}
-
-interface ComponentVisualStats {
-  skinRatio: number;
-  nearWhiteRatio: number;
-}
+// Unused visual stats types removed
 
 interface ForegroundRefinementResult {
   image: ImageData;
@@ -283,45 +281,25 @@ interface ForegroundRefinementResult {
   diagnostics: ComplianceDiagnostics;
 }
 
-const refineForegroundForCompliance = (source: ImageData, skipAggressiveCleanup: boolean = false): ForegroundRefinementResult => {
+const refineForegroundForCompliance = (source: ImageData): ForegroundRefinementResult => {
   const { width, height, data } = source;
   const total = width * height;
-  const alphaMask = extractAlphaMask(data, total, FOREGROUND_ALPHA_THRESHOLD);
-  const fallbackBounds = computeBoundsFromMask(alphaMask, width, height) ?? {
-    minX: 0,
-    minY: 0,
-    maxX: width - 1,
-    maxY: height - 1,
-  };
 
-  // For white-on-white images (edge-enhanced), skip aggressive cleanup entirely
-  // to preserve product components like control panels, gauges, etc.
-  if (skipAggressiveCleanup) {
-    const simpleBounds = computeBoundsFromMask(alphaMask, width, height) ?? fallbackBounds;
-    return {
-      image: source,
-      bounds: simpleBounds,
-      diagnostics: {
-        keptComponents: 1,
-        removedSecondaryComponents: 0,
-        removedHumanLikeRegions: 0,
-        removedOverlayRegions: 0,
-        productAreaRatio: 1,
-        suitableForMainListing: true,
-        notices: ['White-on-white mode: aggressive cleanup disabled to preserve product details.'],
-      },
-    };
+  // Step 1: Initial Alpha Cleanup & Mask Extraction
+  const output = new Uint8ClampedArray(data);
+  const alphaMask = new Uint8Array(total);
+  for (let i = 0; i < total; i += 1) {
+    if (data[i * 4 + 3] >= FOREGROUND_ALPHA_THRESHOLD) {
+      alphaMask[i] = 1;
+    }
   }
 
-  const initialAnalysis = collectComponents(alphaMask, width, height);
-  const initialPrimary = selectPrimaryComponent(initialAnalysis.components, width, height, total, {
-    labels: initialAnalysis.labels,
-    rgba: data,
-  });
-  if (!initialPrimary) {
+  // Step 2: Component Analysis to identify "Intentional" objects
+  const analysis = collectComponents(alphaMask, width, height);
+  if (analysis.components.length === 0) {
     return {
       image: source,
-      bounds: fallbackBounds,
+      bounds: { minX: 0, minY: 0, maxX: width - 1, maxY: height - 1 },
       diagnostics: {
         keptComponents: 0,
         removedSecondaryComponents: 0,
@@ -329,166 +307,115 @@ const refineForegroundForCompliance = (source: ImageData, skipAggressiveCleanup:
         removedOverlayRegions: 0,
         productAreaRatio: 0,
         suitableForMainListing: false,
-        notices: ['Tip: use a tighter single-product photo for cleaner automatic isolation.'],
+        notices: [],
       },
     };
   }
 
-  const keepComponentIds = buildPrimaryKeepSet(initialAnalysis.components, initialPrimary, width, height);
-  const keepMask = new Uint8Array(total);
-  for (let i = 0; i < total; i += 1) {
-    const componentId = initialAnalysis.labels[i];
-    if (componentId >= 0 && keepComponentIds.has(componentId)) {
-      keepMask[i] = 1;
-    }
-  }
-  const baseKeepMask = new Uint8Array(keepMask);
-  const baseForegroundPixels = countMaskPixels(baseKeepMask);
-
-  let removedSecondaryComponents = Math.max(initialAnalysis.components.length - keepComponentIds.size, 0);
-  const skinMask = detectSkinMask(data, keepMask, total);
-  const skinAnalysis = collectComponents(skinMask, width, height);
-  const removedSkinRegionIds = new Set<number>();
-  for (const component of skinAnalysis.components) {
-    if (shouldRemoveSkinComponent(component, initialPrimary, width, height)) {
-      removedSkinRegionIds.add(component.id);
-    }
-  }
-  if (removedSkinRegionIds.size > 0) {
-    for (let i = 0; i < total; i += 1) {
-      if (removedSkinRegionIds.has(skinAnalysis.labels[i])) {
-        keepMask[i] = 0;
-      }
-    }
+  // Find the primary product candidate
+  let primary = analysis.components[0];
+  for (const c of analysis.components) {
+    if (c.area > primary.area) primary = c;
   }
 
-  const separated = isolatePrimaryByErosion(keepMask, width, height, data);
-  if (separated.applied) {
-    if (separated.removedPixels > 0) {
+  // Rule: Trust the model for object segmentation. We only remove extremely tiny 
+  // disconnected fragments (< 40px) which are almost certainly noise.
+  const keepIds = new Set<number>();
+  let removedSecondaryComponents = 0;
+
+  for (const component of analysis.components) {
+    // RULE: Trust the RMBG-2.0 model for object segmentation.
+    // Only remove absolute noise (tiny disconnected fragments < 40px).
+    // Everything else segmented by the model is considered intentional.
+    if (component.area >= 40) {
+      keepIds.add(component.id);
+    } else {
       removedSecondaryComponents += 1;
     }
-    keepMask.fill(0);
-    keepMask.set(separated.mask);
   }
 
-  const refinedAnalysis = collectComponents(keepMask, width, height);
-  const refinedPrimary = selectPrimaryComponent(refinedAnalysis.components, width, height, total, {
-    labels: refinedAnalysis.labels,
-    rgba: data,
-  });
-  const finalKeepIds =
-    refinedPrimary ? buildPrimaryKeepSet(refinedAnalysis.components, refinedPrimary, width, height) : new Set<number>();
-  if (finalKeepIds.size > 0 && finalKeepIds.size < refinedAnalysis.components.length) {
-    removedSecondaryComponents += refinedAnalysis.components.length - finalKeepIds.size;
-    for (let i = 0; i < total; i += 1) {
-      const componentId = refinedAnalysis.labels[i];
-      if (componentId >= 0 && !finalKeepIds.has(componentId)) {
-        keepMask[i] = 0;
+  // Step 3: Apply the refined mask to output
+  const finalMask = new Uint8Array(total);
+  for (let i = 0; i < total; i += 1) {
+    const componentId = analysis.labels[i];
+    const offset = i * 4;
+
+    if (componentId >= 0 && keepIds.has(componentId)) {
+      finalMask[i] = 1;
+      // Normalise high alpha for clean edges
+      if (output[offset + 3] >= 250) {
+        output[offset + 3] = 255;
       }
-    }
-  }
-
-  const edgeCleanup = pruneFrameEdgeNoise({
-    keepMask,
-    rgba: data,
-    width,
-    height,
-  });
-  if (edgeCleanup.removedComponents > 0) {
-    removedSecondaryComponents += edgeCleanup.removedComponents;
-  }
-
-  // Safety: if cleanup removed too much of the retained foreground, roll back to safer mask.
-  // CRITICAL: Use conservative threshold to preserve product components (buttons, panels, etc.)
-  if (baseForegroundPixels > 0) {
-    const retainedRatio = countMaskPixels(keepMask) / baseForegroundPixels;
-    // Increased from 0.58 to 0.85 - if we remove more than 15% of foreground, it's too aggressive
-    if (retainedRatio < 0.85) {
-      keepMask.fill(0);
-      keepMask.set(baseKeepMask);
-      removedSecondaryComponents = 0;
-    }
-  }
-
-  const minForegroundPixels = Math.max(220, Math.floor(total * 0.012));
-  if (countMaskPixels(keepMask) < minForegroundPixels) {
-    if (countMaskPixels(baseKeepMask) >= minForegroundPixels) {
-      keepMask.fill(0);
-      keepMask.set(baseKeepMask);
     } else {
-      keepMask.fill(0);
-      keepMask.set(alphaMask);
+      // Remove noise/background
+      output[offset] = 0;
+      output[offset + 1] = 0;
+      output[offset + 2] = 0;
+      output[offset + 3] = 0;
     }
   }
 
-  const output = new Uint8ClampedArray(data);
+  // Step 4: Defringe — remove dark border artifacts caused by JPEG compression halos.
+  //
+  // Only targets pixels that are BOTH semi-transparent AND significantly darker than
+  // their nearest opaque neighbour. This fixes dark JPEG edge halos without touching
+  // natural soft edges, shading gradients, or object highlights (which would look shiny
+  // if their colour were replaced with the brighter interior colour).
+  const DEFRINGE_MAX_ALPHA = 160;  // only thin edge pixels — not natural shading
+  const DEFRINGE_MIN_NEIGHBOR = 220; // neighbour must be nearly opaque
+  const DEFRINGE_LUM_DELTA = 50;    // neighbour must be this much brighter (lum 0-255)
   for (let i = 0; i < total; i += 1) {
     const offset = i * 4;
-    if (!keepMask[i]) {
-      output[offset] = 0;
-      output[offset + 1] = 0;
-      output[offset + 2] = 0;
-      output[offset + 3] = 0;
-      continue;
-    }
-
     const alpha = output[offset + 3];
-    if (alpha <= 4) {
-      keepMask[i] = 0;
-      output[offset] = 0;
-      output[offset + 1] = 0;
-      output[offset + 2] = 0;
-      output[offset + 3] = 0;
-      continue;
-    }
-    if (alpha >= 250) {
-      output[offset + 3] = 255;
-    }
+    if (alpha === 0 || alpha >= DEFRINGE_MAX_ALPHA) continue;
+
+    const x = i % width;
+    const y = Math.floor(i / width);
+
+    let bestAlpha = 0;
+    let bestOffset = -1;
+    if (x > 0)           { const ni = (i - 1) * 4;     if (output[ni + 3] > bestAlpha) { bestAlpha = output[ni + 3]; bestOffset = ni; } }
+    if (x < width - 1)   { const ni = (i + 1) * 4;     if (output[ni + 3] > bestAlpha) { bestAlpha = output[ni + 3]; bestOffset = ni; } }
+    if (y > 0)           { const ni = (i - width) * 4;  if (output[ni + 3] > bestAlpha) { bestAlpha = output[ni + 3]; bestOffset = ni; } }
+    if (y < height - 1)  { const ni = (i + width) * 4;  if (output[ni + 3] > bestAlpha) { bestAlpha = output[ni + 3]; bestOffset = ni; } }
+
+    if (bestOffset < 0 || bestAlpha < DEFRINGE_MIN_NEIGHBOR) continue;
+
+    // Only replace colour when the edge pixel is genuinely darker than the product interior.
+    // Natural highlights / shading gradients have similar or higher luminance — leave them.
+    const edgeLum = 0.299 * output[offset] + 0.587 * output[offset + 1] + 0.114 * output[offset + 2];
+    const neighborLum = 0.299 * output[bestOffset] + 0.587 * output[bestOffset + 1] + 0.114 * output[bestOffset + 2];
+    if (neighborLum - edgeLum < DEFRINGE_LUM_DELTA) continue;
+
+    output[offset]     = output[bestOffset];
+    output[offset + 1] = output[bestOffset + 1];
+    output[offset + 2] = output[bestOffset + 2];
   }
 
-  const finalAlphaMask = extractAlphaMask(output, total, FOREGROUND_ALPHA_THRESHOLD);
-  const finalAnalysis = collectComponents(finalAlphaMask, width, height);
-  const finalPrimary = selectPrimaryComponent(finalAnalysis.components, width, height, total, {
-    labels: finalAnalysis.labels,
-    rgba: output,
-  });
-  const productAreaRatio = finalPrimary ? finalPrimary.area / Math.max(total, 1) : 0;
-  const suitableForMainListing = productAreaRatio >= PRODUCT_DOMINANCE_THRESHOLD;
+  const finalBounds = computeBoundsFromMask(finalMask, width, height) ?? {
+    minX: 0,
+    minY: 0,
+    maxX: width - 1,
+    maxY: height - 1,
+  };
+  const productAreaRatio = countMaskPixels(finalMask) / Math.max(total, 1);
 
-  const notices: string[] = [];
-  if (removedSkinRegionIds.size > 0) {
-    notices.push('Human regions were removed automatically.');
-  }
-
-  const finalBounds = computeBoundsFromMask(finalAlphaMask, width, height) ?? fallbackBounds;
   return {
     image: new ImageData(output, width, height),
     bounds: finalBounds,
     diagnostics: {
-      keptComponents: finalAnalysis.components.length,
+      keptComponents: keepIds.size,
       removedSecondaryComponents,
-      removedHumanLikeRegions: removedSkinRegionIds.size,
+      removedHumanLikeRegions: 0,
       removedOverlayRegions: 0,
       productAreaRatio,
-      suitableForMainListing,
-      notices,
+      suitableForMainListing: productAreaRatio >= PRODUCT_DOMINANCE_THRESHOLD,
+      notices: [],
     },
   };
 };
 
-const extractAlphaMask = (
-  rgba: Uint8ClampedArray,
-  total: number,
-  threshold: number,
-): Uint8Array => {
-  const mask = new Uint8Array(total);
-  for (let i = 0; i < total; i += 1) {
-    if (rgba[i * 4 + 3] >= threshold) {
-      mask[i] = 1;
-    }
-  }
-  return mask;
-};
+// Dead code removed: extractAlphaMask, collectComponents (retained for diagnostics), selectPrimaryComponent (moved or removed), etc.
 
 const collectComponents = (mask: Uint8Array, width: number, height: number): ComponentAnalysis => {
   const total = width * height;
@@ -592,268 +519,11 @@ const collectComponents = (mask: Uint8Array, width: number, height: number): Com
   return { labels, components };
 };
 
-const selectPrimaryComponent = (
-  components: ForegroundComponent[],
-  width: number,
-  height: number,
-  totalPixels: number,
-  options?: PrimarySelectOptions,
-): ForegroundComponent | null => {
-  if (!components.length) return null;
-  const centerX = (width - 1) / 2;
-  const centerY = (height - 1) / 2;
-  const diagonal = Math.hypot(width, height) || 1;
-  const visualStats = computeComponentVisualStats(
-    components,
-    options?.labels ?? null,
-    options?.rgba ?? null,
-  );
+// selectPrimaryComponent and its dependencies removed.
 
-  let winner = components[0];
-  let winnerScore = Number.NEGATIVE_INFINITY;
-  for (const component of components) {
-    const areaRatio = component.area / Math.max(totalPixels, 1);
-    const bboxWidth = component.maxX - component.minX + 1;
-    const bboxHeight = component.maxY - component.minY + 1;
-    const bboxRatio = (bboxWidth * bboxHeight) / Math.max(totalPixels, 1);
-    const fillRatio = component.area / Math.max(bboxWidth * bboxHeight, 1);
-    const centerDistance = Math.hypot(component.centerX - centerX, component.centerY - centerY) / diagonal;
-    const aspect = bboxWidth / Math.max(bboxHeight, 1);
-    const elongatedPenalty = aspect > 3.4 || aspect < 0.3 ? 0.45 : aspect > 2.2 || aspect < 0.45 ? 0.2 : 0;
-    const edgeSides =
-      Number(component.touchesLeft) +
-      Number(component.touchesRight) +
-      Number(component.touchesTop) +
-      Number(component.touchesBottom);
-    const edgePenalty = edgeSides * 0.18;
-    const centerBonus =
-      component.minX <= centerX &&
-      component.maxX >= centerX &&
-      component.minY <= centerY &&
-      component.maxY >= centerY
-        ? 0.2
-        : 0;
-    const visual = visualStats?.[component.id];
-    const skinPenalty = (visual?.skinRatio ?? 0) * 3.2;
-    const humanLikePenalty = (visual?.skinRatio ?? 0) >= 0.06 ? 0.9 : 0;
-    const paperLikePenalty =
-      (visual?.nearWhiteRatio ?? 0) >= 0.86 && edgeSides >= 1 && (aspect > 1.8 || aspect < 0.55) ? 0.9 : 0;
-    const lowDensityPenalty = fillRatio < 0.35 ? 0.22 : 0;
-    const score =
-      areaRatio * 2 +
-      bboxRatio * 0.35 +
-      fillRatio * 0.7 +
-      (1 - clamp(centerDistance, 0, 1)) * 1.0 +
-      centerBonus -
-      skinPenalty -
-      humanLikePenalty -
-      paperLikePenalty -
-      lowDensityPenalty -
-      edgePenalty -
-      elongatedPenalty;
-    if (score > winnerScore) {
-      winner = component;
-      winnerScore = score;
-    }
-  }
+// Dead code removed: buildPrimaryKeepSet, computeComponentVisualStats, etc.
 
-  return winner;
-};
-
-const buildPrimaryKeepSet = (
-  components: ForegroundComponent[],
-  primary: ForegroundComponent,
-  width: number,
-  height: number,
-): Set<number> => {
-  const keep = new Set<number>([primary.id]);
-  const gapThreshold = Math.max(8, Math.round(Math.min(width, height) * 0.03));
-  const primaryArea = Math.max(primary.area, 1);
-  const expandedPrimary = expandComponentBounds(primary, width, height, 0.08);
-  const bboxWidth = Math.max(primary.maxX - primary.minX + 1, 1);
-  const bboxHeight = Math.max(primary.maxY - primary.minY + 1, 1);
-  const tinyAttachmentLimit = Math.max(70, Math.floor(primaryArea * 0.012));
-  const mediumAttachmentLimit = Math.max(130, Math.floor(primaryArea * 0.08));
-  const centerBand = expandComponentBounds(primary, width, height, 0.16);
-
-  for (const component of components) {
-    if (component.id === primary.id) continue;
-    const nearPrimary = computeComponentGap(primary, component) <= gapThreshold;
-    if (!nearPrimary) continue;
-
-    const area = component.area;
-    const overlapsPrimary = intersects(component, expandedPrimary);
-    const inCenterBand = intersects(component, centerBand);
-    const compWidth = Math.max(component.maxX - component.minX + 1, 1);
-    const compHeight = Math.max(component.maxY - component.minY + 1, 1);
-    const aspect = compWidth / compHeight;
-    const elongated = aspect > 3.4 || aspect < 0.3;
-    const tooLargeForAttachment = area > mediumAttachmentLimit;
-    const veryTiny = area <= tinyAttachmentLimit;
-
-    if (component.touchesEdge && !veryTiny) continue;
-    if (tooLargeForAttachment) continue;
-
-    if (veryTiny && (inCenterBand || overlapsPrimary)) {
-      keep.add(component.id);
-      continue;
-    }
-
-    if (
-      area <= mediumAttachmentLimit &&
-      overlapsPrimary &&
-      !elongated &&
-      compWidth <= bboxWidth * 0.45 &&
-      compHeight <= bboxHeight * 0.45
-    ) {
-      keep.add(component.id);
-    }
-  }
-
-  return keep;
-};
-
-const computeComponentVisualStats = (
-  components: ForegroundComponent[],
-  labels: Int32Array | null,
-  rgba: Uint8ClampedArray | null,
-) => {
-  if (!labels || !rgba || !components.length) return null;
-  const totals = new Float64Array(components.length);
-  const skin = new Float64Array(components.length);
-  const nearWhite = new Float64Array(components.length);
-
-  const totalPixels = labels.length;
-  for (let i = 0; i < totalPixels; i += 1) {
-    const id = labels[i];
-    if (id < 0) continue;
-    const offset = i * 4;
-    const alpha = rgba[offset + 3];
-    if (alpha < FOREGROUND_ALPHA_THRESHOLD) continue;
-    totals[id] += 1;
-
-    const r = rgba[offset];
-    const g = rgba[offset + 1];
-    const b = rgba[offset + 2];
-    if (isSkinPixel(r, g, b)) {
-      skin[id] += 1;
-    }
-    if (r >= 236 && g >= 236 && b >= 236) {
-      nearWhite[id] += 1;
-    }
-  }
-
-  return components.map<ComponentVisualStats>((component) => {
-    const count = Math.max(totals[component.id], 1);
-    return {
-      skinRatio: skin[component.id] / count,
-      nearWhiteRatio: nearWhite[component.id] / count,
-    };
-  });
-};
-
-const isolatePrimaryByErosion = (
-  mask: Uint8Array,
-  width: number,
-  height: number,
-  rgba: Uint8ClampedArray,
-) => {
-  const total = width * height;
-  const originalCount = countMaskPixels(mask);
-  if (originalCount <= 0) {
-    return { mask, removedPixels: 0, applied: false };
-  }
-
-  const erosionSteps = clamp(Math.round(Math.min(width, height) * 0.004), 2, 5);
-  let eroded = new Uint8Array(mask);
-  for (let i = 0; i < erosionSteps; i += 1) {
-    eroded = erodeBinaryMask(eroded, width, height);
-  }
-
-  const erodedCount = countMaskPixels(eroded);
-  if (erodedCount < Math.max(120, Math.floor(originalCount * 0.04))) {
-    return { mask, removedPixels: 0, applied: false };
-  }
-
-  const erodedAnalysis = collectComponents(eroded, width, height);
-  const primary = selectPrimaryComponent(erodedAnalysis.components, width, height, total, {
-    labels: erodedAnalysis.labels,
-    rgba,
-  });
-  if (!primary) {
-    return { mask, removedPixels: 0, applied: false };
-  }
-
-  let grown = new Uint8Array(total);
-  for (let i = 0; i < total; i += 1) {
-    if (erodedAnalysis.labels[i] === primary.id) {
-      grown[i] = 1;
-    }
-  }
-
-  const growSteps = erosionSteps + 2;
-  for (let step = 0; step < growSteps; step += 1) {
-    const dilated = dilateBinaryMask(grown, width, height);
-    for (let i = 0; i < total; i += 1) {
-      grown[i] = dilated[i] && mask[i] ? 1 : 0;
-    }
-  }
-
-  const grownCount = countMaskPixels(grown);
-  if (grownCount < Math.max(120, Math.floor(originalCount * 0.2))) {
-    return { mask, removedPixels: 0, applied: false };
-  }
-
-  const removedPixels = Math.max(originalCount - grownCount, 0);
-  return {
-    mask: grown,
-    removedPixels,
-    applied: removedPixels > 0,
-  };
-};
-
-const computeComponentGap = (a: ForegroundComponent, b: ForegroundComponent) => {
-  const dx = Math.max(0, a.minX - b.maxX - 1, b.minX - a.maxX - 1);
-  const dy = Math.max(0, a.minY - b.maxY - 1, b.minY - a.maxY - 1);
-  return Math.hypot(dx, dy);
-};
-
-const erodeBinaryMask = (mask: Uint8Array, width: number, height: number) => {
-  const output = new Uint8Array(mask.length);
-  for (let y = 1; y < height - 1; y += 1) {
-    const row = y * width;
-    for (let x = 1; x < width - 1; x += 1) {
-      const idx = row + x;
-      if (
-        mask[idx] &&
-        mask[idx - 1] &&
-        mask[idx + 1] &&
-        mask[idx - width] &&
-        mask[idx + width]
-      ) {
-        output[idx] = 1;
-      }
-    }
-  }
-  return output;
-};
-
-const dilateBinaryMask = (mask: Uint8Array, width: number, height: number) => {
-  const output = new Uint8Array(mask.length);
-  for (let y = 0; y < height; y += 1) {
-    const row = y * width;
-    for (let x = 0; x < width; x += 1) {
-      const idx = row + x;
-      if (!mask[idx]) continue;
-      output[idx] = 1;
-      if (x > 0) output[idx - 1] = 1;
-      if (x + 1 < width) output[idx + 1] = 1;
-      if (y > 0) output[idx - width] = 1;
-      if (y + 1 < height) output[idx + width] = 1;
-    }
-  }
-  return output;
-};
+// Dead code removed: isolatePrimaryByErosion, erodeBinaryMask, dilateBinaryMask, countMaskPixels (retained if used)
 
 const countMaskPixels = (mask: Uint8Array) => {
   let count = 0;
@@ -863,137 +533,9 @@ const countMaskPixels = (mask: Uint8Array) => {
   return count;
 };
 
-const detectSkinMask = (
-  rgba: Uint8ClampedArray,
-  keepMask: Uint8Array,
-  total: number,
-): Uint8Array => {
-  const mask = new Uint8Array(total);
-  for (let i = 0; i < total; i += 1) {
-    if (!keepMask[i]) continue;
-    const offset = i * 4;
-    const alpha = rgba[offset + 3];
-    if (alpha < FOREGROUND_ALPHA_THRESHOLD) continue;
+// Dead code removed: detectSkinMask, shouldRemoveSkinComponent
 
-    const r = rgba[offset];
-    const g = rgba[offset + 1];
-    const b = rgba[offset + 2];
-    if (!isSkinPixel(r, g, b)) continue;
-    mask[i] = 1;
-  }
-  return mask;
-};
-
-const shouldRemoveSkinComponent = (
-  component: ForegroundComponent,
-  primary: ForegroundComponent,
-  width: number,
-  height: number,
-) => {
-  const areaCap = primary.area * 0.45;
-  if (component.area > areaCap) return false;
-  const expandedPrimary = expandComponentBounds(primary, width, height, 0.12);
-  const overlapsExpandedPrimary = intersects(component, expandedPrimary);
-  const boxWidth = component.maxX - component.minX + 1;
-  const boxHeight = component.maxY - component.minY + 1;
-  const aspect = boxWidth / Math.max(boxHeight, 1);
-  const elongated = aspect > 2.6 || aspect < 0.38;
-  const smallRelative = component.area <= primary.area * 0.22;
-  return (component.touchesEdge && (elongated || smallRelative)) || (!overlapsExpandedPrimary && elongated);
-};
-
-const pruneFrameEdgeNoise = (params: {
-  keepMask: Uint8Array;
-  rgba: Uint8ClampedArray;
-  width: number;
-  height: number;
-}) => {
-  const { keepMask, rgba, width, height } = params;
-  const total = width * height;
-  const analysis = collectComponents(keepMask, width, height);
-  const primary = selectPrimaryComponent(analysis.components, width, height, total, {
-    labels: analysis.labels,
-    rgba,
-  });
-  if (!primary) {
-    return { removedComponents: 0 };
-  }
-
-  const expandedPrimary = expandComponentBounds(primary, width, height, 0.2);
-  const maxNoiseArea = Math.max(140, Math.floor(primary.area * 0.02));
-  const removeIds = new Set<number>();
-
-  const alphaSums = new Float64Array(analysis.components.length);
-  const pixelCounts = new Float64Array(analysis.components.length);
-  for (let i = 0; i < total; i += 1) {
-    const id = analysis.labels[i];
-    if (id < 0) continue;
-    alphaSums[id] += rgba[i * 4 + 3];
-    pixelCounts[id] += 1;
-  }
-
-  for (const component of analysis.components) {
-    if (component.id === primary.id) continue;
-    if (!component.touchesEdge) continue;
-
-    const compWidth = Math.max(component.maxX - component.minX + 1, 1);
-    const compHeight = Math.max(component.maxY - component.minY + 1, 1);
-    const aspect = compWidth / compHeight;
-    const isThinHorizontal = compHeight <= Math.max(4, Math.floor(height * 0.01)) && aspect >= 6;
-    const isThinVertical = compWidth <= Math.max(4, Math.floor(width * 0.01)) && aspect <= 1 / 6;
-    const isSmallEdge = component.area <= maxNoiseArea;
-    const farFromPrimary = computeComponentGap(component, primary) > Math.max(12, Math.floor(Math.min(width, height) * 0.05));
-    const nearTopBand = component.maxY <= Math.floor(height * 0.2);
-    const overlapsPrimaryEnvelope = intersects(component, expandedPrimary);
-    const meanAlpha = alphaSums[component.id] / Math.max(pixelCounts[component.id], 1);
-    const lowAlpha = meanAlpha < 170;
-
-    if (overlapsPrimaryEnvelope) continue;
-    if (farFromPrimary && (isThinHorizontal || isThinVertical || (isSmallEdge && (nearTopBand || lowAlpha)))) {
-      removeIds.add(component.id);
-    }
-  }
-
-  if (removeIds.size === 0) {
-    return { removedComponents: 0 };
-  }
-
-  for (let i = 0; i < total; i += 1) {
-    if (removeIds.has(analysis.labels[i])) {
-      keepMask[i] = 0;
-    }
-  }
-
-  const refreshed = collectComponents(keepMask, width, height);
-  const refreshedPrimary = selectPrimaryComponent(refreshed.components, width, height, total, {
-    labels: refreshed.labels,
-    rgba,
-  });
-  if (refreshedPrimary) {
-    const tightenedPrimary = expandComponentBounds(refreshedPrimary, width, height, 0.22);
-    for (let i = 0; i < total; i += 1) {
-      if (!keepMask[i]) continue;
-      const x = i % width;
-      const y = Math.floor(i / width);
-      const offset = i * 4;
-      const alpha = rgba[offset + 3];
-      const r = rgba[offset];
-      const g = rgba[offset + 1];
-      const b = rgba[offset + 2];
-      const nearWhite = r >= 242 && g >= 242 && b >= 242;
-      const outsideEnvelope =
-        x < tightenedPrimary.minX ||
-        x > tightenedPrimary.maxX ||
-        y < tightenedPrimary.minY ||
-        y > tightenedPrimary.maxY;
-      if (outsideEnvelope && nearWhite && alpha <= 36) {
-        keepMask[i] = 0;
-      }
-    }
-  }
-
-  return { removedComponents: removeIds.size };
-};
+// Dead code removed: pruneFrameEdgeNoise
 
 const computeBoundsFromMask = (
   mask: Uint8Array,
@@ -1020,74 +562,9 @@ const computeBoundsFromMask = (
   return { minX, minY, maxX, maxY };
 };
 
-const expandComponentBounds = (
-  component: ForegroundComponent,
-  width: number,
-  height: number,
-  ratio: number,
-) => {
-  const padX = Math.round((component.maxX - component.minX + 1) * ratio);
-  const padY = Math.round((component.maxY - component.minY + 1) * ratio);
-  return {
-    minX: clamp(component.minX - padX, 0, width - 1),
-    minY: clamp(component.minY - padY, 0, height - 1),
-    maxX: clamp(component.maxX + padX, 0, width - 1),
-    maxY: clamp(component.maxY + padY, 0, height - 1),
-  };
-};
+// Geometric helper functions removed
 
-const intersects = (
-  component: ForegroundComponent,
-  bounds: { minX: number; minY: number; maxX: number; maxY: number },
-) =>
-  !(
-    component.maxX < bounds.minX ||
-    component.minX > bounds.maxX ||
-    component.maxY < bounds.minY ||
-    component.minY > bounds.maxY
-  );
-
-const isSkinPixel = (r: number, g: number, b: number) => {
-  const maxChannel = Math.max(r, g, b);
-  const minChannel = Math.min(r, g, b);
-  const rgbRule =
-    r > 95 &&
-    g > 40 &&
-    b > 20 &&
-    maxChannel - minChannel > 15 &&
-    Math.abs(r - g) > 15 &&
-    r > g &&
-    r > b;
-  if (!rgbRule) return false;
-
-  const cb = 128 - 0.168736 * r - 0.331264 * g + 0.5 * b;
-  const cr = 128 + 0.5 * r - 0.418688 * g - 0.081312 * b;
-  if (!(cr >= 135 && cr <= 180 && cb >= 85 && cb <= 135)) return false;
-
-  const { hue, saturation, value } = rgbToHsv(r, g, b);
-  return hue >= 0.02 && hue <= 0.14 && saturation >= 0.18 && saturation <= 0.7 && value >= 0.28;
-};
-
-const rgbToHsv = (r: number, g: number, b: number) => {
-  const rn = r / 255;
-  const gn = g / 255;
-  const bn = b / 255;
-  const max = Math.max(rn, gn, bn);
-  const min = Math.min(rn, gn, bn);
-  const delta = max - min;
-
-  let hue = 0;
-  if (delta > 0) {
-    if (max === rn) hue = ((gn - bn) / delta) % 6;
-    else if (max === gn) hue = (bn - rn) / delta + 2;
-    else hue = (rn - gn) / delta + 4;
-    hue /= 6;
-    if (hue < 0) hue += 1;
-  }
-
-  const saturation = max === 0 ? 0 : delta / max;
-  return { hue, saturation, value: max };
-};
+// Skin detection functions removed
 
 const normalizeBounds = (bounds: Bounds, width: number, height: number): Bounds => ({
   minX: clamp(Math.floor(bounds.minX), 0, Math.max(0, width - 1)),

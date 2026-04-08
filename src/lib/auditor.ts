@@ -111,7 +111,8 @@ type PixelAnalysis = {
 };
 
 // Skin ratio above this threshold triggers the people-in-image warning.
-const SKIN_RATIO_THRESHOLD = 0.06;
+// Set higher to reduce false positives from warm-toned products (pink bags, salmon ribbons, etc.)
+const SKIN_RATIO_THRESHOLD = 0.15;
 
 const buildSnapshot = (file: File, width: number, height: number, analysis: PixelAnalysis): AuditSnapshot => {
   const formatLabel = detectFormatLabel(file);
@@ -398,32 +399,34 @@ const isNearWhite = (r: number, g: number, b: number) => r >= 236 && g >= 236 &&
 
 /**
  * Returns true if (r,g,b) looks like human skin.
- * Uses a loose HSV heuristic tuned to cover a range of skin tones under
- * typical product-photography lighting:
- *   hue   0–25°  (orange-red band)
- *   sat   0.12–0.65  (desaturated skin to vivid tan)
- *   val   0.25–0.97  (not near-black, not pure-white)
- *   R channel must be dominant
+ * Uses an HSV heuristic tuned to cover a range of skin tones while minimising
+ * false positives from warm-toned products (pink bags, salmon ribbons, orange fabric).
+ *
+ * Key constraints vs product colours:
+ *   hue   8–23°   (tighter than 0–25 — excludes deep reds and more orange tones)
+ *   sat   0.15–0.50  (products are either more vivid or less warm than skin)
+ *   val   0.28–0.90  (very bright pixels are more likely packaging than skin)
+ *   R – G ≥ 18     (skin has a meaningful red-over-green gap)
+ *   G > B           (skin has more green than blue)
  */
 const isSkinPixel = (r: number, g: number, b: number): boolean => {
+  if (r <= g || r <= b) return false;                   // R must dominate
+  if (g <= b) return false;                             // G must be above B
+  if (r - g < 18) return false;                         // R–G gap too small (product or grey)
   const rN = r / 255;
   const gN = g / 255;
   const bN = b / 255;
-  const max = Math.max(rN, gN, bN);
-  const min = Math.min(rN, gN, bN);
+  const max = rN; // already confirmed R is max
+  const min = Math.min(gN, bN);
   const delta = max - min;
-  if (max < 0.25 || max > 0.97) return false;          // too dark / too bright
-  if (delta < 0.01) return false;                       // achromatic (grey / white)
+  if (max < 0.28 || max > 0.90) return false;          // too dark or too bright (likely packaging)
+  if (delta < 0.01) return false;                       // achromatic
   const sat = delta / max;
-  if (sat < 0.12 || sat > 0.65) return false;
-  // Hue in degrees (0–360)
-  let hue = 0;
-  if (max === rN) hue = 60 * (((gN - bN) / delta) % 6);
-  else if (max === gN) hue = 60 * ((bN - rN) / delta + 2);
-  else hue = 60 * ((rN - gN) / delta + 4);
+  if (sat < 0.15 || sat > 0.50) return false;
+  // Hue in degrees — R is max so: hue = 60 * ((gN - bN) / delta) % 6
+  let hue = 60 * (((gN - bN) / delta) % 6);
   if (hue < 0) hue += 360;
-  if (hue > 25 && hue < 335) return false;             // outside red-orange-pink band
-  return rN > gN && rN > bN;                            // R must dominate
+  return hue >= 8 && hue <= 23;                        // tight skin-tone band only
 };
 
 const detectFormatLabel = (file: File) => {

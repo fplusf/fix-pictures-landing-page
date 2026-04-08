@@ -50,7 +50,14 @@ export default function TermsOfService() {
           </section>
 
           <section>
-            <h2 className="text-xl font-bold text-zinc-950">6. Modifications</h2>
+            <h2 className="text-xl font-bold text-zinc-950">6. Refund Policy</h2>
+            <p className="mt-3">
+              We want you to be happy with the service. Please refer to our <Link to="/refund" className="text-[#ff7a2f] hover:underline">Refund Policy</Link> for details on eligibility and how to request a refund.
+            </p>
+          </section>
+
+          <section>
+            <h2 className="text-xl font-bold text-zinc-950">7. Modifications</h2>
             <p className="mt-3">
               fix.pictures may revise these terms of service for its website at any time without notice. By using this website you are agreeing to be bound by the then current version of these terms of service.
             </p>

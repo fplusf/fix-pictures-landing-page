@@ -22,6 +22,7 @@
     "jszip": "^3.10.1",
     "lucide-react": "^0.563.0",
     "piexifjs": "^1.0.6",
+    "posthog-js": "^1.364.7",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "react-dropzone": "^14.4.0",

@@ -1,7 +1,7 @@
 /// <reference lib="webworker" />
 
 import { removeBackground } from '@imgly/background-removal';
-import { needsEdgeEnhancement, applyEdgeEnhancement, imageDataToBlob } from '../lib/preprocessing';
+// import { imageDataToBlob } from '../lib/preprocessing'; // No longer used in worker pipeline
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Public types (consumed by worker-client and ImageFixerApp)
@@ -21,7 +21,7 @@ export type WorkerRequest = {
     }
 );
 
-export type ModelId = 'rmbg-1.4' | 'rmbg-2.0';
+export type ModelId = 'rmbg-1.4';
 
 export type WorkerProgress = {
   id: string;
@@ -70,31 +70,13 @@ const ctx = self as DedicatedContext;
 const BOUNDS_ALPHA_THRESHOLD = 20;
 
 // ─────────────────────────────────────────────────────────────────────────────
-// MODEL ROUTING STRATEGY
-// ─────────────────────────────────────────────────────────────────────────────
+// BACKGROUND COMPLEXITY ANALYSIS (diagnostic / logging only)
 //
-// RMBG-1.4  (@imgly/background-removal) — fast, ~40 MB one-time download
-//   ✅ Products on white / very light backgrounds
-//   ✅ Clean, studio-style shots
-//   ✅ Batch-processing many images quickly
-//   ✅ White-on-white products (edge enhancement kicks in)
-//
-// RMBG-2.0  (@huggingface/transformers) — accurate, ~200 MB one-time download
-//   ✅ Complex, colourful, or dark backgrounds
-//   ✅ Gradient / lifestyle / lifestyle-on-set backgrounds
-//   ✅ Products with fine detail: jewellery, fabric weave, watch straps
-//   ✅ Transparent / reflective surfaces: glass bottles, acrylic, crystal
-//   ✅ Products where RMBG-1.4 leaves visible halos or edge artefacts
-//
-// DETECTION: We sample the four corner regions (proxy for background) and
-// compute three signals:
-//   • saturation  — colourful bg → harder for RMBG-1.4
-//   • rms-variance — busy / textured bg → harder for RMBG-1.4
-//   • darkness    — dark bg → harder for RMBG-1.4
-// A weighted score above COMPLEXITY_THRESHOLD routes to RMBG-2.0.
+// Corner-pixel analysis is kept for debug logging — it no longer routes
+// between models since we run a single pipeline.
 // ─────────────────────────────────────────────────────────────────────────────
 
-const COMPLEXITY_THRESHOLD = 0.18; // bias toward quality for ambiguous cases
+const COMPLEXITY_THRESHOLD = 0.18;
 
 interface RoutingDecision {
   model: ModelId;
@@ -161,19 +143,11 @@ const routeModel = (frame: ImageData): RoutingDecision => {
   // Weighted complexity score
   const score = avgSat * 0.45 + rmsVar * 0.35 + darkness * 0.20;
 
-  if (score > COMPLEXITY_THRESHOLD) {
-    return {
-      model: 'rmbg-2.0',
-      score,
-      label: `complex bg — sat:${avgSat.toFixed(2)} var:${rmsVar.toFixed(2)} dark:${darkness.toFixed(2)}`,
-    };
-  }
+  const label = score > COMPLEXITY_THRESHOLD
+    ? `complex bg — sat:${avgSat.toFixed(2)} var:${rmsVar.toFixed(2)} dark:${darkness.toFixed(2)}`
+    : `simple bg — bright:${avgBrightness.toFixed(0)} sat:${avgSat.toFixed(2)}`;
 
-  return {
-    model: 'rmbg-1.4',
-    score,
-    label: `simple bg — bright:${avgBrightness.toFixed(0)} sat:${avgSat.toFixed(2)}`,
-  };
+  return { model: 'rmbg-1.4' as ModelId, score, label };
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -191,44 +165,95 @@ const runRmbg14 = async (id: string, inputBlob: Blob): Promise<Blob> => {
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
-// RMBG-2.0  (@huggingface/transformers)
-// High-quality model — loaded lazily and cached for the worker's lifetime.
-// Model weights are downloaded once from HuggingFace Hub (~200 MB) then
-// stored in the browser cache permanently.
+// RMBG-1.4 via @huggingface/transformers (primary high-quality path)
+//
+// Uses briaai/RMBG-1.4 directly — the same model as @imgly/background-removal
+// but with our own post-processing pipeline (sigmoid → min-max normalise →
+// sigmoid sharpening). This gives us full control over mask quality.
+//
+// Why not RMBG-2.0?
+//   All available RMBG-2.0 ONNX exports are 350–977 MB, which OOMs in every
+//   browser WASM runtime (confirmed across webgpu + wasm). There is no public,
+//   auth-free, browser-compatible RMBG-2.0 export at this time.
+//
+// Model: briaai/RMBG-1.4  (public, no auth required)
+//   onnx/model_quantized.onnx  42 MB   ← default (fast, great quality)
+//   onnx/model_fp16.onnx       84 MB   ← fp16 fallback
+//   onnx/model.onnx           168 MB   ← fp32 last resort
 // ─────────────────────────────────────────────────────────────────────────────
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 let _hfModel: any = null;
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 let _hfProcessor: any = null;
+// Singleton promise — prevents concurrent load attempts
+let _hfModelLoading: Promise<void> | null = null;
 
-const ensureRmbg20Model = async (id: string) => {
+const MODEL_ID = 'briaai/RMBG-1.4';
+
+const ensureHfModel = async (id: string) => {
   if (_hfModel) return;
+  if (_hfModelLoading) return _hfModelLoading;
 
-  // Lazy-load transformers.js
-  const { AutoModel, AutoProcessor, env } = await import('@huggingface/transformers');
+  _hfModelLoading = (async () => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { AutoModel, AutoProcessor, env } = await import('@huggingface/transformers') as any;
 
-  // Already in a dedicated worker — disable the WASM proxy thread
-  (env as any).backends.onnx.wasm.proxy = false;
+    // Dedicated worker — no WASM proxy thread needed
+    env.backends.onnx.wasm.proxy = false;
+    env.backends.onnx.wasm.numThreads = 1;
 
-  postProgress(id, 'loading', 'Setting up local AI engine (first use, cached for speed)…');
+    postProgress(id, 'loading', 'Setting up local AI engine…');
 
-  // fp16 keeps the download size manageable while preserving quality
-  _hfModel = await AutoModel.from_pretrained('briaai/RMBG-2.0', {
-    dtype: 'fp16',
-    progress_callback: (p: any) => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const progressCb = (p: any) => {
       if (p.status === 'progress' && p.total > 0) {
         const pct = Math.round((p.loaded / p.total) * 100);
-        postProgress(id, 'loading', `Preparing local AI engine… ${pct}%`);
+        postProgress(id, 'loading', `Downloading AI model… ${pct}%`);
       }
-    },
-  });
-  _hfProcessor = await AutoProcessor.from_pretrained('briaai/RMBG-2.0');
-}
+    };
 
-const runRmbg20 = async (id: string, inputBlob: Blob): Promise<Blob> => {
+    // briaai/RMBG-1.4 ships: model_fp16.onnx (84MB) and model.onnx (168MB).
+    // dtype:'fp16' → model_fp16.onnx (confirmed working in browser WASM).
+    // dtype:'fp32' → model.onnx (168MB, last resort).
+    // Note: 'quantized' is not a valid dtype key in transformers.js v3;
+    //        the file model_quantized.onnx can't be addressed this way.
+    const attempts = [
+      { device: 'wasm', dtype: 'fp16' },
+      { device: 'wasm', dtype: 'fp32' },
+    ] as const;
+
+    let lastErr: unknown;
+    for (const { device, dtype } of attempts) {
+      try {
+        const [model, processor] = await Promise.all([
+          AutoModel.from_pretrained(MODEL_ID, { device, dtype, progress_callback: progressCb }),
+          AutoProcessor.from_pretrained(MODEL_ID),
+        ]);
+        _hfModel = model;
+        _hfProcessor = processor;
+        console.info(`[fix.pictures] HF model loaded (${MODEL_ID} device=${device} dtype=${dtype})`);
+        return;
+      } catch (err) {
+        _hfModel = null;
+        _hfProcessor = null;
+        lastErr = err;
+        const e = err as Error;
+        console.warn(`[fix.pictures] HF model attempt (device=${device} dtype=${dtype}) failed:`, e?.message ?? String(err));
+      }
+    }
+
+    throw lastErr;
+  })().finally(() => {
+    _hfModelLoading = null;
+  });
+
+  return _hfModelLoading;
+};
+
+const runHfModel = async (id: string, inputBlob: Blob): Promise<Blob> => {
   const { RawImage } = await import('@huggingface/transformers');
-  await ensureRmbg20Model(id);
+  await ensureHfModel(id);
 
   postProgress(id, 'segmenting', 'Segmenting [high-quality model]…');
 
@@ -236,28 +261,12 @@ const runRmbg20 = async (id: string, inputBlob: Blob): Promise<Blob> => {
   const inputs = await _hfProcessor(image);
   const { output } = await _hfModel(inputs);
 
-  // ── Post-processing — matches HuggingFace reference implementation ─────────
-  //
-  // The model outputs raw logit-like values. The HF pipeline does two steps
-  // that we must replicate to get the same sharp, clean masks:
-  //
-  //   1. Sigmoid  — squash any out-of-range logits into [0, 1]
-  //   2. Normalize — (v - min) / (max - min)
-  //      Raw outputs sit in a compressed range e.g. [0.12, 0.88].
-  //      Without this step the mask is flat/grey and edges are mushy.
-  //      Stretching to the full [0, 1] range makes background → 0 and
-  //      foreground → 1 with maximum contrast at the boundary.
-  //
-  // Reference (Python): pred = (pred - pred.min()) / (pred.max() - pred.min())
-
-  // output[0] shape: [1, 1, H_model, W_model]
-  const rawTensor = output[0].squeeze(); // → [H_model, W_model]
-
-  // Step 1 — sigmoid (safe even if model already applied it; idempotent near 0/1)
+  // RMBG-1.4 outputs raw logits → sigmoid → min-max normalise → uint8 mask.
+  // Without normalisation, low-confidence pixels produce washed-out alpha.
+  const rawTensor = output[0].squeeze();
   const probTensor = rawTensor.sigmoid();
-
-  // Step 2 — normalize: scan the float data, find min/max, stretch to [0, 1]
   const floatData = probTensor.data as Float32Array;
+
   let min = Infinity, max = -Infinity;
   for (let i = 0; i < floatData.length; i++) {
     if (floatData[i] < min) min = floatData[i];
@@ -265,47 +274,30 @@ const runRmbg20 = async (id: string, inputBlob: Blob): Promise<Blob> => {
   }
   const range = max - min;
 
-  // Step 3 — sigmoid sharpening curve (critical for compositing on white)
-  //
-  // Pure min/max normalization maps mid-confidence pixels (hands, skin tones
-  // against complex backgrounds) to fractional alpha values like 0.6–0.8.
-  // When composited on a white canvas those pixels appear washed out / ghosted.
-  //
-  // A sigmoid curve centred at 0.5 with steepness k pushes confident foreground
-  // toward fully opaque and background toward fully transparent while preserving
-  // soft transitions at genuine edges (fine hair, glass, fabric weave).
-  //
-  //   k = 10  →  0.3 ≈ 7%,  0.4 ≈ 27%,  0.5 = 50%,  0.6 ≈ 73%,  0.7 ≈ 93%
-  //
-  const SIGMOID_K = 10;
   const uint8 = new Uint8Array(floatData.length);
   if (range > 0) {
+    const SIGMOID_K = 10;
     for (let i = 0; i < floatData.length; i++) {
-      const normalized = (floatData[i] - min) / range;           // [0, 1]
-      const sharpened  = 1 / (1 + Math.exp(-SIGMOID_K * (normalized - 0.5))); // [0, 1]
+      const normalized = (floatData[i] - min) / range;
+      // Sigmoid sharpening — pushes mid-confidence pixels toward 0 or 1
+      const sharpened = 1 / (1 + Math.exp(-SIGMOID_K * (normalized - 0.5)));
       uint8[i] = Math.round(sharpened * 255);
     }
   }
 
-  // Build a single-channel RawImage from the sharpened uint8 data,
-  // then resize to the original image dimensions.
   const [H, W] = rawTensor.dims.slice(-2) as [number, number];
   const maskImage = new RawImage(uint8, W, H, 1);
   const resized = await maskImage.resize(image.width, image.height);
 
-  // Apply alpha — soft values near edges are kept intact so genuine
-  // semi-transparent surfaces (glass, mesh, crystals) stay natural.
   const canvas = new OffscreenCanvas(image.width, image.height);
   const canvasCtx = canvas.getContext('2d', { willReadFrequently: true });
   if (!canvasCtx) throw new Error('OffscreenCanvas 2D context unavailable');
   canvasCtx.drawImage(await createImageBitmap(inputBlob), 0, 0);
   const imageData = canvasCtx.getImageData(0, 0, image.width, image.height);
-
   const maskArr = resized.data as Uint8Array;
   for (let i = 0; i < maskArr.length; i++) {
     imageData.data[i * 4 + 3] = maskArr[i];
   }
-
   canvasCtx.putImageData(imageData, 0, 0);
   return canvas.convertToBlob({ type: 'image/png' });
 };
@@ -335,16 +327,24 @@ ctx.addEventListener('unhandledrejection', (event) => {
 // Message handler
 // ─────────────────────────────────────────────────────────────────────────────
 
+let _warmupStarted = false;
+
 ctx.addEventListener('message', async (event: MessageEvent<WorkerRequest>) => {
   const { data } = event;
 
   if (data.type === 'warmup') {
+    // Deduplicate: React StrictMode (and any other double-invoke) sends warmup twice.
+    // The singleton promise in ensureRmbg20Model handles concurrent loads, but both
+    // callers would still catch and log the same failure. Guard here so only the
+    // first warmup message proceeds; subsequent ones are silent no-ops.
+    if (_warmupStarted) return;
+    _warmupStarted = true;
     try {
-      await ensureRmbg20Model(data.id);
-      postProgress(data.id, 'loading', 'RMBG-2.0 model is ready.');
+      await ensureHfModel(data.id);
+      postProgress(data.id, 'loading', 'AI model ready.');
     } catch (error) {
-      const err = error as Error;
-      console.warn('[fix.pictures] Warm-up failed — model will load on demand', err);
+      // Warm-up failure is non-fatal — imgly fallback handles it on first image.
+      console.debug('[fix.pictures] HF model warm-up failed — will fall back to imgly', error);
     }
     return;
   }
@@ -382,29 +382,23 @@ const processFile = async (request: Extract<WorkerRequest, { type: 'process-imag
     `[fix.pictures] bg analysis — score:${bgAnalysis.score.toFixed(3)} (${bgAnalysis.label})`,
   );
 
-  // ── Step 2: Preprocessing — edge enhancement for white-on-white products ───
-  const needsEnhancement = needsEdgeEnhancement(sourceFrame);
-  let aiInputBlob = sourceBlob;
-  if (needsEnhancement) {
-    postProgress(request.id, 'loading', 'Enhancing edges for white-on-white detection…');
-    const enhanced = applyEdgeEnhancement(sourceFrame);
-    aiInputBlob = await imageDataToBlob(enhanced);
-  }
+  const aiInputBlob = sourceBlob;
 
   // ── Step 3: Segmentation ───────────────────────────────────────────────────
-  // RMBG-2.0 always runs first — it produces better results for all image types.
-  // RMBG-1.4 (imgly) is the fallback if 2.0 fails (model load error, OOM, etc.)
-  postProgress(request.id, 'segmenting', 'Running RMBG-2.0 (high quality)…');
+  // Primary: briaai/RMBG-1.4 via transformers.js with our own post-processing.
+  // Fallback: @imgly/background-removal (same model, different pipeline).
+  postProgress(request.id, 'segmenting', 'Running background removal…');
 
   let outputBlob: Blob;
   let modelUsed: ModelId;
 
   try {
-    outputBlob = await runRmbg20(request.id, aiInputBlob);
-    modelUsed = 'rmbg-2.0';
+    outputBlob = await runHfModel(request.id, aiInputBlob);
+    modelUsed = 'rmbg-1.4';
   } catch (err) {
-    console.warn('[fix.pictures] RMBG-2.0 failed — falling back to RMBG-1.4', err);
-    postProgress(request.id, 'segmenting', 'Falling back to RMBG-1.4…');
+    const e = err as Error;
+    console.warn('[fix.pictures] HF model failed — falling back to imgly', e?.message ?? String(err));
+    postProgress(request.id, 'segmenting', 'Switching to fallback engine…');
     outputBlob = await runRmbg14(request.id, aiInputBlob);
     modelUsed = 'rmbg-1.4';
   }
@@ -426,7 +420,7 @@ const processFile = async (request: Extract<WorkerRequest, { type: 'process-imag
     maskedImageBuffer,
     bounds,
     histogram: computeHistogram(sourceFrame),
-    wasEdgeEnhanced: needsEnhancement,
+    wasEdgeEnhanced: false,
     modelUsed,
   };
 };
@@ -521,8 +515,8 @@ const computeRobustBounds = (alpha: Uint8Array, width: number, height: number, t
     if (components[i].size > largest.size) largest = components[i];
   }
 
-  const keepFloor = Math.max(120, Math.floor(largest.size * 0.01));
-  const kept = components.filter((c) => c.size >= keepFloor);
+  const mediumAttachmentLimit = Math.max(250, Math.floor(largest.size * 0.35));
+  const kept = components.filter((c) => c.size >= mediumAttachmentLimit);
   if (!kept.length) return computeBoundsFromAlpha(alpha, width, height, threshold);
 
   let minX = width, minY = height, maxX = -1, maxY = -1;
