@@ -21,6 +21,9 @@ backend/.env
 # Azure secrets — never commit these
 azure/secrets.sh
 
+# Claude Code worktrees — never commit these
+.claude/worktrees/
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
