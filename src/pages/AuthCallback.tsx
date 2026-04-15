@@ -15,8 +15,9 @@ export default function AuthCallback() {
       }
 
       if (session) {
-        // Successfully authenticated, redirect to app
-        navigate('/app');
+        // If a pending checkout was saved before OAuth, go back to pricing to resume it
+        const pendingPriceId = sessionStorage.getItem('pendingPriceId');
+        navigate(pendingPriceId ? '/pricing' : '/app');
       } else {
         // No session, redirect to landing
         navigate('/');

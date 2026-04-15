@@ -361,9 +361,14 @@ const refineForegroundForCompliance = (source: ImageData): ForegroundRefinementR
   // their nearest opaque neighbour. This fixes dark JPEG edge halos without touching
   // natural soft edges, shading gradients, or object highlights (which would look shiny
   // if their colour were replaced with the brighter interior colour).
-  const DEFRINGE_MAX_ALPHA = 160;  // only thin edge pixels — not natural shading
+  //
+  // IMPORTANT: Only fire when the opaque neighbour is near-white (R,G,B ≥ 200).
+  // Coloured neighbours (e.g. orange packaging, blue labels) mean the semi-transparent
+  // pixel is a legitimate product edge — not a dark halo — so we must leave it alone.
+  const DEFRINGE_MAX_ALPHA = 160;    // only thin edge pixels — not natural shading
   const DEFRINGE_MIN_NEIGHBOR = 220; // neighbour must be nearly opaque
-  const DEFRINGE_LUM_DELTA = 50;    // neighbour must be this much brighter (lum 0-255)
+  const DEFRINGE_LUM_DELTA = 50;     // neighbour must be this much brighter (lum 0-255)
+  const DEFRINGE_NEAR_WHITE = 200;   // neighbour must be near-white on all channels
   for (let i = 0; i < total; i += 1) {
     const offset = i * 4;
     const alpha = output[offset + 3];
@@ -381,15 +386,20 @@ const refineForegroundForCompliance = (source: ImageData): ForegroundRefinementR
 
     if (bestOffset < 0 || bestAlpha < DEFRINGE_MIN_NEIGHBOR) continue;
 
+    // Skip defringe if the opaque neighbour is a saturated colour — that means the
+    // semi-transparent pixel is a legitimate product edge, not a dark compression halo.
+    const nR = output[bestOffset], nG = output[bestOffset + 1], nB = output[bestOffset + 2];
+    if (nR < DEFRINGE_NEAR_WHITE || nG < DEFRINGE_NEAR_WHITE || nB < DEFRINGE_NEAR_WHITE) continue;
+
     // Only replace colour when the edge pixel is genuinely darker than the product interior.
     // Natural highlights / shading gradients have similar or higher luminance — leave them.
     const edgeLum = 0.299 * output[offset] + 0.587 * output[offset + 1] + 0.114 * output[offset + 2];
-    const neighborLum = 0.299 * output[bestOffset] + 0.587 * output[bestOffset + 1] + 0.114 * output[bestOffset + 2];
+    const neighborLum = 0.299 * nR + 0.587 * nG + 0.114 * nB;
     if (neighborLum - edgeLum < DEFRINGE_LUM_DELTA) continue;
 
-    output[offset]     = output[bestOffset];
-    output[offset + 1] = output[bestOffset + 1];
-    output[offset + 2] = output[bestOffset + 2];
+    output[offset]     = nR;
+    output[offset + 1] = nG;
+    output[offset + 2] = nB;
   }
 
   const finalBounds = computeBoundsFromMask(finalMask, width, height) ?? {

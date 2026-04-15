@@ -1,20 +1,26 @@
-import { useEffect } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { useAuth } from '@/src/contexts/AuthContext';
 import { trackEvent } from '@/src/lib/posthog';
+import { openCheckout } from '@/src/lib/paddle';
 
 const APP_ROUTE = '/app';
 
+const PRICE_PRO = import.meta.env.VITE_PADDLE_PRICE_PRO as string;
+const PRICE_LIFETIME = import.meta.env.VITE_PADDLE_PRICE_LIFETIME as string;
+
 const pricingPlans = [
   {
-    name: 'Free',
+    name: 'Free Trial',
     price: '$0',
     interval: '',
-    quota: '5 images',
+    quota: '5 free images',
     features: ['Full AI pipeline', 'Compliance report', 'Batch download'],
-    tagline: 'Try the full workflow, no card needed.',
-    cta: 'Start Free',
+    tagline: 'Then $49/year — cancel anytime before.',
+    cta: 'Start Free Trial',
     featured: false,
+    priceId: PRICE_PRO,
+    isTrial: true,
   },
   {
     name: 'Pro',
@@ -25,7 +31,8 @@ const pricingPlans = [
     tagline: 'Best value for active Amazon sellers.',
     cta: 'Get Pro',
     featured: true,
-    checkoutUrl: 'https://YOURSTORE.lemonsqueezy.com/buy/PRO_VARIANT_ID',
+    priceId: PRICE_PRO,
+    isTrial: false,
   },
   {
     name: 'Lifetime',
@@ -36,40 +43,60 @@ const pricingPlans = [
     tagline: 'Pay once. Never pay again.',
     cta: 'Get Lifetime Access',
     featured: false,
-    checkoutUrl: 'https://YOURSTORE.lemonsqueezy.com/buy/LIFETIME_VARIANT_ID',
+    priceId: PRICE_LIFETIME,
+    isTrial: false,
   },
 ];
 
 export default function PricingPage() {
   const { user, signInWithGoogle, loading } = useAuth();
-  const navigate = useNavigate();
+  const [checkoutLoading, setCheckoutLoading] = useState<string | null>(null);
+  const [checkoutError, setCheckoutError] = useState<string | null>(null);
 
+  // After OAuth redirect back to /pricing, resume the pending checkout automatically
   useEffect(() => {
-    if (user && !loading) {
-      // We don't necessarily want to redirect from pricing if they are logged in, 
-      // but if they click a plan they should go to app or checkout.
-    }
-  }, [user, loading, navigate]);
+    if (!user || loading) return;
+    const pendingPriceId = sessionStorage.getItem('pendingPriceId');
+    const pendingPlanName = sessionStorage.getItem('pendingPlanName');
+    if (!pendingPriceId) return;
+    sessionStorage.removeItem('pendingPriceId');
+    sessionStorage.removeItem('pendingPlanName');
+    const name = pendingPlanName ?? '';
+    setCheckoutLoading(name);
+    openCheckout(pendingPriceId, user.email ?? undefined)
+      .catch((err) => {
+        console.error('Checkout failed:', err);
+        setCheckoutError(err instanceof Error ? err.message : 'Something went wrong. Please try again.');
+      })
+      .finally(() => setCheckoutLoading(null));
+  }, [user, loading]);
 
-  const handleStartClick = async (e: React.MouseEvent<HTMLAnchorElement>, planName?: string) => {
-    if (planName) trackEvent('pricing_plan_clicked', { plan: planName });
-    if (loading) { e.preventDefault(); return; }
-    
-    // If it's a paid plan with a checkout URL, let it navigate (but only if it's a real URL)
-    if (e.currentTarget.href.includes('lemonsqueezy.com')) {
-      return;
-    }
+  const handlePlanClick = async (planName: string, priceId: string) => {
+    trackEvent('pricing_plan_clicked', { plan: planName });
+    if (loading) return;
+    setCheckoutError(null);
 
-    // Otherwise, it's the free plan or an app redirect
-    e.preventDefault();
-    if (user) {
-      navigate(APP_ROUTE);
-    } else {
+    if (!user) {
+      // Save intent so we can resume after OAuth redirect
+      sessionStorage.setItem('pendingPriceId', priceId);
+      sessionStorage.setItem('pendingPlanName', planName);
       try {
         await signInWithGoogle();
       } catch (err) {
         console.error('Sign in failed:', err);
       }
+      return;
+    }
+
+    setCheckoutLoading(planName);
+    try {
+      await openCheckout(priceId, user.email ?? undefined);
+      // navigates away on success — finally still runs
+    } catch (err) {
+      console.error('Checkout failed:', err);
+      setCheckoutError(err instanceof Error ? err.message : 'Something went wrong. Please try again.');
+    } finally {
+      setCheckoutLoading(null);
     }
   };
 
@@ -142,21 +169,25 @@ export default function PricingPage() {
                   ))}
                 </ul>
 
-                <a
-                  href={plan.checkoutUrl || APP_ROUTE}
-                  onClick={(e) => handleStartClick(e, plan.name)}
-                  className={`mt-10 inline-flex w-full items-center justify-center rounded-xl py-4 text-base font-bold transition ${
+                <button
+                  onClick={() => handlePlanClick(plan.name, plan.priceId!)}
+                  disabled={checkoutLoading === plan.name}
+                  className={`mt-10 inline-flex w-full items-center justify-center rounded-xl py-4 text-base font-bold transition disabled:opacity-60 disabled:cursor-not-allowed ${
                     plan.featured
                       ? 'bg-gradient-to-r from-[#e636a4] to-[#ff7a2f] text-white hover:brightness-105'
                       : 'bg-zinc-900 text-white hover:bg-zinc-800'
                   }`}
                 >
-                  {plan.cta}
-                </a>
+                  {checkoutLoading === plan.name ? 'Loading…' : plan.cta}
+                </button>
               </div>
             </article>
           ))}
         </div>
+
+        {checkoutError && (
+          <p className="mt-6 text-center text-sm text-red-500">{checkoutError}</p>
+        )}
 
         <section className="mt-24 rounded-[2rem] border border-zinc-200 bg-white p-10 md:p-16">
           <div className="grid gap-12 md:grid-cols-2">

@@ -2,9 +2,11 @@ import { BeforeAfterSlider } from '@/src/components/before-after-slider';
 import { ConfirmDialog } from '@/src/components/ConfirmDialog';
 import { Dropzone } from '@/src/components/dropzone';
 import { ProcessingSteps } from '@/src/components/processing-steps';
+import { UpgradeModal } from '@/src/components/UpgradeModal';
 import { Button } from '@/src/components/ui/button';
 import { Slider } from '@/src/components/ui/slider';
 import { useAuth } from '@/src/contexts/AuthContext';
+import { FREE_IMAGE_LIMIT, useSubscription, useUsageTracker } from '@/src/hooks/useSubscription';
 import { analyzeImageFile, type AuditSnapshot } from '@/src/lib/auditor';
 import {
   composeCompliantImage,
@@ -66,8 +68,10 @@ const MAX_PARALLEL_JOBS = 2; // Browser ONNX runtime — keep parallel low to av
 const DEFAULT_SHADOW_INTENSITY = 55;
 
 function App() {
-  const { signOut } = useAuth();
+  const { user, signOut } = useAuth();
   const navigate = useNavigate();
+  const { plan, imagesUsed, imagesRemaining, refetch } = useSubscription();
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [batchItems, setBatchItems] = useState<BatchItem[]>([]);
   const [activeItemId, setActiveItemId] = useState<string | null>(null);
   const [sessionError, setSessionError] = useState<string | null>(null);
@@ -78,6 +82,7 @@ function App() {
   const [downloadingSelected, setDownloadingSelected] = useState(false);
   const [zipExporting, setZipExporting] = useState(false);
   const [showSignOutDialog, setShowSignOutDialog] = useState(false);
+  const [resultsTab, setResultsTab] = useState<'before' | 'after'>('after');
 
   const handleSignOut = async () => {
     try {
@@ -108,6 +113,10 @@ function App() {
     [staticAnalysisRows],
   );
 
+  useEffect(() => {
+    setResultsTab(activeItem?.metrics ? 'after' : 'before');
+  }, [activeItem?.id, activeItem?.metrics]);
+
   const processingCount = useMemo(
     () => batchItems.filter((item) => item.status === 'processing').length,
     [batchItems],
@@ -115,6 +124,13 @@ function App() {
   const completedItems = useMemo(
     () => batchItems.filter((item) => item.status === 'completed' && item.outputBlob),
     [batchItems],
+  );
+
+  // Track usage: insert a row per newly completed image (deduped by item ID)
+  useUsageTracker(
+    completedItems.map((i) => i.id),
+    user?.id,
+    refetch,
   );
 
   useEffect(() => {
@@ -375,6 +391,29 @@ function App() {
 
   const handleFiles = useCallback(async (files: File[]) => {
     if (!files.length) return;
+
+    // ── Quota guard ───────────────────────────────────────────────────────────
+    const isPaid = plan === 'pro' || plan === 'lifetime';
+    if (!isPaid) {
+      // How many slots are still available in this session?
+      // imagesRemaining already subtracts imagesUsed from FREE_IMAGE_LIMIT,
+      // but we also need to subtract items already added this session.
+      const sessionCompleted = batchItems.filter((i) => i.status === 'completed').length;
+      const alreadyCounted = Math.min(sessionCompleted, imagesUsed); // rough guard
+      const slotsLeft = Math.max(0, FREE_IMAGE_LIMIT - imagesUsed - (batchItems.filter(i => i.status !== 'completed').length));
+      if (imagesUsed >= FREE_IMAGE_LIMIT || (imagesRemaining <= 0 && batchItems.length > 0)) {
+        setShowUpgradeModal(true);
+        return;
+      }
+      // Allow only up to the remaining slots; show modal if truncated
+      if (files.length > imagesRemaining) {
+        setShowUpgradeModal(true);
+        files = files.slice(0, imagesRemaining);
+        if (!files.length) return;
+      }
+      void alreadyCounted; void slotsLeft; // suppress unused warnings
+    }
+    // ─────────────────────────────────────────────────────────────────────────
 
     const validation = await Promise.all(
       files.map(async (file) => {
@@ -693,7 +732,21 @@ function App() {
               <MetricPill label="Queue" value={String(batchItems.length)} />
               <MetricPill label="Completed" value={String(completedItems.length)} accent />
               <MetricPill label="Processing" value={String(processingCount)} />
-                <Button
+              {/* Quota / plan badge */}
+              {plan === 'free' ? (
+                <button
+                  onClick={() => setShowUpgradeModal(true)}
+                  className="flex items-center gap-1.5 rounded-full border border-amber-300 bg-amber-50 px-2.5 py-1 text-xs font-semibold text-amber-700 transition hover:bg-amber-100"
+                >
+                  <span>🖼</span>
+                  {imagesUsed}/{FREE_IMAGE_LIMIT} free
+                </button>
+              ) : (
+                <span className="flex items-center gap-1.5 rounded-full border border-emerald-300 bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700">
+                  ✓ {plan === 'lifetime' ? 'Lifetime' : 'Pro'}
+                </span>
+              )}
+              <Button
                 variant="outline"
                 size="sm"
                 onClick={() => setShowSignOutDialog(true)}
@@ -735,16 +788,43 @@ function App() {
 
               <div className="mt-4 rounded-2xl border border-emerald-200 bg-emerald-50/50 p-3">
                 <p className="text-sm font-semibold text-emerald-900">Selected Image Result</p>
-                <p className="mt-0.5 text-xs text-emerald-800">
+                <p className="mt-0.5 break-all text-xs text-emerald-800">
                   {activeItem?.file.name ?? 'No image selected'}
                 </p>
+
+                {activeItem?.metrics ? (
+                  <div className="mt-2.5 flex rounded-xl border border-emerald-200 bg-emerald-100/60 p-0.5">
+                    <button
+                      onClick={() => setResultsTab('before')}
+                      className={cn(
+                        'flex-1 rounded-lg py-1.5 text-xs font-semibold transition-all',
+                        resultsTab === 'before'
+                          ? 'bg-white shadow text-emerald-900 ring-1 ring-emerald-200'
+                          : 'text-emerald-600 hover:text-emerald-800',
+                      )}
+                    >
+                      Before
+                    </button>
+                    <button
+                      onClick={() => setResultsTab('after')}
+                      className={cn(
+                        'flex-1 rounded-lg py-1.5 text-xs font-semibold transition-all',
+                        resultsTab === 'after'
+                          ? 'bg-white shadow text-emerald-900 ring-1 ring-emerald-200'
+                          : 'text-emerald-600 hover:text-emerald-800',
+                      )}
+                    >
+                      After
+                    </button>
+                  </div>
+                ) : null}
 
                 <div className="mt-3 space-y-1.5">
                   {!activeItem ? (
                     <div className="rounded-xl border border-dashed border-emerald-300 bg-white/80 px-3 py-2 text-xs text-emerald-700">
                       Upload an image to see result stats.
                     </div>
-                  ) : !activeItem.metrics ? (
+                  ) : !activeItem.metrics || resultsTab === 'before' ? (
                     <>
                       <div className="mb-1 flex items-center justify-between">
                         <p className="text-xs font-semibold uppercase tracking-[0.12em] text-emerald-700">
@@ -848,7 +928,7 @@ function App() {
             <div className="sticky top-0 z-50 -mx-4 -mt-4 mb-4 flex flex-wrap items-center justify-between gap-3 border-b border-zinc-100 bg-white px-4 py-3 sm:-mx-5 sm:-mt-5 sm:px-5">
               <div>
                 <h2 className="text-xl font-semibold tracking-tight text-zinc-950">Selected Image</h2>
-                <p className="text-sm text-zinc-600">
+                <p className="break-all text-sm text-zinc-600">
                   {activeItem?.file.name ?? 'No image selected'}
                 </p>
               </div>
@@ -963,7 +1043,7 @@ function App() {
                     <img src={item.sourceUrl} alt={item.file.name} className="h-14 w-14 rounded-xl border border-zinc-200 bg-white object-contain" />
                     <div className="min-w-0 flex-1">
                       <div className="flex items-start justify-between gap-2">
-                        <p className="truncate text-sm font-medium text-zinc-900">{item.file.name}</p>
+                        <p className="break-all text-sm font-medium text-zinc-900">{item.file.name}</p>
                         <StatusBadge status={item.status} compact />
                       </div>
                       <p className="mt-0.5 text-xs text-zinc-600">
@@ -1089,6 +1169,8 @@ function App() {
         onConfirm={handleSignOut}
         variant="destructive"
       />
+
+      <UpgradeModal open={showUpgradeModal} onClose={() => setShowUpgradeModal(false)} />
     </div>
   );
 }

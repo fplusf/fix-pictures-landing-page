@@ -1,5 +1,6 @@
 import { useAuth } from '@/src/contexts/AuthContext';
 import { trackEvent } from '@/src/lib/posthog';
+import { openCheckout } from '@/src/lib/paddle';
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
@@ -46,16 +47,20 @@ const proofCases = [
 ];
 
 // ─── Pricing ─────────────────────────────────────────────────────────────────
+const PRICE_PRO = import.meta.env.VITE_PADDLE_PRICE_PRO as string;
+const PRICE_LIFETIME = import.meta.env.VITE_PADDLE_PRICE_LIFETIME as string;
+
 const pricingPlans = [
   {
-    name: 'Free',
+    name: 'Free Trial',
     price: '$0',
     interval: '',
-    quota: '5 images',
+    quota: '5 free images',
     features: ['Full AI pipeline', 'Compliance report', 'Batch download'],
-    tagline: 'Try the full workflow, no card needed.',
-    cta: 'Start Free',
+    tagline: 'Then $49/year — cancel anytime before.',
+    cta: 'Start Free Trial',
     featured: false,
+    priceId: PRICE_PRO,
   },
   {
     name: 'Pro',
@@ -66,7 +71,7 @@ const pricingPlans = [
     tagline: 'Best value for active Amazon sellers.',
     cta: 'Get Pro',
     featured: true,
-    checkoutUrl: 'https://YOURSTORE.lemonsqueezy.com/buy/PRO_VARIANT_ID',
+    priceId: PRICE_PRO,
   },
   {
     name: 'Lifetime',
@@ -77,7 +82,7 @@ const pricingPlans = [
     tagline: 'Pay once. Never pay again.',
     cta: 'Get Lifetime Access',
     featured: false,
-    checkoutUrl: 'https://YOURSTORE.lemonsqueezy.com/buy/LIFETIME_VARIANT_ID',
+    priceId: PRICE_LIFETIME,
   },
 ];
 
@@ -213,12 +218,35 @@ function LandingPage() {
     if (user && !loading) navigate(APP_ROUTE);
   }, [user, loading, navigate]);
 
-  const handleStartClick = async (e: React.MouseEvent<HTMLAnchorElement>, planName?: string) => {
-    if (planName) trackEvent('pricing_plan_clicked', { plan: planName });
-    if (loading) { e.preventDefault(); return; }
-    if (!e.currentTarget.href.includes('lemonsqueezy.com')) {
-      e.preventDefault();
+  const [checkoutLoading, setCheckoutLoading] = useState<string | null>(null);
+  const [checkoutError, setCheckoutError] = useState<string | null>(null);
+
+  const handlePlanClick = async (planName: string, priceId?: string) => {
+    trackEvent('pricing_plan_clicked', { plan: planName });
+    if (loading) return;
+    setCheckoutError(null);
+
+    if (!user) {
+      if (priceId) {
+        // Save intent so AuthCallback can redirect to /pricing and resume checkout
+        sessionStorage.setItem('pendingPriceId', priceId);
+        sessionStorage.setItem('pendingPlanName', planName);
+      }
       try { await signInWithGoogle(); } catch (err) { console.error('Sign in failed:', err); }
+      return;
+    }
+
+    if (!priceId) return;
+
+    setCheckoutLoading(planName);
+    try {
+      await openCheckout(priceId, user.email ?? undefined);
+      // navigates away on success
+    } catch (err) {
+      console.error('Checkout failed:', err);
+      setCheckoutError(err instanceof Error ? err.message : 'Something went wrong. Please try again.');
+    } finally {
+      setCheckoutLoading(null);
     }
   };
 
@@ -237,13 +265,12 @@ function LandingPage() {
             <a href="#examples" className="transition hover:text-zinc-900">Examples</a>
             <a href="/pricing" className="transition hover:text-zinc-900">Pricing</a>
           </div>
-          <a
-            href={APP_ROUTE}
-            onClick={handleStartClick}
+          <button
+            onClick={() => handlePlanClick('Free')}
             className="rounded-xl bg-gradient-to-r from-[#e636a4] to-[#ff7a2f] px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:brightness-105 active:scale-[0.98]"
           >
             {loading ? 'Loading…' : 'Start Free →'}
-          </a>
+          </button>
         </div>
       </nav>
 
@@ -270,13 +297,12 @@ function LandingPage() {
             </p>
 
             <div className="mt-8 flex flex-col gap-4 sm:flex-row sm:items-center">
-              <a
-                href={APP_ROUTE}
-                onClick={handleStartClick}
+              <button
+                onClick={() => handlePlanClick('Free')}
                 className="flex h-14 items-center justify-center rounded-xl bg-gradient-to-r from-[#e636a4] to-[#ff7a2f] px-8 text-base font-bold text-white shadow-md transition hover:brightness-105 active:scale-[0.98]"
               >
                 {loading ? 'Loading…' : 'Fix your images free →'}
-              </a>
+              </button>
               <a
                 href="#how-it-works"
                 className="flex h-14 items-center justify-center rounded-xl border border-zinc-200 bg-white px-8 text-base font-semibold text-zinc-700 transition hover:bg-zinc-50 active:scale-[0.98]"
@@ -483,22 +509,26 @@ function LandingPage() {
                       ))}
                     </ul>
 
-                    <a
-                      href={plan.checkoutUrl || APP_ROUTE}
-                      onClick={(e) => handleStartClick(e, plan.name)}
-                      className={`mt-6 inline-flex w-full items-center justify-center rounded-xl px-4 py-3 text-sm font-bold transition ${
+                    <button
+                      onClick={() => handlePlanClick(plan.name, plan.priceId)}
+                      disabled={checkoutLoading === plan.name}
+                      className={`mt-6 inline-flex w-full items-center justify-center rounded-xl px-4 py-3 text-sm font-bold transition disabled:opacity-60 disabled:cursor-not-allowed ${
                         plan.featured
                           ? 'bg-gradient-to-r from-[#e636a4] to-[#ff7a2f] text-white hover:brightness-105'
                           : 'bg-zinc-900 text-white hover:bg-zinc-800'
                       }`}
                     >
-                      {plan.cta}
-                    </a>
+                      {checkoutLoading === plan.name ? 'Loading…' : plan.cta}
+                    </button>
                   </div>
                 </article>
               ))}
             </div>
           </div>
+
+          {checkoutError && (
+            <p className="mt-6 text-center text-sm text-red-500">{checkoutError}</p>
+          )}
         </section>
 
         {/* ── Final CTA ────────────────────────────────────────────────────── */}
@@ -512,13 +542,12 @@ function LandingPage() {
           <p className="mt-4 text-sm text-zinc-400 md:text-base">
             Free to start. No account required. Results in under 30 seconds.
           </p>
-          <a
-            href={APP_ROUTE}
-            onClick={handleStartClick}
+          <button
+            onClick={() => handlePlanClick('Free')}
             className="mt-8 inline-flex rounded-xl bg-gradient-to-r from-[#e636a4] to-[#ff7a2f] px-10 py-4 text-base font-bold text-white shadow-lg transition hover:brightness-110 active:scale-[0.98]"
           >
             {loading ? 'Loading…' : 'Open fix.pictures free →'}
-          </a>
+          </button>
         </section>
 
       </main>
