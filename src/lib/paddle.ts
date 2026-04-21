@@ -91,41 +91,38 @@ export async function openCheckout(priceId: string, email?: string): Promise<voi
   const paddle = await getPaddle();
 
   if (paddle) {
-    try {
-      paddle.Checkout.open({
-        items: [{ priceId, quantity: 1 }],
-        customer: email ? { email } : undefined,
-        settings: { successUrl: `${window.location.origin}/app` },
-      });
+    // If we're using window.Paddle it means initializePaddle timed out — almost
+    // certainly because ProfitWell analytics was blocked by an ad-blocker.
+    // The same blocker will also kill the buy.paddle.com iframe inside the overlay,
+    // so skip the overlay entirely and go straight to the server-side redirect.
+    if (usingWindowFallback) {
+      console.warn('[Paddle] window.Paddle fallback — skipping overlay, using server-side redirect.');
+    } else {
+      // initializePaddle succeeded with our eventCallback registered.
+      // Open the overlay and wait for checkout.loaded. If it never fires
+      // (iframe blocked), we fall through to the server-side redirect.
+      try {
+        paddle.Checkout.open({
+          items: [{ priceId, quantity: 1 }],
+          customer: email ? { email } : undefined,
+          settings: { successUrl: `${window.location.origin}/app` },
+        });
 
-      // Wait for checkout.loaded (fired via eventCallback) or a hard timeout.
-      // If the Paddle iframe is blocked by an ad-blocker, checkout.loaded never
-      // fires and we fall through to the server-side redirect after the timeout.
-      const loaded = await new Promise<boolean>((resolve) => {
-        const timer = setTimeout(() => {
-          resolveCheckoutLoaded = null;
-          resolve(false);
-        }, CHECKOUT_LOAD_MS);
-
-        if (usingWindowFallback) {
-          // No eventCallback available — poll for the Paddle iframe appearing in the DOM.
-          const poll = setInterval(() => {
-            const hasFrame = !!document.querySelector('iframe[src*="paddle.com"]');
-            if (hasFrame) { clearInterval(poll); clearTimeout(timer); resolve(true); }
-          }, 200);
-          // Give the poll a full timeout window then give up.
-          setTimeout(() => { clearInterval(poll); }, CHECKOUT_LOAD_MS);
-        } else {
+        const loaded = await new Promise<boolean>((resolve) => {
+          const timer = setTimeout(() => {
+            resolveCheckoutLoaded = null;
+            resolve(false);
+          }, CHECKOUT_LOAD_MS);
           resolveCheckoutLoaded = (ok) => { clearTimeout(timer); resolve(ok); };
-        }
-      });
+        });
 
-      if (loaded) return; // Overlay working — done.
+        if (loaded) return; // Overlay working — done.
 
-      console.warn('[Paddle] Overlay did not load (iframe likely blocked). Falling back to redirect.');
-      try { paddle.Checkout.close(); } catch { /* ignore */ }
-    } catch (err) {
-      console.warn('[Paddle] Overlay checkout threw:', err);
+        console.warn('[Paddle] checkout.loaded never fired (iframe likely blocked). Falling back to redirect.');
+        try { paddle.Checkout.close(); } catch { /* ignore */ }
+      } catch (err) {
+        console.warn('[Paddle] Overlay checkout threw:', err);
+      }
     }
   }
 
