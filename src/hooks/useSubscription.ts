@@ -4,7 +4,7 @@ import { supabase } from '@/src/lib/supabase';
 
 export type Plan = 'free' | 'pro' | 'lifetime';
 
-export const FREE_IMAGE_LIMIT = 5;
+export const FREE_IMAGE_LIMIT = 100;
 
 export interface SubscriptionState {
   plan: Plan;

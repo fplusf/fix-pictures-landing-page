@@ -2,7 +2,6 @@ import { BeforeAfterSlider } from '@/src/components/before-after-slider';
 import { ConfirmDialog } from '@/src/components/ConfirmDialog';
 import { Dropzone } from '@/src/components/dropzone';
 import { ProcessingSteps } from '@/src/components/processing-steps';
-import { UpgradeModal } from '@/src/components/UpgradeModal';
 import { Button } from '@/src/components/ui/button';
 import { Slider } from '@/src/components/ui/slider';
 import { useAuth } from '@/src/contexts/AuthContext';
@@ -71,7 +70,6 @@ function App() {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
   const { plan, imagesUsed, imagesRemaining, refetch } = useSubscription();
-  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [batchItems, setBatchItems] = useState<BatchItem[]>([]);
   const [activeItemId, setActiveItemId] = useState<string | null>(null);
   const [sessionError, setSessionError] = useState<string | null>(null);
@@ -402,12 +400,12 @@ function App() {
       const alreadyCounted = Math.min(sessionCompleted, imagesUsed); // rough guard
       const slotsLeft = Math.max(0, FREE_IMAGE_LIMIT - imagesUsed - (batchItems.filter(i => i.status !== 'completed').length));
       if (imagesUsed >= FREE_IMAGE_LIMIT || (imagesRemaining <= 0 && batchItems.length > 0)) {
-        setShowUpgradeModal(true);
+        navigate('/upgrade');
         return;
       }
       // Allow only up to the remaining slots; show modal if truncated
       if (files.length > imagesRemaining) {
-        setShowUpgradeModal(true);
+        navigate('/upgrade');
         files = files.slice(0, imagesRemaining);
         if (!files.length) return;
       }
@@ -735,7 +733,7 @@ function App() {
               {/* Quota / plan badge */}
               {plan === 'free' ? (
                 <button
-                  onClick={() => setShowUpgradeModal(true)}
+                  onClick={() => navigate('/upgrade')}
                   className="flex items-center gap-1.5 rounded-full border border-amber-300 bg-amber-50 px-2.5 py-1 text-xs font-semibold text-amber-700 transition hover:bg-amber-100"
                 >
                   <span>🖼</span>
@@ -1170,7 +1168,6 @@ function App() {
         variant="destructive"
       />
 
-      <UpgradeModal open={showUpgradeModal} onClose={() => setShowUpgradeModal(false)} />
     </div>
   );
 }

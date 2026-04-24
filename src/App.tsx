@@ -8,7 +8,8 @@ import PrivacyPolicy from '@/src/pages/PrivacyPolicy';
 import RefundPolicy from '@/src/pages/RefundPolicy';
 import PricingPage from '@/src/pages/PricingPage';
 import AuthCallback from '@/src/pages/AuthCallback';
-import ProtectedRoute from '@/src/components/ProtectedRoute';
+import UpgradePage from '@/src/pages/UpgradePage';
+import ProtectedRoute, { AppRoute } from '@/src/components/ProtectedRoute';
 
 export default function AppRouter() {
   const location = useLocation();
@@ -24,15 +25,23 @@ export default function AppRouter() {
       <Route
         path="/app"
         element={
-          <ProtectedRoute>
+          <AppRoute>
             <ImageFixerApp />
-          </ProtectedRoute>
+          </AppRoute>
         }
       />
       <Route path="/terms" element={<TermsOfService />} />
       <Route path="/privacy" element={<PrivacyPolicy />} />
       <Route path="/refund" element={<RefundPolicy />} />
       <Route path="/pricing" element={<PricingPage />} />
+      <Route
+        path="/upgrade"
+        element={
+          <ProtectedRoute>
+            <UpgradePage />
+          </ProtectedRoute>
+        }
+      />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
