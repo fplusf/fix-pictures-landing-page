@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useAuth } from '@/src/contexts/AuthContext';
 import { supabase } from '@/src/lib/supabase';
 
@@ -46,7 +46,7 @@ export function useSubscription(): SubscriptionState {
       setImagesUsed(usageResult.count ?? 0);
       setLoading(false);
     });
-  }, [user, tick]);
+  }, [user?.id, tick]);
 
   const isPaid = plan === 'pro' || plan === 'lifetime';
   const imagesRemaining = isPaid
@@ -60,7 +60,7 @@ export function useSubscription(): SubscriptionState {
     imagesRemaining,
     canProcess,
     loading,
-    refetch: () => setTick((t) => t + 1),
+    refetch: useCallback(() => setTick((t) => t + 1), []),
   };
 }
 
