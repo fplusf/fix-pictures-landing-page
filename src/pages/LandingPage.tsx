@@ -411,8 +411,13 @@ function LandingPage() {
             <h2 className="mt-2 text-3xl font-black text-zinc-950 md:text-4xl">Everything Amazon sellers need.</h2>
           </div>
           <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {features.map((f) => (
-              <div key={f.title} className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
+            {features.map((f, index) => (
+              <div
+                key={f.title}
+                className={`rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md ${
+                  features.length % 3 === 1 && index === features.length - 1 ? 'lg:col-start-2' : ''
+                }`}
+              >
                 <span className="text-2xl">{f.icon}</span>
                 <h3 className="mt-3 text-base font-black text-zinc-950">{f.title}</h3>
                 <p className="mt-1.5 text-sm leading-relaxed text-zinc-500">{f.description}</p>
