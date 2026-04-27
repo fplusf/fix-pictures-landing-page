@@ -28,20 +28,28 @@ function decodeBase64Image(input: string): Uint8Array {
   return bytes;
 }
 
-function getOpenAiKey(): string | undefined {
+interface EnvBindings {
+  OPENAI_API_KEY?: string;
+  VITE_OPEN_AI_API_KEY?: string;
+}
+
+function getOpenAiKey(env?: EnvBindings): string | undefined {
+  // 1. Cloudflare Pages / Workers — env bindings passed from function context
+  if (env?.OPENAI_API_KEY) return env.OPENAI_API_KEY;
+  if (env?.VITE_OPEN_AI_API_KEY) return env.VITE_OPEN_AI_API_KEY;
+  // 2. Node.js dev server (Vite plugin) — process.env
   if (typeof process !== 'undefined') {
-    // Prefer the server-only name (no VITE_ prefix = not exposed to browser bundle)
     return process.env?.OPENAI_API_KEY || process.env?.VITE_OPEN_AI_API_KEY || undefined;
   }
   return undefined;
 }
 
-export async function handleProcessImage(request: Request): Promise<Response> {
+export async function handleProcessImage(request: Request, env?: EnvBindings): Promise<Response> {
   if (request.method !== 'POST') {
     return jsonResponse('Method not allowed', 405);
   }
 
-  const apiKey = getOpenAiKey();
+  const apiKey = getOpenAiKey(env);
   if (!apiKey) {
     return jsonResponse('OPENAI_API_KEY is not configured', 500);
   }

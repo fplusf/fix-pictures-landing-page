@@ -211,8 +211,23 @@ class SmartWorkerClient {
     const formData = new FormData();
     formData.append('image', file, file.name);
 
-    const response = await fetch('/api/process-image', {
+    // Dev: Vite plugin intercepts /api/process-image (reads process.env.OPENAI_API_KEY)
+    // Prod: Supabase Edge Function (reads OPENAI_API_KEY secret)
+    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string;
+    const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY as string;
+    const url = import.meta.env.DEV
+      ? '/api/process-image'
+      : `${supabaseUrl}/functions/v1/process-image`;
+
+    const headers: Record<string, string> = {};
+    if (!import.meta.env.DEV) {
+      headers['Authorization'] = `Bearer ${anonKey}`;
+      headers['apikey'] = anonKey;
+    }
+
+    const response = await fetch(url, {
       method: 'POST',
+      headers,
       body: formData,
     });
 
