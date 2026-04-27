@@ -21,7 +21,7 @@ export type WorkerRequest = {
     }
 );
 
-export type ModelId = 'rmbg-1.4';
+export type ModelId = 'rmbg-1.4' | 'gpt-image-1';
 
 export type WorkerProgress = {
   id: string;

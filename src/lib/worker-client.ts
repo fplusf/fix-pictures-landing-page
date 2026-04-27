@@ -31,6 +31,12 @@ class SmartWorkerClient {
 
   private listeners = new Set<ProgressCallback>();
 
+  private emitProgress(progress: WorkerProgress) {
+    const pending = this.pending.get(progress.id);
+    pending?.onProgress?.(progress);
+    this.listeners.forEach((listener) => listener(progress));
+  }
+
   private isFatalMessage(message: unknown): message is WorkerFatal {
     return (
       typeof message === 'object' &&
@@ -73,9 +79,7 @@ class SmartWorkerClient {
           return;
         }
         if (message.type === 'progress') {
-          const pending = this.pending.get(message.id);
-          pending?.onProgress?.(message);
-          this.listeners.forEach((listener) => listener(message));
+          this.emitProgress(message);
           return;
         }
 
@@ -121,9 +125,117 @@ class SmartWorkerClient {
     // Lazy init
   }
 
+  private async blobToImageData(blob: Blob): Promise<ImageData> {
+    const bitmap = await createImageBitmap(blob);
+    try {
+      const canvas = document.createElement('canvas');
+      canvas.width = bitmap.width;
+      canvas.height = bitmap.height;
+      const context = canvas.getContext('2d', { willReadFrequently: true });
+      if (!context) throw new Error('Unable to decode processed image.');
+      context.drawImage(bitmap, 0, 0);
+      return context.getImageData(0, 0, bitmap.width, bitmap.height);
+    } finally {
+      bitmap.close();
+    }
+  }
+
+  private extractAlpha(image: ImageData) {
+    const total = image.width * image.height;
+    const alpha = new Uint8Array(total);
+    for (let i = 0; i < total; i += 1) {
+      alpha[i] = image.data[4 * i + 3];
+    }
+    return alpha;
+  }
+
+  private computeBoundsFromAlpha(alpha: Uint8Array, width: number, height: number, threshold: number) {
+    let minX = width;
+    let minY = height;
+    let maxX = -1;
+    let maxY = -1;
+    for (let y = 0; y < height; y += 1) {
+      for (let x = 0; x < width; x += 1) {
+        if (alpha[y * width + x] < threshold) continue;
+        if (x < minX) minX = x;
+        if (y < minY) minY = y;
+        if (x > maxX) maxX = x;
+        if (y > maxY) maxY = y;
+      }
+    }
+    if (maxX < 0 || maxY < 0) {
+      return { minX: 0, minY: 0, maxX: width - 1, maxY: height - 1 };
+    }
+    return { minX, minY, maxX, maxY };
+  }
+
+  private computeHistogram(image: ImageData) {
+    let r = 0;
+    let g = 0;
+    let b = 0;
+    const total = Math.max(image.width * image.height, 1);
+    for (let i = 0; i < image.data.length; i += 4) {
+      r += image.data[i];
+      g += image.data[i + 1];
+      b += image.data[i + 2];
+    }
+    return { average: [Math.round(r / total), Math.round(g / total), Math.round(b / total)] as [number, number, number] };
+  }
+
+  private async buildPayload(file: File, outputBlob: Blob): Promise<ProcessedPayload> {
+    const sourceFrame = await this.blobToImageData(file);
+    const cutoutFrame = await this.blobToImageData(outputBlob);
+    const alpha = this.extractAlpha(cutoutFrame);
+    const maskedImageBuffer = await outputBlob.arrayBuffer();
+
+    return {
+      fileName: file.name,
+      width: cutoutFrame.width,
+      height: cutoutFrame.height,
+      maskedImageBuffer,
+      bounds: this.computeBoundsFromAlpha(alpha, cutoutFrame.width, cutoutFrame.height, 20),
+      histogram: this.computeHistogram(sourceFrame),
+      wasEdgeEnhanced: false,
+      modelUsed: 'gpt-image-1',
+    };
+  }
+
+  private async tryRemoteImageEdit(file: File, id: string, options?: { onProgress?: RequestProgressCallback }) {
+    const progress = (stage: WorkerProgress['stage'], message: string) => {
+      const event: WorkerProgress = { id, type: 'progress', stage, message };
+      options?.onProgress?.(event);
+      this.listeners.forEach((listener) => listener(event));
+    };
+
+    progress('loading', 'Uploading source image…');
+    const formData = new FormData();
+    formData.append('image', file, file.name);
+
+    const response = await fetch('/api/process-image', {
+      method: 'POST',
+      body: formData,
+    });
+
+    if (!response.ok) {
+      const text = await response.text();
+      throw new Error(text || `Remote image processing failed (${response.status})`);
+    }
+
+    progress('segmenting', 'Running hosted image model…');
+    const outputBlob = await response.blob();
+    progress('refining', 'Verifying cutout edges…');
+    return this.buildPayload(file, outputBlob);
+  }
+
   public async process(file: File, options?: { onProgress?: RequestProgressCallback }) {
-    const worker = this.ensureWorker();
     const id = crypto.randomUUID();
+    try {
+      return await this.tryRemoteImageEdit(file, id, options);
+    } catch (error) {
+      console.warn('fix.pictures: remote image edit unavailable, falling back to local worker', error);
+    }
+
+    const worker = this.ensureWorker();
     const arrayBuffer = await file.arrayBuffer();
     const request: WorkerRequest = {
       id,
