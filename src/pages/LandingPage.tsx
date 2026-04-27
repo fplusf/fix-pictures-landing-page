@@ -433,7 +433,7 @@ function LandingPage() {
             </div>
             <div className="shrink-0 rounded-2xl border border-emerald-200 bg-white p-5 shadow-sm">
               <div className="space-y-2 text-sm font-semibold">
-                {['No uploads', 'No servers', 'No accounts for free', 'No data sharing'].map((item) => (
+                {['No uploads', 'No servers', 'No data sharing'].map((item) => (
                   <div key={item} className="flex items-center gap-2 text-emerald-800">
                     <span className="inline-flex h-4 w-4 items-center justify-center rounded-full bg-emerald-500 text-[10px] font-black text-white">✓</span>
                     {item}
@@ -530,7 +530,7 @@ function LandingPage() {
             </span>
           </h2>
           <p className="mt-4 text-sm text-zinc-400 md:text-base">
-            Free to start. No account required. Results in under 30 seconds.
+            Free to start. Results in under 30 seconds.
           </p>
           <button
             onClick={() => handlePlanClick('Free')}

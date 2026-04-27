@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "antigravity": {
+      "command": "/Users/farrukh/.antigravity/antigravity/bin/antigravity",
+      "args": ["mcp", "serve"],
+      "env": {}
+    }
+  }
+}
