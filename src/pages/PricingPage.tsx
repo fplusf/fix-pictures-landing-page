@@ -13,7 +13,7 @@ const pricingPlans = [
     name: 'Free Trial',
     price: '$0',
     interval: '',
-    quota: '5 free images',
+    quota: '10 free images',
     features: ['Amazon-ready exports', 'Compliance report', 'Before/after review'],
     tagline: 'Test the output quality on 5 real images.',
     cta: 'Start Free Trial',
@@ -123,7 +123,7 @@ export default function PricingPage() {
             Simple, honest pricing.
           </h1>
           <p className="mx-auto mt-6 max-w-2xl text-lg text-zinc-600">
-            Start with 5 trial images, then move to the credit pack that fits your catalog volume.
+            Start with 10 trial images, then move to the credit pack that fits your catalog volume.
           </p>
         </div>
 
@@ -200,7 +200,7 @@ export default function PricingPage() {
               <div>
                 <h4 className="font-bold text-zinc-950">How does the free tier work?</h4>
                 <p className="mt-2 text-sm text-zinc-600 leading-relaxed">
-                  You get 5 full-resolution, Amazon-ready trial images. Once you use your quota, you can move to Starter or Growth depending on the image volume you need.
+                  You get 10 full-resolution, Amazon-ready trial images. Once you use your quota, you can move to Starter or Growth depending on the image volume you need.
                 </p>
               </div>
               <div>

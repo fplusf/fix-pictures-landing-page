@@ -4,7 +4,7 @@ import { supabase } from '@/src/lib/supabase';
 
 export type Plan = 'free' | 'starter' | 'growth' | 'pro' | 'lifetime';
 
-export const FREE_IMAGE_LIMIT = 5;
+export const FREE_IMAGE_LIMIT = 10;
 export const STARTER_IMAGE_LIMIT = 1000;
 export const GROWTH_IMAGE_LIMIT = 2500;
 

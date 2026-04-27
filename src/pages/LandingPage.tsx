@@ -44,7 +44,7 @@ const pricingPlans = [
     name: 'Free Trial',
     price: '$0',
     interval: '',
-    quota: '5 free images',
+    quota: '10 free images',
     features: ['Amazon-ready exports', 'Compliance report', 'Before/after review'],
     tagline: 'Test the output quality on 5 real images.',
     cta: 'Start Free Trial',

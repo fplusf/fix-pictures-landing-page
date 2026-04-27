@@ -38,13 +38,13 @@ export function UpgradeModal({ open, onClose }: Props) {
         {/* Accessible title/description (visually hidden — gradient header serves as the UI heading) */}
         <DialogTitle className="sr-only">Upgrade your plan</DialogTitle>
         <DialogDescription className="sr-only">
-          You have used all 5 free images. Upgrade to Starter or Growth to continue processing.
+          You have used all 10 free images. Upgrade to Starter or Growth to continue processing.
         </DialogDescription>
 
         {/* Header */}
         <div className="bg-gradient-to-br from-[#e636a4] via-[#f95093] to-[#ff7a2f] px-8 py-8 text-white text-center">
           <div className="text-4xl mb-3">🚀</div>
-          <h2 className="text-2xl font-black">You've used your 5 free images</h2>
+          <h2 className="text-2xl font-black">You've used your 10 free images</h2>
           <p className="mt-2 text-white/80 text-sm">
             Upgrade to keep processing with the credit pack that fits your catalog.
           </p>
