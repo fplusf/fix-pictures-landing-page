@@ -24,14 +24,14 @@ export default function RefundPolicy() {
           <section>
             <h2 className="text-xl font-bold text-zinc-950">2. Refund Eligibility</h2>
             <p className="mt-3">
-              Refunds are available for Pro Yearly and Lifetime plans within 7 days of purchase, provided that the account has processed fewer than 10 images since the upgrade. Once 10 or more images have been processed on a paid plan, the purchase is considered fully consumed and non-refundable.
+              Refunds are available for Starter and Growth purchases within 7 days of purchase, provided that the account has processed fewer than 10 images since the upgrade. Once 10 or more images have been processed on a paid plan, the purchase is considered fully consumed and non-refundable.
             </p>
           </section>
 
           <section>
-            <h2 className="text-xl font-bold text-zinc-950">3. Subscription Cancellations</h2>
+            <h2 className="text-xl font-bold text-zinc-950">3. Credit Plan Changes</h2>
             <p className="mt-3">
-              You can cancel your subscription at any time. When you cancel, you will maintain access to your Pro features until the end of your current billing period. No further charges will be made.
+              Paid plans are sold as image-credit tiers. If you need a higher tier later, contact support and we can help you move to the plan that matches your processing volume.
             </p>
           </section>
 

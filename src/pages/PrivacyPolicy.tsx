@@ -10,7 +10,7 @@ export default function PrivacyPolicy() {
             Back to Home
           </Link>
           <h1 className="mt-6 text-4xl font-black tracking-tight text-zinc-950 md:text-5xl">Privacy Policy</h1>
-          <p className="mt-4 font-medium text-zinc-500">Last updated: March 6, 2026</p>
+          <p className="mt-4 font-medium text-zinc-500">Last updated: April 27, 2026</p>
         </header>
 
         <div className="space-y-8 text-base leading-relaxed text-zinc-600">
@@ -24,7 +24,7 @@ export default function PrivacyPolicy() {
           <section>
             <h2 className="text-xl font-bold text-zinc-950">2. Image Processing</h2>
             <p className="mt-3">
-              Your images are processed locally in your browser using Web Workers. We do *not* store your original or processed images on our servers. All image data is transient and exists only during your active session.
+              We process uploaded images through hosted AI services and internal automation to generate the outputs you request. We may temporarily transmit, cache, and store image data as needed to provide the service, maintain reliability, investigate errors, and prevent abuse.
             </p>
           </section>
 

@@ -3,8 +3,8 @@ import { openCheckout } from '@/src/lib/paddle';
 import { useState } from 'react';
 import { useAuth } from '@/src/contexts/AuthContext';
 
-const PRICE_PRO = import.meta.env.VITE_PADDLE_PRICE_PRO as string;
-const PRICE_LIFETIME = import.meta.env.VITE_PADDLE_PRICE_LIFETIME as string;
+const PRICE_STARTER = (import.meta.env.VITE_PADDLE_PRICE_STARTER || import.meta.env.VITE_PADDLE_PRICE_PRO) as string;
+const PRICE_GROWTH = (import.meta.env.VITE_PADDLE_PRICE_GROWTH as string) || '';
 
 interface Props {
   open: boolean;
@@ -13,11 +13,12 @@ interface Props {
 
 export function UpgradeModal({ open, onClose }: Props) {
   const { user } = useAuth();
-  const [loading, setLoading] = useState<'pro' | 'lifetime' | null>(null);
+  const [loading, setLoading] = useState<'starter' | 'growth' | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const handleUpgrade = async (plan: 'pro' | 'lifetime') => {
-    const priceId = plan === 'pro' ? PRICE_PRO : PRICE_LIFETIME;
+  const handleUpgrade = async (plan: 'starter' | 'growth') => {
+    const priceId = plan === 'starter' ? PRICE_STARTER : PRICE_GROWTH;
+    if (!priceId) return;
     setLoading(plan);
     setError(null);
     try {
@@ -37,7 +38,7 @@ export function UpgradeModal({ open, onClose }: Props) {
         {/* Accessible title/description (visually hidden — gradient header serves as the UI heading) */}
         <DialogTitle className="sr-only">Upgrade your plan</DialogTitle>
         <DialogDescription className="sr-only">
-          You have used all 5 free images. Choose a Pro or Lifetime plan to continue processing.
+          You have used all 5 free images. Upgrade to Starter or Growth to continue processing.
         </DialogDescription>
 
         {/* Header */}
@@ -45,43 +46,41 @@ export function UpgradeModal({ open, onClose }: Props) {
           <div className="text-4xl mb-3">🚀</div>
           <h2 className="text-2xl font-black">You've used your 5 free images</h2>
           <p className="mt-2 text-white/80 text-sm">
-            Upgrade to keep processing — unlimited images, no restrictions.
+            Upgrade to keep processing with the credit pack that fits your catalog.
           </p>
         </div>
 
         {/* Plans */}
         <div className="p-6 space-y-3 bg-white">
-          {/* Pro */}
           <button
-            onClick={() => handleUpgrade('pro')}
-            disabled={!!loading}
-            className="w-full rounded-xl border-2 border-[#e636a4] p-4 text-left transition hover:bg-pink-50 disabled:opacity-60"
-          >
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="font-black text-zinc-900">Pro — $49 / year</p>
-                <p className="text-sm text-zinc-500 mt-0.5">Unlimited images · Cancel anytime</p>
-              </div>
-              <span className="rounded-full bg-pink-100 px-3 py-1 text-xs font-bold text-[#c71f8a]">
-                {loading === 'pro' ? 'Loading…' : 'Best value'}
-              </span>
-            </div>
-          </button>
-
-          {/* Lifetime */}
-          <button
-            onClick={() => handleUpgrade('lifetime')}
+            onClick={() => handleUpgrade('starter')}
             disabled={!!loading}
             className="w-full rounded-xl border-2 border-zinc-200 p-4 text-left transition hover:bg-zinc-50 disabled:opacity-60"
           >
             <div className="flex items-center justify-between">
               <div>
-                <p className="font-black text-zinc-900">Lifetime — $99 one-time</p>
-                <p className="text-sm text-zinc-500 mt-0.5">Pay once, use forever · All future updates</p>
+                <p className="font-black text-zinc-900">Starter — $49</p>
+                <p className="text-sm text-zinc-500 mt-0.5">1,000 images · Best for smaller catalogs</p>
               </div>
-              {loading === 'lifetime' && (
-                <span className="text-xs text-zinc-400">Loading…</span>
-              )}
+              <span className="rounded-full bg-zinc-100 px-3 py-1 text-xs font-bold text-zinc-700">
+                {loading === 'starter' ? 'Loading…' : 'Entry'}
+              </span>
+            </div>
+          </button>
+
+          <button
+            onClick={() => handleUpgrade('growth')}
+            disabled={!!loading || !PRICE_GROWTH}
+            className="w-full rounded-xl border-2 border-[#e636a4] p-4 text-left transition hover:bg-pink-50 disabled:opacity-60"
+          >
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="font-black text-zinc-900">Growth — $99</p>
+                <p className="text-sm text-zinc-500 mt-0.5">2,500 images · Lower cost per image</p>
+              </div>
+              <span className="rounded-full bg-pink-100 px-3 py-1 text-xs font-bold text-[#c71f8a]">
+                {loading === 'growth' ? 'Loading…' : !PRICE_GROWTH ? 'Set Paddle Price' : 'Best value'}
+              </span>
             </div>
           </button>
 

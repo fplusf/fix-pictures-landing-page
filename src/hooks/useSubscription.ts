@@ -2,9 +2,25 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { useAuth } from '@/src/contexts/AuthContext';
 import { supabase } from '@/src/lib/supabase';
 
-export type Plan = 'free' | 'pro' | 'lifetime';
+export type Plan = 'free' | 'starter' | 'growth' | 'pro' | 'lifetime';
 
-export const FREE_IMAGE_LIMIT = 100;
+export const FREE_IMAGE_LIMIT = 5;
+export const STARTER_IMAGE_LIMIT = 1000;
+export const GROWTH_IMAGE_LIMIT = 2500;
+
+export function getPlanImageLimit(plan: Plan): number | typeof Infinity {
+  switch (plan) {
+    case 'free':
+      return FREE_IMAGE_LIMIT;
+    case 'starter':
+      return STARTER_IMAGE_LIMIT;
+    case 'growth':
+      return GROWTH_IMAGE_LIMIT;
+    case 'pro':
+    case 'lifetime':
+      return Infinity;
+  }
+}
 
 export interface SubscriptionState {
   plan: Plan;
@@ -48,11 +64,11 @@ export function useSubscription(): SubscriptionState {
     });
   }, [user?.id, tick]);
 
-  const isPaid = plan === 'pro' || plan === 'lifetime';
-  const imagesRemaining = isPaid
+  const planLimit = getPlanImageLimit(plan);
+  const imagesRemaining = planLimit === Infinity
     ? Infinity
-    : Math.max(0, FREE_IMAGE_LIMIT - imagesUsed);
-  const canProcess = isPaid || imagesUsed < FREE_IMAGE_LIMIT;
+    : Math.max(0, planLimit - imagesUsed);
+  const canProcess = planLimit === Infinity || imagesUsed < planLimit;
 
   return {
     plan,

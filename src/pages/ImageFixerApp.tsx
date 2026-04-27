@@ -5,7 +5,13 @@ import { ProcessingSteps } from '@/src/components/processing-steps';
 import { Button } from '@/src/components/ui/button';
 import { Slider } from '@/src/components/ui/slider';
 import { useAuth } from '@/src/contexts/AuthContext';
-import { FREE_IMAGE_LIMIT, useSubscription, useUsageTracker } from '@/src/hooks/useSubscription';
+import {
+  FREE_IMAGE_LIMIT,
+  GROWTH_IMAGE_LIMIT,
+  STARTER_IMAGE_LIMIT,
+  useSubscription,
+  useUsageTracker,
+} from '@/src/hooks/useSubscription';
 import { analyzeImageFile, type AuditSnapshot } from '@/src/lib/auditor';
 import {
   composeCompliantImage,
@@ -391,7 +397,7 @@ function App() {
     if (!files.length) return;
 
     // ── Quota guard ───────────────────────────────────────────────────────────
-    const isPaid = plan === 'pro' || plan === 'lifetime';
+    const isPaid = plan === 'starter' || plan === 'growth' || plan === 'pro' || plan === 'lifetime';
     if (!isPaid) {
       // How many slots are still available in this session?
       // imagesRemaining already subtracts imagesUsed from FREE_IMAGE_LIMIT,
@@ -741,7 +747,13 @@ function App() {
                 </button>
               ) : (
                 <span className="flex items-center gap-1.5 rounded-full border border-emerald-300 bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700">
-                  ✓ {plan === 'lifetime' ? 'Lifetime' : 'Pro'}
+                  ✓ {plan === 'starter'
+                    ? `${imagesUsed}/${STARTER_IMAGE_LIMIT} Starter`
+                    : plan === 'growth'
+                      ? `${imagesUsed}/${GROWTH_IMAGE_LIMIT} Growth`
+                      : plan === 'lifetime'
+                        ? 'Lifetime'
+                        : 'Pro'}
                 </span>
               )}
               <Button

@@ -45,7 +45,7 @@ export function AppRoute({ children }: ProtectedRouteProps) {
 
   if (!user) return <Navigate to="/" replace />;
 
-  const isPaid = plan === 'pro' || plan === 'lifetime';
+  const isPaid = plan === 'starter' || plan === 'growth' || plan === 'pro' || plan === 'lifetime';
   if (!isPaid && !canProcess) return <Navigate to="/upgrade" replace />;
 
   return <>{children}</>;

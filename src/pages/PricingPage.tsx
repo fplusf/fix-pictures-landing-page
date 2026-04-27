@@ -6,44 +6,43 @@ import { openCheckout } from '@/src/lib/paddle';
 
 const APP_ROUTE = '/app';
 
-const PRICE_PRO = import.meta.env.VITE_PADDLE_PRICE_PRO as string;
-const PRICE_LIFETIME = import.meta.env.VITE_PADDLE_PRICE_LIFETIME as string;
-
+const PRICE_STARTER = (import.meta.env.VITE_PADDLE_PRICE_STARTER || import.meta.env.VITE_PADDLE_PRICE_PRO) as string;
+const PRICE_GROWTH = (import.meta.env.VITE_PADDLE_PRICE_GROWTH as string) || '';
 const pricingPlans = [
   {
     name: 'Free Trial',
     price: '$0',
     interval: '',
     quota: '5 free images',
-    features: ['Full AI pipeline', 'Compliance report', 'Batch download'],
-    tagline: 'Then $49/year — cancel anytime before.',
+    features: ['Amazon-ready exports', 'Compliance report', 'Before/after review'],
+    tagline: 'Test the output quality on 5 real images.',
     cta: 'Start Free Trial',
     featured: false,
-    priceId: PRICE_PRO,
+    priceId: PRICE_STARTER,
     isTrial: true,
   },
   {
-    name: 'Pro',
+    name: 'Starter',
     price: '$49',
-    interval: '/ year',
-    quota: 'Unlimited images',
-    features: ['Everything in Free', 'Batch processing', 'Priority support'],
-    tagline: 'Best value for active Amazon sellers.',
-    cta: 'Get Pro',
-    featured: true,
-    priceId: PRICE_PRO,
+    interval: '',
+    quota: '1,000 images included',
+    features: ['Everything in Free', 'Credit-based processing', 'Best for smaller catalogs'],
+    tagline: 'For sellers who need a practical first paid tier.',
+    cta: 'Get Starter',
+    featured: false,
+    priceId: PRICE_STARTER,
     isTrial: false,
   },
   {
-    name: 'Lifetime',
+    name: 'Growth',
     price: '$99',
-    interval: 'one time',
-    quota: 'Unlimited images forever',
-    features: ['Everything in Pro', 'All future updates', 'No subscription ever'],
-    tagline: 'Pay once. Never pay again.',
-    cta: 'Get Lifetime Access',
-    featured: false,
-    priceId: PRICE_LIFETIME,
+    interval: '',
+    quota: '2,500 images included',
+    features: ['Everything in Starter', 'Higher-volume processing', 'Lower cost per image'],
+    tagline: 'For teams working through larger SKU batches.',
+    cta: 'Get Growth',
+    featured: true,
+    priceId: PRICE_GROWTH,
     isTrial: false,
   },
 ];
@@ -124,7 +123,7 @@ export default function PricingPage() {
             Simple, honest pricing.
           </h1>
           <p className="mx-auto mt-6 max-w-2xl text-lg text-zinc-600">
-            Start fixing your Amazon images for free. Upgrade whenever you need unlimited batch processing and priority support.
+            Start with 5 trial images, then move to the credit pack that fits your catalog volume.
           </p>
         </div>
 
@@ -171,14 +170,14 @@ export default function PricingPage() {
 
                 <button
                   onClick={() => handlePlanClick(plan.name, plan.priceId!)}
-                  disabled={checkoutLoading === plan.name}
+                  disabled={checkoutLoading === plan.name || !plan.priceId}
                   className={`mt-10 inline-flex w-full items-center justify-center rounded-xl py-4 text-base font-bold transition disabled:opacity-60 disabled:cursor-not-allowed ${
                     plan.featured
                       ? 'bg-gradient-to-r from-[#e636a4] to-[#ff7a2f] text-white hover:brightness-105'
                       : 'bg-zinc-900 text-white hover:bg-zinc-800'
                   }`}
                 >
-                  {checkoutLoading === plan.name ? 'Loading…' : plan.cta}
+                  {checkoutLoading === plan.name ? 'Loading…' : !plan.priceId ? 'Set Paddle Price' : plan.cta}
                 </button>
               </div>
             </article>
@@ -201,19 +200,19 @@ export default function PricingPage() {
               <div>
                 <h4 className="font-bold text-zinc-950">How does the free tier work?</h4>
                 <p className="mt-2 text-sm text-zinc-600 leading-relaxed">
-                  You get 5 full-resolution, Amazon-ready images for free. No credit card required. Once you use your quota, you can upgrade to a Pro or Lifetime plan for unlimited access.
+                  You get 5 full-resolution, Amazon-ready trial images. Once you use your quota, you can move to Starter or Growth depending on the image volume you need.
                 </p>
               </div>
               <div>
-                <h4 className="font-bold text-zinc-950">What is the "Lifetime" plan?</h4>
+                <h4 className="font-bold text-zinc-950">How do paid plans work?</h4>
                 <p className="mt-2 text-sm text-zinc-600 leading-relaxed">
-                  The Lifetime plan is a one-time payment. You pay $99 once and get unlimited images forever, including all future updates and AI model improvements.
+                  Starter includes up to 1,000 processed images and Growth includes up to 2,500. Choose the tier that matches your expected catalog workload.
                 </p>
               </div>
               <div>
                 <h4 className="font-bold text-zinc-950">Is my data private?</h4>
                 <p className="mt-2 text-sm text-zinc-600 leading-relaxed">
-                  Yes. All AI processing happens locally in your browser. We never upload your images to our servers. Your privacy is our priority.
+                  We handle uploaded images only to deliver the service, generate outputs, maintain the workflow, and protect the platform from abuse. We do not sell customer images.
                 </p>
               </div>
             </div>
@@ -235,7 +234,7 @@ export default function PricingPage() {
           </div>
         </div>
         <p className="mt-8 text-center text-xs text-zinc-400">
-          © {new Date().getFullYear()} fix.pictures. All AI processing runs locally.
+          © {new Date().getFullYear()} fix.pictures. Built for Amazon-ready product image cleanup and compliance workflows.
         </p>
       </footer>
     </div>

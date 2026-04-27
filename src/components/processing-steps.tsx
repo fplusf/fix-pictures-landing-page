@@ -49,7 +49,7 @@ export const ProcessingSteps = ({ logs, onCancel }: ProcessingStepsProps) => {
   return (
     <div className="w-full rounded-2xl border border-zinc-200 bg-white p-4 shadow-lg">
       <p className="text-sm font-semibold text-zinc-900">Running compliance autopilot…</p>
-      <p className="mt-1 text-xs text-zinc-500">Smart model selection · in-browser · no upload</p>
+      <p className="mt-1 text-xs text-zinc-500">Smart model routing · compliance canvas · export checks</p>
       <div className="mt-4 space-y-2">
         {STAGES.map((stage, index) => {
           const entry = latestByStage(logs, stage.id);

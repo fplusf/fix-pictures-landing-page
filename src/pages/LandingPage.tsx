@@ -37,42 +37,41 @@ const proofCases = [
 ];
 
 // ─── Pricing ─────────────────────────────────────────────────────────────────
-const PRICE_PRO = import.meta.env.VITE_PADDLE_PRICE_PRO as string;
-const PRICE_LIFETIME = import.meta.env.VITE_PADDLE_PRICE_LIFETIME as string;
-
+const PRICE_STARTER = (import.meta.env.VITE_PADDLE_PRICE_STARTER || import.meta.env.VITE_PADDLE_PRICE_PRO) as string;
+const PRICE_GROWTH = (import.meta.env.VITE_PADDLE_PRICE_GROWTH as string) || '';
 const pricingPlans = [
   {
     name: 'Free Trial',
     price: '$0',
     interval: '',
     quota: '5 free images',
-    features: ['Full AI pipeline', 'Compliance report', 'Batch download'],
-    tagline: 'Then $49/year — cancel anytime before.',
+    features: ['Amazon-ready exports', 'Compliance report', 'Before/after review'],
+    tagline: 'Test the output quality on 5 real images.',
     cta: 'Start Free Trial',
     featured: false,
-    priceId: PRICE_PRO,
+    priceId: PRICE_STARTER,
   },
   {
-    name: 'Pro',
+    name: 'Starter',
     price: '$49',
-    interval: '/ year',
-    quota: 'Unlimited images',
-    features: ['Everything in Free', 'Batch processing', 'Priority support'],
-    tagline: 'Best value for active Amazon sellers.',
-    cta: 'Get Pro',
-    featured: true,
-    priceId: PRICE_PRO,
+    interval: '',
+    quota: '1,000 images included',
+    features: ['Everything in Free', 'Credit-based processing', 'Best for smaller catalogs'],
+    tagline: 'For sellers who need a practical first paid tier.',
+    cta: 'Get Starter',
+    featured: false,
+    priceId: PRICE_STARTER,
   },
   {
-    name: 'Lifetime',
+    name: 'Growth',
     price: '$99',
-    interval: 'one time',
-    quota: 'Unlimited images forever',
-    features: ['Everything in Pro', 'All future updates', 'No subscription ever'],
-    tagline: 'Pay once. Never pay again.',
-    cta: 'Get Lifetime Access',
-    featured: false,
-    priceId: PRICE_LIFETIME,
+    interval: '',
+    quota: '2,500 images included',
+    features: ['Everything in Starter', 'Higher-volume processing', 'Lower cost per image'],
+    tagline: 'For teams working through larger SKU batches.',
+    cta: 'Get Growth',
+    featured: true,
+    priceId: PRICE_GROWTH,
   },
 ];
 
@@ -104,9 +103,9 @@ const steps = [
 // ─── Features ─────────────────────────────────────────────────────────────────
 const features = [
   {
-    icon: '🔒',
-    title: '100% private',
-    description: 'Images never leave your device. All AI processing runs in your browser.',
+    icon: '🧠',
+    title: 'Model-routed pipeline',
+    description: 'Each job is routed through the processing path that fits speed, quality, and catalog workload.',
   },
   {
     icon: '📦',
@@ -272,7 +271,7 @@ function LandingPage() {
             {/* Trust pill */}
             <div className="inline-flex items-center gap-2 rounded-full border border-zinc-200 bg-white px-4 py-2 text-xs font-semibold text-zinc-600 shadow-sm">
               <span className="h-2 w-2 rounded-full bg-emerald-400" />
-              100% in-browser · zero uploads · fully private
+              Compliance-first workflow · seller-ready output
             </div>
 
             <h1 className="mt-6 text-4xl font-black leading-[1.08] tracking-tight text-zinc-950 sm:text-5xl md:text-6xl">
@@ -283,7 +282,7 @@ function LandingPage() {
             </h1>
 
             <p className="mt-5 max-w-lg text-base leading-relaxed text-zinc-600 md:text-lg">
-              Drop any product photo. AI removes the background, corrects framing, adds a grounding shadow, and exports a 2000px Amazon-compliant JPG — all inside your browser.
+              Drop any product photo. Our AI pipeline removes the background, corrects framing, adds a grounding shadow, and exports a 2000px Amazon-ready JPG.
             </p>
 
             <div className="mt-8 flex flex-col gap-4 sm:flex-row sm:items-center">
@@ -341,7 +340,7 @@ function LandingPage() {
             {[
               { stat: '< 30s', label: 'Average fix time' },
               { stat: '2000px', label: 'Output resolution' },
-              { stat: '0 uploads', label: 'Images stay private' },
+              { stat: '85%', label: 'Target product fill' },
               { stat: '100%', label: 'Amazon compliance' },
             ].map(({ stat, label }) => (
               <div key={label} className="px-6 py-2 text-center">
@@ -430,15 +429,15 @@ function LandingPage() {
         <section className="mt-16 rounded-2xl border border-emerald-200 bg-gradient-to-r from-emerald-50 to-white p-8 md:p-10">
           <div className="flex flex-col items-start gap-5 md:flex-row md:items-center md:justify-between">
             <div>
-              <p className="text-xs font-bold uppercase tracking-[0.2em] text-emerald-700">Privacy first</p>
-              <h3 className="mt-1.5 text-2xl font-black text-zinc-950 md:text-3xl">Your images never leave your device.</h3>
+              <p className="text-xs font-bold uppercase tracking-[0.2em] text-emerald-700">Built for scale</p>
+              <h3 className="mt-1.5 text-2xl font-black text-zinc-950 md:text-3xl">Optimized for recurring catalog work.</h3>
               <p className="mt-2 max-w-xl text-sm leading-relaxed text-zinc-600">
-                The entire AI pipeline runs inside your browser using WebAssembly. No image is ever uploaded to any server. No storage. No data sharing. Just you and your browser.
+                We tune the processing pipeline for real ecommerce throughput: strong main-image cleanup, consistent framing, and repeatable outputs across a larger catalog.
               </p>
             </div>
             <div className="shrink-0 rounded-2xl border border-emerald-200 bg-white p-5 shadow-sm">
               <div className="space-y-2 text-sm font-semibold">
-                {['No uploads', 'No servers', 'No data sharing'].map((item) => (
+                {['Model routing', 'Batch-friendly workflow', 'Repeatable outputs'].map((item) => (
                   <div key={item} className="flex items-center gap-2 text-emerald-800">
                     <span className="inline-flex h-4 w-4 items-center justify-center rounded-full bg-emerald-500 text-[10px] font-black text-white">✓</span>
                     {item}
@@ -506,14 +505,14 @@ function LandingPage() {
 
                     <button
                       onClick={() => handlePlanClick(plan.name, plan.priceId)}
-                      disabled={checkoutLoading === plan.name}
+                      disabled={checkoutLoading === plan.name || !plan.priceId}
                       className={`mt-6 inline-flex w-full items-center justify-center rounded-xl px-4 py-3 text-sm font-bold transition disabled:opacity-60 disabled:cursor-not-allowed ${
                         plan.featured
                           ? 'bg-gradient-to-r from-[#e636a4] to-[#ff7a2f] text-white hover:brightness-105'
                           : 'bg-zinc-900 text-white hover:bg-zinc-800'
                       }`}
                     >
-                      {checkoutLoading === plan.name ? 'Loading…' : plan.cta}
+                      {checkoutLoading === plan.name ? 'Loading…' : !plan.priceId ? 'Set Paddle Price' : plan.cta}
                     </button>
                   </div>
                 </article>
@@ -564,7 +563,7 @@ function LandingPage() {
           </div>
         </div>
         <p className="mt-6 text-xs text-zinc-400">
-          © {new Date().getFullYear()} fix.pictures. All AI processing runs locally in your browser — your images are never uploaded or stored.
+          © {new Date().getFullYear()} fix.pictures. Built for Amazon-ready product image cleanup and compliance workflows.
         </p>
       </footer>
     </div>
