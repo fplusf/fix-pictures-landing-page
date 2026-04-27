@@ -8,41 +8,31 @@ const APP_ROUTE = '/app';
 
 // ─── Hero images ────────────────────────────────────────────────────────────
 const heroExample = {
-  before:
-    'https://images.unsplash.com/photo-1541643600914-78b084683702?auto=format&fit=crop&w=1400&q=80',
-  after:
-    'https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?auto=format&fit=crop&w=1400&q=80',
+  before: '/examples/kettle-before.jpg',
+  after: '/examples/kettle-after.png',
 };
 
 // ─── Proof cases ─────────────────────────────────────────────────────────────
 const proofCases = [
   {
-    name: 'Cosmetics',
-    before:
-      'https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?auto=format&fit=crop&w=1200&q=80',
-    after:
-      'https://images.unsplash.com/photo-1598440947619-2c35fc9aa908?auto=format&fit=crop&w=1200&q=80',
+    name: 'Camera lens',
+    before: '/examples/lens-before.jpg',
+    after: '/examples/lens-after.jpg',
   },
   {
-    name: 'Electronics',
-    before:
-      'https://images.unsplash.com/photo-1484704849700-f032a568e944?auto=format&fit=crop&w=1200&q=80',
-    after:
-      'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=1200&q=80',
+    name: 'Snack bar',
+    before: '/examples/snicker-before.jpg',
+    after: '/examples/snicker-after.png',
   },
   {
-    name: 'Footwear',
-    before:
-      'https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=1200&q=80',
-    after:
-      'https://images.unsplash.com/photo-1595950653106-6c9ebd614d3a?auto=format&fit=crop&w=1200&q=80',
+    name: 'Thermos bottle',
+    before: '/examples/termos-before.jpg',
+    after: '/examples/termos-after.jpg',
   },
   {
-    name: 'Packaging',
-    before:
-      'https://images.unsplash.com/photo-1556228720-195a672e8a03?auto=format&fit=crop&w=1200&q=80',
-    after:
-      'https://images.unsplash.com/photo-1556228578-8c89e6adf883?auto=format&fit=crop&w=1200&q=80',
+    name: 'Watch',
+    before: '/examples/watch-before.jpg',
+    after: '/examples/watch-after.jpg',
   },
 ];
 
@@ -119,11 +109,6 @@ const features = [
     description: 'Images never leave your device. All AI processing runs in your browser.',
   },
   {
-    icon: '🤖',
-    title: 'RMBG AI model',
-    description: 'Uses the same background removal model as professional editing suites.',
-  },
-  {
     icon: '📦',
     title: 'Batch processing',
     description: 'Drop an entire product catalogue. Multiple images processed in parallel.',
@@ -137,11 +122,6 @@ const features = [
     icon: '🌑',
     title: 'Contact shadow',
     description: 'Subtle grounding shadow keeps products looking natural on white.',
-  },
-  {
-    icon: '⚡',
-    title: 'No account for free tier',
-    description: 'Just open the app and start. Sign in only when you need unlimited access.',
   },
 ];
 
@@ -182,9 +162,19 @@ function BeforeAfterSlider({
 
   return (
     <div className={`relative overflow-hidden rounded-2xl border border-zinc-200 bg-zinc-100 shadow-sm ${className}`}>
-      <img src={beforeSrc} alt={`${label} before`} className="h-full w-full object-cover" loading="lazy" />
+      <img
+        src={afterSrc}
+        alt={`${label} after`}
+        className="h-full w-full bg-white object-contain p-4 md:p-6"
+        loading="lazy"
+      />
       <div className="absolute inset-0 overflow-hidden" style={{ clipPath: `inset(0 ${100 - split}% 0 0)` }} aria-hidden="true">
-        <img src={afterSrc} alt={`${label} after`} className="h-full w-full object-cover" loading="lazy" />
+        <img
+          src={beforeSrc}
+          alt={`${label} before`}
+          className="h-full w-full bg-white object-contain p-4 md:p-6"
+          loading="lazy"
+        />
       </div>
       <div className="pointer-events-none absolute inset-y-0" style={{ left: `${split}%` }}>
         <div className="h-full w-0.5 bg-white shadow-[0_0_0_1px_rgba(0,0,0,0.25)]" />
