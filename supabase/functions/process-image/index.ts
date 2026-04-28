@@ -8,13 +8,14 @@ const QUALITY = 'auto';
 
 const EDIT_PROMPT = [
   'Convert this product photo to a fully Amazon main image compliant result.',
-  'Replace the entire background with pure white (RGB 255, 255, 255) — no gradients, shadows, off-white tones, or texture.',
-  'The product must fill at least 85% of the image frame — crop tight around the subject with minimal padding.',
+  'Replace the entire background with pure white (RGB 255, 255, 255) — no gradients, off-white tones, or texture anywhere.',
+  'CRITICAL: remove ALL shadows completely — no drop shadow, no cast shadow, no floor shadow, no ground shadow, no shadow of any kind below or around the product. The area below the product must be pure white with zero grey or dark pixels.',
+  'The product must fill at least 85% of the image frame — center the subject tightly with minimal padding.',
   'Keep the exact real product: preserve every detail, color, texture, branding, shape, and proportion.',
   'Do not add any props, text, badges, watermarks, reflections, extra objects, or decorative elements.',
   'Do not alter the product design, branding, packaging, geometry, materials, or finish in any way.',
   'Do not crop off any part of the product.',
-  'Output a single centered product on a pure white background with crisp clean edges.',
+  'Output a single centered product floating cleanly on a pure white background with crisp edges and no shadow whatsoever.',
 ].join(' ');
 
 const CORS_HEADERS = {
