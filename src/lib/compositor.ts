@@ -128,22 +128,13 @@ export const composeCompliantImage = async (
 
     const scaledBboxHeight = bboxHeight * scale;
 
-    const shadowSignals = computeShadowSignals(sourceCanvas, image.width, image.height, bbox);
-    const shouldApplyShadow =
-      options.shadowMode === 'off' ? false : shadowSignals.grounded && !shadowSignals.transparent;
-
-    let shadowOpacity = 0;
-    if (shouldApplyShadow) {
-      const intensityNorm = clamp(options.shadowIntensity, 0, 100) / 100;
-      shadowOpacity = clamp(0.05 + intensityNorm * 0.1, 0.05, 0.15);
-      drawContactShadow(context, {
-        bbox,
-        scale,
-        left,
-        floorY: bboxBottom,
-        opacity: shadowOpacity,
-      });
-    }
+    // Shadow drawing disabled — fully rely on the AI model output.
+    // gpt-image-2 handles background removal cleanly; our contact-shadow
+    // logic was adding an unwanted fake shadow on flat-based products.
+    // Kept for reference but not called.
+    const shouldApplyShadow = false;
+    const shadowOpacity = 0;
+    void options.shadowMode; // suppress unused-var lint
 
     context.drawImage(sourceCanvas, left, top, image.width * scale, image.height * scale);
 

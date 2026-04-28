@@ -964,55 +964,7 @@ function App() {
               </div>
             )}
 
-            <button
-              type="button"
-              className="mt-4 inline-flex items-center gap-2 text-sm font-medium text-zinc-700"
-              onClick={() => setShowAdvancedShadow((value) => !value)}
-            >
-              Advanced shadow controls
-              {showAdvancedShadow ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-            </button>
-
-            {showAdvancedShadow && (
-              <div className="mt-3 rounded-2xl border border-zinc-200 bg-zinc-50 p-4">
-                <p className="text-xs font-semibold uppercase tracking-[0.16em] text-zinc-500">Shadow mode</p>
-                <div className="mt-3 flex flex-wrap gap-2">
-                  <Button
-                    size="sm"
-                    className={cn('h-9 rounded-full px-4', shadowMode === 'auto' ? '' : 'bg-zinc-100 text-zinc-700 hover:bg-zinc-200')}
-                    onClick={() => setShadowMode('auto')}
-                  >
-                    Auto
-                  </Button>
-                  <Button
-                    size="sm"
-                    className={cn('h-9 rounded-full px-4', shadowMode === 'off' ? '' : 'bg-zinc-100 text-zinc-700 hover:bg-zinc-200')}
-                    onClick={() => setShadowMode('off')}
-                  >
-                    Off
-                  </Button>
-                </div>
-                <div className="mt-4">
-                  <div className="mb-2 flex items-center justify-between text-sm text-zinc-700">
-                    <span>Intensity</span>
-                    <span>{shadowIntensity}%</span>
-                  </div>
-                  <Slider
-                    value={[shadowIntensity]}
-                    min={0}
-                    max={100}
-                    step={1}
-                    onValueChange={(value) => setShadowIntensity(value[0] ?? DEFAULT_SHADOW_INTENSITY)}
-                    disabled={shadowMode === 'off'}
-                  />
-                </div>
-                {renderingShadow && (
-                  <p className="mt-3 text-xs text-zinc-600">
-                    Re-rendering with updated shadow...
-                  </p>
-                )}
-              </div>
-            )}
+            {/* Advanced shadow controls — hidden while shadow drawing is disabled */}
  
             {activeItem?.status === 'completed' && !activeItem.payload && (
               <div className="mt-4">
