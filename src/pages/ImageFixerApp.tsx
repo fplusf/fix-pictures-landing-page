@@ -130,11 +130,15 @@ function App() {
     [batchItems],
   );
 
+  // IDs whose usage was already tracked by the Edge Function server-side
+  const serverTrackedIdsRef = useRef(new Set<string>());
+
   // Track usage: insert a row per newly completed image (deduped by item ID)
   useUsageTracker(
     completedItems.map((i) => i.id),
     user?.id,
     refetch,
+    serverTrackedIdsRef.current,
   );
 
   useEffect(() => {
@@ -322,6 +326,12 @@ function App() {
           onProgress: pushProgress,
         });
 
+        // If the Edge Function tracked usage server-side, mark this item so
+        // useUsageTracker doesn't insert a duplicate client-side row.
+        if (payload.usageTrackedByServer) {
+          serverTrackedIdsRef.current.add(itemId);
+        }
+
         updateBatchItem(itemId, (entry) => ({
           ...entry,
           progressLogs: [
@@ -353,6 +363,11 @@ function App() {
         });
       } catch (error) {
         const err = error as Error;
+
+        if (err.message === 'QUOTA_EXCEEDED') {
+          navigate('/upgrade');
+          return;
+        }
 
         if (err.name === 'AbortError') {
           const wasCancelled = cancelledItemIdsRef.current.has(itemId);

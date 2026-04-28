@@ -51,6 +51,8 @@ export type ProcessedPayload = {
   histogram: Histogram;
   wasEdgeEnhanced: boolean;
   modelUsed: ModelId;
+  /** True when the Edge Function already inserted the usage row server-side. Client must skip its own insert. */
+  usageTrackedByServer?: boolean;
 };
 
 export type Bounds = {

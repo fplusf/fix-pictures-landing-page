@@ -90,6 +90,8 @@ export function useUsageTracker(
   completedIds: string[],
   userId: string | undefined,
   refetch: () => void,
+  /** IDs whose usage was already tracked server-side — skip client insert for these */
+  serverTrackedIds?: Set<string>,
 ) {
   const counted = useRef(new Set<string>());
 
@@ -98,7 +100,12 @@ export function useUsageTracker(
     const newIds = completedIds.filter((id) => !counted.current.has(id));
     if (!newIds.length) return;
     newIds.forEach((id) => counted.current.add(id));
-    // Fire-and-forget — one insert per completed image
-    Promise.all(newIds.map(() => incrementImageUsage(userId))).then(refetch);
-  }, [completedIds, userId, refetch]);
+    // Only insert client-side for images NOT already tracked by the server (local RMBG path)
+    const clientOnlyIds = newIds.filter((id) => !serverTrackedIds?.has(id));
+    if (clientOnlyIds.length) {
+      Promise.all(clientOnlyIds.map(() => incrementImageUsage(userId))).then(refetch);
+    } else {
+      refetch();
+    }
+  }, [completedIds, userId, refetch, serverTrackedIds]);
 }

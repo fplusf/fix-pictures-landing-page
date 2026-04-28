@@ -1,10 +1,25 @@
 // Supabase Edge Function — Deno runtime
 // Calls OpenAI gpt-image-2 to remove product photo backgrounds.
-// Falls back gracefully: the browser local model runs if this returns non-200.
+// Enforces per-user quota server-side before touching OpenAI.
+
+import { createClient } from 'jsr:@supabase/supabase-js@2';
 
 const OPENAI_API_URL = 'https://api.openai.com/v1/images/edits';
 const MODEL = 'gpt-image-2';
 const QUALITY = 'auto';
+
+// Must stay in sync with src/hooks/useSubscription.ts
+const FREE_IMAGE_LIMIT = 10;
+const STARTER_IMAGE_LIMIT = 1000;
+const GROWTH_IMAGE_LIMIT = 2500;
+
+const PLAN_LIMITS: Record<string, number | null> = {
+  free: FREE_IMAGE_LIMIT,
+  starter: STARTER_IMAGE_LIMIT,
+  growth: GROWTH_IMAGE_LIMIT,
+  pro: null,      // unlimited
+  lifetime: null, // unlimited
+};
 
 const EDIT_PROMPT = [
   'Convert this product photo to a fully Amazon main image compliant result.',
@@ -31,7 +46,6 @@ const jsonError = (message: string, status = 400) =>
   });
 
 Deno.serve(async (req: Request) => {
-  // Handle CORS preflight
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: CORS_HEADERS });
   }
@@ -40,8 +54,42 @@ Deno.serve(async (req: Request) => {
     return jsonError('Method not allowed', 405);
   }
 
-  const apiKey = Deno.env.get('OPENAI_API_KEY');
-  if (!apiKey) {
+  // ── 1. Auth ────────────────────────────────────────────────────────────────
+  const authHeader = req.headers.get('Authorization');
+  if (!authHeader?.startsWith('Bearer ')) {
+    return jsonError('Missing or invalid Authorization header', 401);
+  }
+  const jwt = authHeader.slice(7);
+
+  const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+  const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY')!;
+  const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+    global: { headers: { Authorization: `Bearer ${jwt}` } },
+    auth: { persistSession: false },
+  });
+
+  const { data: { user }, error: authError } = await supabase.auth.getUser();
+  if (authError || !user) {
+    return jsonError('Unauthorized', 401);
+  }
+
+  // ── 2. Quota check (before touching OpenAI) ────────────────────────────────
+  const [subResult, usageResult] = await Promise.all([
+    supabase.from('subscriptions').select('plan').eq('user_id', user.id).maybeSingle(),
+    supabase.from('image_usage').select('id', { count: 'exact', head: true }).eq('user_id', user.id),
+  ]);
+
+  const plan = (subResult.data?.plan as string) ?? 'free';
+  const imagesUsed = usageResult.count ?? 0;
+  const limit = PLAN_LIMITS[plan] ?? FREE_IMAGE_LIMIT; // unknown plan → treat as free
+
+  if (limit !== null && imagesUsed >= limit) {
+    return jsonError('Image processing limit reached. Please upgrade your plan.', 402);
+  }
+
+  // ── 3. Parse image ─────────────────────────────────────────────────────────
+  const openaiKey = Deno.env.get('OPENAI_API_KEY');
+  if (!openaiKey) {
     return jsonError('OPENAI_API_KEY is not configured on the server', 500);
   }
 
@@ -57,7 +105,7 @@ Deno.serve(async (req: Request) => {
     return jsonError('Missing or invalid image field');
   }
 
-  // Forward to OpenAI image edits endpoint
+  // ── 4. Call OpenAI ─────────────────────────────────────────────────────────
   const outgoing = new FormData();
   outgoing.append('model', MODEL);
   outgoing.append('prompt', EDIT_PROMPT);
@@ -72,7 +120,7 @@ Deno.serve(async (req: Request) => {
   try {
     openaiResponse = await fetch(OPENAI_API_URL, {
       method: 'POST',
-      headers: { Authorization: `Bearer ${apiKey}` },
+      headers: { Authorization: `Bearer ${openaiKey}` },
       body: outgoing,
     });
   } catch (err) {
@@ -91,7 +139,10 @@ Deno.serve(async (req: Request) => {
     return jsonError('OpenAI returned no image data', 502);
   }
 
-  // Decode base64 → binary
+  // ── 5. Track usage server-side (only on success) ───────────────────────────
+  await supabase.from('image_usage').insert({ user_id: user.id });
+
+  // ── 6. Return image ────────────────────────────────────────────────────────
   const binary = atob(encoded);
   const bytes = new Uint8Array(binary.length);
   for (let i = 0; i < binary.length; i++) {
@@ -104,6 +155,7 @@ Deno.serve(async (req: Request) => {
       ...CORS_HEADERS,
       'content-type': 'image/png',
       'cache-control': 'no-store',
+      'x-usage-tracked': 'true', // tells the client to skip its own insert
     },
   });
 });

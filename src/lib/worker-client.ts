@@ -221,7 +221,13 @@ class SmartWorkerClient {
 
     const headers: Record<string, string> = {};
     if (!import.meta.env.DEV) {
-      headers['Authorization'] = `Bearer ${anonKey}`;
+      // Send the user's session JWT so the Edge Function can verify identity + quota.
+      // Dynamically import supabase to avoid circular deps.
+      const { supabase } = await import('@/src/lib/supabase');
+      const { data: { session } } = await supabase.auth.getSession();
+      const userJwt = session?.access_token;
+      if (!userJwt) throw new Error('Not authenticated');
+      headers['Authorization'] = `Bearer ${userJwt}`;
       headers['apikey'] = anonKey;
     }
 
@@ -233,20 +239,30 @@ class SmartWorkerClient {
 
     if (!response.ok) {
       const text = await response.text();
+      // Surface quota errors clearly so the UI can redirect to /upgrade
+      if (response.status === 402) throw new Error('QUOTA_EXCEEDED');
       throw new Error(text || `Remote image processing failed (${response.status})`);
     }
 
     progress('segmenting', 'Running hosted image model…');
+    // x-usage-tracked: true means the server already inserted the usage row —
+    // the client must NOT insert again to avoid double-counting.
+    const usageTrackedByServer = response.headers.get('x-usage-tracked') === 'true';
     const outputBlob = await response.blob();
     progress('refining', 'Verifying cutout edges…');
-    return this.buildPayload(file, outputBlob);
+    const result = await this.buildPayload(file, outputBlob);
+    return { ...result, usageTrackedByServer };
   }
 
   public async process(file: File, options?: { onProgress?: RequestProgressCallback }) {
     const id = crypto.randomUUID();
     try {
-      return await this.tryRemoteImageEdit(file, id, options);
+      const result = await this.tryRemoteImageEdit(file, id, options);
+      return result;
     } catch (error) {
+      const err = error as Error;
+      // Quota exceeded — do not fall back to local worker, surface the error
+      if (err.message === 'QUOTA_EXCEEDED') throw err;
       console.warn('fix.pictures: remote image edit unavailable, falling back to local worker', error);
     }
 
