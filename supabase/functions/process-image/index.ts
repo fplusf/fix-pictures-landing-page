@@ -63,7 +63,7 @@ Deno.serve(async (req: Request) => {
   outgoing.append('image', image, image.name || 'upload.png');
   outgoing.append('quality', QUALITY);
   outgoing.append('output_format', 'png');
-  outgoing.append('background', 'transparent');
+  outgoing.append('background', 'auto');
   outgoing.append('size', 'auto');
   outgoing.append('moderation', 'auto');
 
