@@ -37,8 +37,9 @@ const proofCases = [
 ];
 
 // ─── Pricing ─────────────────────────────────────────────────────────────────
-const PRICE_STARTER = (import.meta.env.VITE_PADDLE_PRICE_STARTER || import.meta.env.VITE_PADDLE_PRICE_PRO) as string;
-const PRICE_GROWTH = (import.meta.env.VITE_PADDLE_PRICE_GROWTH as string) || '';
+const PRICE_STARTER = import.meta.env.VITE_PADDLE_PRICE_STARTER as string | undefined;
+const PRICE_GROWTH  = import.meta.env.VITE_PADDLE_PRICE_GROWTH  as string | undefined;
+const PRICE_PRO     = import.meta.env.VITE_PADDLE_PRICE_PRO     as string | undefined;
 const pricingPlans = [
   {
     name: 'Free Trial',
@@ -46,32 +47,43 @@ const pricingPlans = [
     interval: '',
     quota: '10 free images',
     features: ['Amazon-ready exports', 'Compliance report', 'Before/after review'],
-    tagline: 'Test the output quality on 5 real images.',
+    tagline: 'Test the output quality on real images. No card needed.',
     cta: 'Start Free Trial',
     featured: false,
     priceId: PRICE_STARTER,
   },
   {
     name: 'Starter',
-    price: '$49',
+    price: '$19',
     interval: '',
-    quota: '1,000 images included',
-    features: ['Everything in Free', 'Credit-based processing', 'Best for smaller catalogs'],
-    tagline: 'For sellers who need a practical first paid tier.',
+    quota: '100 image credits',
+    features: ['Everything in Free', 'Credits never expire', 'Best for smaller catalogs'],
+    tagline: 'Perfect for testing with a real product catalog.',
     cta: 'Get Starter',
     featured: false,
     priceId: PRICE_STARTER,
   },
   {
     name: 'Growth',
-    price: '$99',
+    price: '$49',
     interval: '',
-    quota: '2,500 images included',
-    features: ['Everything in Starter', 'Higher-volume processing', 'Lower cost per image'],
-    tagline: 'For teams working through larger SKU batches.',
+    quota: '500 image credits',
+    features: ['Everything in Starter', 'Lower cost per image', 'For active sellers'],
+    tagline: 'For sellers processing new SKUs every week.',
     cta: 'Get Growth',
     featured: true,
     priceId: PRICE_GROWTH,
+  },
+  {
+    name: 'Pro',
+    price: '$99',
+    interval: '',
+    quota: '1,500 image credits',
+    features: ['Everything in Growth', 'Lowest cost per image', 'High-volume catalogs'],
+    tagline: 'For agencies and large-catalog Amazon sellers.',
+    cta: 'Get Pro',
+    featured: false,
+    priceId: PRICE_PRO,
   },
 ];
 
