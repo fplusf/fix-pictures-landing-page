@@ -369,6 +369,11 @@ function App() {
           return;
         }
 
+        if (err.message === 'CAPACITY_REACHED') {
+          setSessionError('capacity');
+          return;
+        }
+
         if (err.name === 'AbortError') {
           const wasCancelled = cancelledItemIdsRef.current.has(itemId);
           if (wasCancelled) {
@@ -795,12 +800,20 @@ function App() {
                 </span>
               </div>
 
-              <Dropzone onFiles={handleFiles} multiple />
-              {sessionError && (
+              <Dropzone onFiles={handleFiles} multiple disabled={sessionError === 'capacity'} />
+              {sessionError === 'capacity' ? (
+                <div className="mt-3 rounded-xl border border-orange-200 bg-orange-50 px-4 py-3 text-sm text-orange-800">
+                  <p className="font-semibold">🚧 We're at capacity right now.</p>
+                  <p className="mt-1 text-orange-700">
+                    We're experiencing high demand and have temporarily paused new free trials while we scale up.
+                    Check back soon — we're working on it!
+                  </p>
+                </div>
+              ) : sessionError ? (
                 <p className="mt-3 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-700">
                   {sessionError}
                 </p>
-              )}
+              ) : null}
 
               <div className="mt-3 grid gap-2">
                 <Button variant="outline" className="h-10 justify-start border-zinc-300" onClick={clearSession} disabled={!batchItems.length}>

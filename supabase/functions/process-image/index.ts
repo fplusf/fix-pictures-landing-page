@@ -13,6 +13,9 @@ const FREE_IMAGE_LIMIT = 10;
 const STARTER_IMAGE_LIMIT = 1000;
 const GROWTH_IMAGE_LIMIT = 2500;
 
+// Hard cap on total free users — raise once payments are live
+const FREE_USER_CAP = 100;
+
 const PLAN_LIMITS: Record<string, number | null> = {
   free: FREE_IMAGE_LIMIT,
   starter: STARTER_IMAGE_LIMIT,
@@ -85,6 +88,17 @@ Deno.serve(async (req: Request) => {
 
   if (limit !== null && imagesUsed >= limit) {
     return jsonError('Image processing limit reached. Please upgrade your plan.', 402);
+  }
+
+  // ── Global free-user cap (new free users only) ─────────────────────────────
+  // Paid users are never blocked. Only new free users (0 images so far) are
+  // gated once the cap is reached. Existing free users who already started
+  // keep their remaining credits.
+  if (plan === 'free' && imagesUsed === 0) {
+    const { data: totalFreeUsers } = await supabase.rpc('count_free_users');
+    if ((totalFreeUsers ?? 0) >= FREE_USER_CAP) {
+      return jsonError('SYSTEM_CAPACITY', 503);
+    }
   }
 
   // ── 3. Parse image ─────────────────────────────────────────────────────────

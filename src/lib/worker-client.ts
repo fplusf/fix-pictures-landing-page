@@ -241,6 +241,7 @@ class SmartWorkerClient {
       const text = await response.text();
       // Surface quota errors clearly so the UI can redirect to /upgrade
       if (response.status === 402) throw new Error('QUOTA_EXCEEDED');
+      if (response.status === 503) throw new Error('CAPACITY_REACHED');
       throw new Error(text || `Remote image processing failed (${response.status})`);
     }
 
@@ -261,8 +262,9 @@ class SmartWorkerClient {
       return result;
     } catch (error) {
       const err = error as Error;
-      // Quota exceeded — do not fall back to local worker, surface the error
+      // These errors must surface to the UI — never fall back to local worker
       if (err.message === 'QUOTA_EXCEEDED') throw err;
+      if (err.message === 'CAPACITY_REACHED') throw err;
       console.warn('fix.pictures: remote image edit unavailable, falling back to local worker', error);
     }
 
