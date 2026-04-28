@@ -336,9 +336,10 @@ function App() {
           inferenceBackend,
         }));
 
-        const renderKey = `${shadowMode}:${shadowIntensity}`;
+        const effectiveShadowMode = payload.modelUsed === 'gpt-image-2' ? 'off' : shadowMode;
+        const renderKey = `${effectiveShadowMode}:${shadowIntensity}`;
         const result = await composeCompliantImage(payload, {
-          shadowMode,
+          shadowMode: effectiveShadowMode,
           shadowIntensity,
           quality: 0.9,
           wasEdgeEnhanced: payload.wasEdgeEnhanced,
@@ -583,7 +584,7 @@ function App() {
       }
 
       const result = await composeCompliantImage(item.payload, {
-        shadowMode,
+        shadowMode: item.payload.modelUsed === 'gpt-image-2' ? 'off' : shadowMode,
         shadowIntensity,
         quality: 0.9,
       });
@@ -684,7 +685,8 @@ function App() {
   useEffect(() => {
     if (!activeItem || activeItem.status !== 'completed' || !activeItem.payload) return;
 
-    const renderKey = `${shadowMode}:${shadowIntensity}`;
+    const effectiveShadowMode = activeItem.payload.modelUsed === 'gpt-image-2' ? 'off' : shadowMode;
+    const renderKey = `${effectiveShadowMode}:${shadowIntensity}`;
     if (activeItem.renderKey === renderKey) return;
     const payload = activeItem.payload;
 
@@ -694,7 +696,7 @@ function App() {
     void (async () => {
       try {
         const result = await composeCompliantImage(payload, {
-          shadowMode,
+          shadowMode: effectiveShadowMode,
           shadowIntensity,
           quality: 0.9,
           wasEdgeEnhanced: payload.wasEdgeEnhanced,
