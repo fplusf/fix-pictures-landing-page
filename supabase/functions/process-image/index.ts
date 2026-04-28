@@ -1,10 +1,10 @@
 // Supabase Edge Function — Deno runtime
-// Calls OpenAI gpt-image-1 to remove product photo backgrounds.
+// Calls OpenAI gpt-image-2 to remove product photo backgrounds.
 // Falls back gracefully: the browser local model runs if this returns non-200.
 
 const OPENAI_API_URL = 'https://api.openai.com/v1/images/edits';
-const MODEL = 'gpt-image-1';
-const QUALITY = 'high';
+const MODEL = 'gpt-image-2';
+const QUALITY = 'auto';
 
 const EDIT_PROMPT = [
   'Transform the uploaded image into a production-safe product cutout for ecommerce.',
@@ -64,7 +64,8 @@ Deno.serve(async (req: Request) => {
   outgoing.append('quality', QUALITY);
   outgoing.append('output_format', 'png');
   outgoing.append('background', 'transparent');
-  outgoing.append('input_fidelity', 'high');
+  outgoing.append('size', 'auto');
+  outgoing.append('moderation', 'auto');
 
   let openaiResponse: Response;
   try {

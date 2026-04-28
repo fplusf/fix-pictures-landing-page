@@ -196,7 +196,7 @@ class SmartWorkerClient {
       bounds: this.computeBoundsFromAlpha(alpha, cutoutFrame.width, cutoutFrame.height, 20),
       histogram: this.computeHistogram(sourceFrame),
       wasEdgeEnhanced: false,
-      modelUsed: 'rmbg-1.4',
+      modelUsed: 'gpt-image-2',
     };
   }
 
@@ -244,6 +244,12 @@ class SmartWorkerClient {
 
   public async process(file: File, options?: { onProgress?: RequestProgressCallback }) {
     const id = crypto.randomUUID();
+    try {
+      return await this.tryRemoteImageEdit(file, id, options);
+    } catch (error) {
+      console.warn('fix.pictures: remote image edit unavailable, falling back to local worker', error);
+    }
+
     const worker = this.ensureWorker();
     const arrayBuffer = await file.arrayBuffer();
     const request: WorkerRequest = {
