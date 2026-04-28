@@ -7,14 +7,14 @@ const MODEL = 'gpt-image-2';
 const QUALITY = 'auto';
 
 const EDIT_PROMPT = [
-  'Transform the uploaded image into a production-safe product cutout for ecommerce.',
-  'Keep the exact real product from the source image.',
-  'Preserve shape, color, texture, branding, proportions, and product details.',
-  'Remove the entire background and output the product on a fully transparent background.',
-  'Do not add props, text, badges, reflections, extra objects, decorative elements, or new shadows.',
-  'Do not alter the product design, branding, packaging, geometry, materials, or finish.',
+  'Convert this product photo to a fully Amazon main image compliant result.',
+  'Replace the entire background with pure white (RGB 255, 255, 255) — no gradients, shadows, off-white tones, or texture.',
+  'The product must fill at least 85% of the image frame — crop tight around the subject with minimal padding.',
+  'Keep the exact real product: preserve every detail, color, texture, branding, shape, and proportion.',
+  'Do not add any props, text, badges, watermarks, reflections, extra objects, or decorative elements.',
+  'Do not alter the product design, branding, packaging, geometry, materials, or finish in any way.',
   'Do not crop off any part of the product.',
-  'Return a single centered product cutout with crisp edges and no surrounding scene.',
+  'Output a single centered product on a pure white background with crisp clean edges.',
 ].join(' ');
 
 const CORS_HEADERS = {
