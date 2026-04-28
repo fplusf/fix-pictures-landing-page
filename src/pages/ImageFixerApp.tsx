@@ -8,6 +8,7 @@ import { useAuth } from '@/src/contexts/AuthContext';
 import {
   FREE_IMAGE_LIMIT,
   GROWTH_IMAGE_LIMIT,
+  PRO_IMAGE_LIMIT,
   STARTER_IMAGE_LIMIT,
   useSubscription,
   useUsageTracker,
@@ -773,9 +774,9 @@ function App() {
                     ? `${imagesUsed}/${STARTER_IMAGE_LIMIT} Starter`
                     : plan === 'growth'
                       ? `${imagesUsed}/${GROWTH_IMAGE_LIMIT} Growth`
-                      : plan === 'lifetime'
-                        ? 'Lifetime'
-                        : 'Pro'}
+                      : plan === 'pro'
+                        ? `${imagesUsed}/${PRO_IMAGE_LIMIT} Pro`
+                        : 'Lifetime ∞'}
                 </span>
               )}
               <Button

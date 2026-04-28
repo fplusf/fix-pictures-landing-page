@@ -5,8 +5,9 @@ import { supabase } from '@/src/lib/supabase';
 export type Plan = 'free' | 'starter' | 'growth' | 'pro' | 'lifetime';
 
 export const FREE_IMAGE_LIMIT = 10;
-export const STARTER_IMAGE_LIMIT = 1000;
-export const GROWTH_IMAGE_LIMIT = 2500;
+export const STARTER_IMAGE_LIMIT = 100;
+export const GROWTH_IMAGE_LIMIT = 500;
+export const PRO_IMAGE_LIMIT = 1500;
 
 export function getPlanImageLimit(plan: Plan): number | typeof Infinity {
   switch (plan) {
@@ -17,6 +18,7 @@ export function getPlanImageLimit(plan: Plan): number | typeof Infinity {
     case 'growth':
       return GROWTH_IMAGE_LIMIT;
     case 'pro':
+      return PRO_IMAGE_LIMIT;
     case 'lifetime':
       return Infinity;
   }

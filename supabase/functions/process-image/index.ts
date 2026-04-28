@@ -10,8 +10,9 @@ const QUALITY = 'auto';
 
 // Must stay in sync with src/hooks/useSubscription.ts
 const FREE_IMAGE_LIMIT = 10;
-const STARTER_IMAGE_LIMIT = 1000;
-const GROWTH_IMAGE_LIMIT = 2500;
+const STARTER_IMAGE_LIMIT = 100;
+const GROWTH_IMAGE_LIMIT = 500;
+const PRO_IMAGE_LIMIT = 1500;
 
 // Hard cap on total free users — raise once payments are live
 const FREE_USER_CAP = 100;
@@ -20,7 +21,7 @@ const PLAN_LIMITS: Record<string, number | null> = {
   free: FREE_IMAGE_LIMIT,
   starter: STARTER_IMAGE_LIMIT,
   growth: GROWTH_IMAGE_LIMIT,
-  pro: null,      // unlimited
+  pro: PRO_IMAGE_LIMIT,
   lifetime: null, // unlimited
 };
 
