@@ -67,7 +67,7 @@ interface BatchItem {
 const ALLOWED_TYPES = new Set(['image/jpeg', 'image/jpg', 'image/png', 'image/webp']);
 const MAX_FILE_SIZE_BYTES = 25 * 1024 * 1024;
 const MIN_DIMENSION = 500;
-const MAX_PARALLEL_JOBS = 2; // Browser ONNX runtime — keep parallel low to avoid memory pressure
+const MAX_PARALLEL_JOBS = 5; // Remote API (Gemini) — no memory constraint, limit is upload bandwidth + API concurrency
 const DEFAULT_SHADOW_INTENSITY = 55;
 
 function App() {
