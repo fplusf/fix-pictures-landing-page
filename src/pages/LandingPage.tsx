@@ -524,7 +524,7 @@ function LandingPage() {
                           : 'bg-zinc-900 text-white hover:bg-zinc-800'
                       }`}
                     >
-                      {checkoutLoading === plan.name ? 'Loading…' : !plan.priceId ? 'Set Paddle Price' : plan.cta}
+                      {checkoutLoading === plan.name ? 'Loading…' : plan.cta}
                     </button>
                   </div>
                 </article>
