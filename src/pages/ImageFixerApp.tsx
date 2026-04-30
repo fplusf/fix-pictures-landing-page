@@ -731,8 +731,8 @@ function App() {
   }, [activeItem, applyComposedResult, shadowIntensity, shadowMode]);
 
   return (
-    <div className="relative h-screen overflow-hidden">
-      <div className="mx-auto flex h-full w-full max-w-[1600px] flex-col gap-3 px-3 py-3 sm:px-4 sm:py-4">
+    <div className="relative min-h-screen lg:h-screen lg:overflow-hidden">
+      <div className="mx-auto flex w-full max-w-[1600px] flex-col gap-3 px-3 py-3 sm:px-4 sm:py-4 lg:h-full">
         <header className="shrink-0 rounded-2xl border border-zinc-200 bg-white/90 px-3 py-3 shadow-[0_16px_52px_-42px_rgba(15,23,42,0.5)] backdrop-blur sm:px-4">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div className="min-w-0 flex items-center gap-3">
@@ -746,10 +746,13 @@ function App() {
             </div>
 
             <div className="flex flex-wrap items-center justify-end gap-1.5 text-sm text-zinc-700 sm:gap-2">
-              <MetricPill label="Queue" value={String(batchItems.length)} />
-              <MetricPill label="Completed" value={String(completedItems.length)} accent />
-              <MetricPill label="Processing" value={String(processingCount)} />
-              {/* Quota / plan badge */}
+              {/* Metric pills — hidden on small screens to keep header single-row */}
+              <div className="hidden items-center gap-1.5 sm:flex sm:gap-2">
+                <MetricPill label="Queue" value={String(batchItems.length)} />
+                <MetricPill label="Completed" value={String(completedItems.length)} accent />
+                <MetricPill label="Processing" value={String(processingCount)} />
+              </div>
+              {/* Quota / plan badge — always visible */}
               {plan === 'free' ? (
                 <button
                   onClick={() => navigate('/upgrade')}
@@ -761,19 +764,20 @@ function App() {
               ) : (
                 <span className="flex items-center gap-1.5 rounded-full border border-emerald-300 bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700">
                   ✓ {plan === 'starter'
-                    ? `${imagesUsed}/${STARTER_IMAGE_LIMIT} Starter`
+                    ? `${imagesUsed}/${STARTER_IMAGE_LIMIT}`
                     : plan === 'growth'
-                      ? `${imagesUsed}/${GROWTH_IMAGE_LIMIT} Growth`
+                      ? `${imagesUsed}/${GROWTH_IMAGE_LIMIT}`
                       : plan === 'pro'
-                        ? `${imagesUsed}/${PRO_IMAGE_LIMIT} Pro`
-                        : 'Lifetime ∞'}
+                        ? `${imagesUsed}/${PRO_IMAGE_LIMIT}`
+                        : '∞'}{' '}
+                  <span className="hidden sm:inline">{plan.charAt(0).toUpperCase() + plan.slice(1)}</span>
                 </span>
               )}
               <Button
                 variant="outline"
                 size="sm"
                 onClick={() => setShowSignOutDialog(true)}
-                className="ml-2 h-8 border-zinc-300 px-3 text-xs"
+                className="h-8 border-zinc-300 px-3 text-xs sm:ml-2"
               >
                 Sign Out
               </Button>
@@ -781,7 +785,7 @@ function App() {
           </div>
         </header>
 
-        <div className="grid min-h-0 flex-1 gap-3 lg:grid-cols-[340px,1fr]">
+        <div className="grid gap-3 lg:grid-cols-[340px,1fr] lg:min-h-0 lg:flex-1">
           <aside className="min-h-0">
             <div className="rounded-2xl border border-zinc-200 bg-white p-3 shadow-[0_16px_52px_-42px_rgba(15,23,42,0.5)] sm:p-4 lg:sticky lg:top-0 lg:h-full lg:overflow-y-auto">
               <div className="mb-3 flex items-center justify-between">
@@ -806,14 +810,14 @@ function App() {
                 </p>
               ) : null}
 
-              <div className="mt-3 grid gap-2">
+              <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-1">
                 <Button variant="outline" className="h-10 justify-start border-zinc-300" onClick={clearSession} disabled={!batchItems.length}>
                   <Trash2 className="mr-2 h-4 w-4" />
                   Clear session
                 </Button>
                 <Button variant="outline" className="h-10 justify-start border-zinc-300" onClick={cancelProcessing} disabled={!processingCount}>
                   <RefreshCw className="mr-2 h-4 w-4" />
-                  Cancel processing
+                  Cancel
                 </Button>
               </div>
 
@@ -943,7 +947,7 @@ function App() {
             </div>
           </aside>
 
-          <main className="min-h-0 space-y-3 overflow-hidden lg:pr-1">
+          <main className="space-y-3 lg:min-h-0 lg:overflow-hidden lg:pr-1">
             {batchItems.length === 0 ? (
               <section className="grid min-h-[340px] place-items-center rounded-2xl border border-zinc-200 bg-white/80 p-8 shadow-[0_16px_52px_-42px_rgba(15,23,42,0.5)]">
                 <div className="max-w-md text-center">
@@ -954,8 +958,8 @@ function App() {
                 </div>
               </section>
             ) : (
-              <section className="grid h-full min-h-0 gap-3 xl:grid-cols-[1.45fr,1fr] xl:items-stretch">
-                <article className="relative isolate h-full min-h-0 overflow-y-auto rounded-2xl border border-zinc-200 bg-white p-4 shadow-[0_16px_52px_-42px_rgba(15,23,42,0.5)] sm:p-5">
+              <section className="grid gap-3 xl:grid-cols-[1.45fr,1fr] xl:items-stretch lg:h-full lg:min-h-0">
+                <article className="relative isolate min-h-[300px] rounded-2xl border border-zinc-200 bg-white p-4 shadow-[0_16px_52px_-42px_rgba(15,23,42,0.5)] sm:p-5 lg:h-full lg:min-h-0 lg:overflow-y-auto">
             <div className="sticky top-0 z-50 -mx-4 -mt-4 mb-4 flex flex-wrap items-center justify-between gap-3 border-b border-zinc-100 bg-white px-4 py-3 sm:-mx-5 sm:-mt-5 sm:px-5">
               <div>
                 <h2 className="text-xl font-semibold tracking-tight text-zinc-950">Selected Image</h2>
@@ -1004,7 +1008,7 @@ function App() {
  
           </article>
 
-                <aside className="flex h-full min-h-0 flex-col overflow-hidden rounded-2xl border border-zinc-200 bg-white p-4 shadow-[0_16px_52px_-42px_rgba(15,23,42,0.5)] sm:p-5">
+                <aside className="flex flex-col rounded-2xl border border-zinc-200 bg-white p-4 shadow-[0_16px_52px_-42px_rgba(15,23,42,0.5)] sm:p-5 lg:h-full lg:min-h-0 lg:overflow-hidden">
             <div className="sticky top-0 z-20 -mx-4 mb-4 flex items-center justify-between gap-2 border-b border-zinc-100 bg-white/95 px-4 pb-3 pt-1 backdrop-blur sm:-mx-5 sm:px-5">
               <h2 className="text-xl font-semibold tracking-tight text-zinc-950">Batch Queue</h2>
               <span className="rounded-full border border-zinc-200 bg-zinc-50 px-2.5 py-1 text-xs font-medium text-zinc-600">
@@ -1012,7 +1016,7 @@ function App() {
               </span>
             </div>
 
-            <div className="flex-1 space-y-2 overflow-y-auto pr-1">
+            <div className="max-h-[420px] space-y-2 overflow-y-auto pr-1 lg:max-h-none lg:flex-1">
               {batchItems.map((item) => (
                 <div
                   key={item.id}
@@ -1089,16 +1093,16 @@ function App() {
             </div>
 
             <div className="sticky bottom-0 z-20 -mx-4 mt-3 border-t border-zinc-100 bg-white/95 px-4 pt-3 backdrop-blur sm:-mx-5 sm:px-5">
-              <div className="flex flex-wrap gap-2">
+              <div className="flex flex-col gap-2 sm:flex-row">
                 <Button
                   onClick={downloadSelected}
                   disabled={!activeItem || activeItem.status !== 'completed' || downloadingSelected || zipExporting}
-                  className="h-11 flex-1 min-w-[180px] px-5 text-sm font-semibold"
+                  className="h-11 w-full px-5 text-sm font-semibold sm:flex-1"
                 >
                   {downloadingSelected ? (
                     <>
                       <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
-                      Preparing latest...
+                      Preparing...
                     </>
                   ) : (
                     <>
@@ -1109,7 +1113,7 @@ function App() {
                 </Button>
                 <Button
                   variant="outline"
-                  className="h-11 flex-1 min-w-[180px] border-zinc-300 px-5"
+                  className="h-11 w-full border-zinc-300 px-5 sm:flex-1"
                   onClick={downloadBatchZip}
                   disabled={!completedItems.length || zipExporting}
                 >
@@ -1121,7 +1125,7 @@ function App() {
                   ) : (
                     <>
                       <Package className="mr-2 h-4 w-4" />
-                      Download All ZIP ({completedItems.length})
+                      Download All ({completedItems.length})
                     </>
                   )}
                 </Button>
