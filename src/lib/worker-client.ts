@@ -196,7 +196,7 @@ class SmartWorkerClient {
       bounds: this.computeBoundsFromAlpha(alpha, cutoutFrame.width, cutoutFrame.height, 20),
       histogram: this.computeHistogram(sourceFrame),
       wasEdgeEnhanced: false,
-      modelUsed: 'gpt-image-2',
+      modelUsed: 'gemini-2.0-flash',
     };
   }
 

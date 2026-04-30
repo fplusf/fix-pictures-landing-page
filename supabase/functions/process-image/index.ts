@@ -1,12 +1,22 @@
 // Supabase Edge Function — Deno runtime
-// Calls OpenAI gpt-image-2 to remove product photo backgrounds.
-// Enforces per-user quota server-side before touching OpenAI.
+// Calls Google Gemini to remove product photo backgrounds.
+// Enforces per-user quota server-side before touching Gemini.
+//
+// NOTE: OpenAI gpt-image-2 integration is commented out below.
+// To switch back: swap the Gemini block for the OpenAI block.
 
 import { createClient } from 'jsr:@supabase/supabase-js@2';
 
-const OPENAI_API_URL = 'https://api.openai.com/v1/images/edits';
-const MODEL = 'gpt-image-2';
-const QUALITY = 'auto';
+// ── Model config ───────────────────────────────────────────────────────────────
+// Gemini model that supports image-in → image-out editing
+const GEMINI_MODEL = 'gemini-2.0-flash-exp-image-generation';
+const GEMINI_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`;
+
+// /* [OpenAI — commented out]
+// const OPENAI_API_URL = 'https://api.openai.com/v1/images/edits';
+// const OPENAI_MODEL = 'gpt-image-2';
+// const OPENAI_QUALITY = 'auto';
+// */
 
 // Must stay in sync with src/hooks/useSubscription.ts
 const FREE_IMAGE_LIMIT = 10;
@@ -77,7 +87,7 @@ Deno.serve(async (req: Request) => {
     return jsonError('Unauthorized', 401);
   }
 
-  // ── 2. Quota check (before touching OpenAI) ────────────────────────────────
+  // ── 2. Quota check (before touching the model) ─────────────────────────────
   const [subResult, usageResult] = await Promise.all([
     supabase.from('subscriptions').select('plan').eq('user_id', user.id).maybeSingle(),
     supabase.from('image_usage').select('id', { count: 'exact', head: true }).eq('user_id', user.id),
@@ -85,16 +95,13 @@ Deno.serve(async (req: Request) => {
 
   const plan = (subResult.data?.plan as string) ?? 'free';
   const imagesUsed = usageResult.count ?? 0;
-  const limit = PLAN_LIMITS[plan] ?? FREE_IMAGE_LIMIT; // unknown plan → treat as free
+  const limit = PLAN_LIMITS[plan] ?? FREE_IMAGE_LIMIT;
 
   if (limit !== null && imagesUsed >= limit) {
     return jsonError('Image processing limit reached. Please upgrade your plan.', 402);
   }
 
-  // ── Global free-user cap (new free users only) ─────────────────────────────
-  // Paid users are never blocked. Only new free users (0 images so far) are
-  // gated once the cap is reached. Existing free users who already started
-  // keep their remaining credits.
+  // ── Global free-user cap ───────────────────────────────────────────────────
   if (plan === 'free' && imagesUsed === 0) {
     const { data: totalFreeUsers } = await supabase.rpc('count_free_users');
     if ((totalFreeUsers ?? 0) >= FREE_USER_CAP) {
@@ -103,9 +110,9 @@ Deno.serve(async (req: Request) => {
   }
 
   // ── 3. Parse image ─────────────────────────────────────────────────────────
-  const openaiKey = Deno.env.get('OPENAI_API_KEY');
-  if (!openaiKey) {
-    return jsonError('OPENAI_API_KEY is not configured on the server', 500);
+  const geminiKey = Deno.env.get('VITE_GEMINI_API_KEY');
+  if (!geminiKey) {
+    return jsonError('VITE_GEMINI_API_KEY is not configured on the server', 500);
   }
 
   let form: FormData;
@@ -120,57 +127,116 @@ Deno.serve(async (req: Request) => {
     return jsonError('Missing or invalid image field');
   }
 
-  // ── 4. Call OpenAI ─────────────────────────────────────────────────────────
-  const outgoing = new FormData();
-  outgoing.append('model', MODEL);
-  outgoing.append('prompt', EDIT_PROMPT);
-  outgoing.append('image', image, image.name || 'upload.png');
-  outgoing.append('quality', QUALITY);
-  outgoing.append('output_format', 'png');
-  outgoing.append('background', 'auto');
-  outgoing.append('size', 'auto');
-  outgoing.append('moderation', 'auto');
+  // ── 4. Call Gemini ─────────────────────────────────────────────────────────
+  // Convert image file to base64 for the Gemini inlineData format
+  const imageBytes = await image.arrayBuffer();
+  const uint8Array = new Uint8Array(imageBytes);
+  const CHUNK = 8192;
+  let binary = '';
+  for (let i = 0; i < uint8Array.length; i += CHUNK) {
+    binary += String.fromCharCode(...uint8Array.subarray(i, i + CHUNK));
+  }
+  const base64Image = btoa(binary);
 
-  let openaiResponse: Response;
+  const requestBody = {
+    contents: [{
+      parts: [
+        { text: EDIT_PROMPT },
+        {
+          inlineData: {
+            mimeType: image.type || 'image/jpeg',
+            data: base64Image,
+          },
+        },
+      ],
+    }],
+    generationConfig: {
+      responseModalities: ['IMAGE'],
+    },
+  };
+
+  let geminiResponse: Response;
   try {
-    openaiResponse = await fetch(OPENAI_API_URL, {
+    geminiResponse = await fetch(`${GEMINI_API_URL}?key=${geminiKey}`, {
       method: 'POST',
-      headers: { Authorization: `Bearer ${openaiKey}` },
-      body: outgoing,
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(requestBody),
     });
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
-    return jsonError(`Failed to reach OpenAI: ${msg}`, 502);
+    return jsonError(`Failed to reach Gemini: ${msg}`, 502);
   }
 
-  if (!openaiResponse.ok) {
-    const text = await openaiResponse.text().catch(() => '');
-    return jsonError(`OpenAI error: ${text}`, openaiResponse.status);
+  if (!geminiResponse.ok) {
+    const text = await geminiResponse.text().catch(() => '');
+    return jsonError(`Gemini error: ${text}`, geminiResponse.status);
   }
 
-  const payload = await openaiResponse.json() as { data?: Array<{ b64_json?: string }> };
-  const encoded = payload.data?.[0]?.b64_json;
+  const payload = await geminiResponse.json() as {
+    candidates?: Array<{
+      content?: {
+        parts?: Array<{
+          inlineData?: { mimeType?: string; data?: string };
+        }>;
+      };
+    }>;
+  };
+
+  const imagePart = payload.candidates?.[0]?.content?.parts?.find(
+    (p) => p.inlineData?.data,
+  );
+  const encoded = imagePart?.inlineData?.data;
+  const mimeType = imagePart?.inlineData?.mimeType ?? 'image/png';
+
   if (!encoded) {
-    return jsonError('OpenAI returned no image data', 502);
+    return jsonError('Gemini returned no image data', 502);
   }
+
+  // /* [OpenAI block — commented out]
+  // const openaiKey = Deno.env.get('OPENAI_API_KEY');
+  // if (!openaiKey) return jsonError('OPENAI_API_KEY is not configured on the server', 500);
+  //
+  // const outgoing = new FormData();
+  // outgoing.append('model', OPENAI_MODEL);
+  // outgoing.append('prompt', EDIT_PROMPT);
+  // outgoing.append('image', image, image.name || 'upload.png');
+  // outgoing.append('quality', OPENAI_QUALITY);
+  // outgoing.append('output_format', 'png');
+  // outgoing.append('background', 'auto');
+  // outgoing.append('size', 'auto');
+  // outgoing.append('moderation', 'auto');
+  //
+  // const openaiResponse = await fetch(OPENAI_API_URL, {
+  //   method: 'POST',
+  //   headers: { Authorization: `Bearer ${openaiKey}` },
+  //   body: outgoing,
+  // });
+  // if (!openaiResponse.ok) {
+  //   const text = await openaiResponse.text().catch(() => '');
+  //   return jsonError(`OpenAI error: ${text}`, openaiResponse.status);
+  // }
+  // const payload = await openaiResponse.json() as { data?: Array<{ b64_json?: string }> };
+  // const encoded = payload.data?.[0]?.b64_json;
+  // */
 
   // ── 5. Track usage server-side (only on success) ───────────────────────────
   await supabase.from('image_usage').insert({ user_id: user.id });
 
   // ── 6. Return image ────────────────────────────────────────────────────────
-  const binary = atob(encoded);
-  const bytes = new Uint8Array(binary.length);
-  for (let i = 0; i < binary.length; i++) {
-    bytes[i] = binary.charCodeAt(i);
+  const binaryOut = atob(encoded);
+  const bytes = new Uint8Array(binaryOut.length);
+  for (let i = 0; i < binaryOut.length; i++) {
+    bytes[i] = binaryOut.charCodeAt(i);
   }
 
   return new Response(bytes, {
     status: 200,
     headers: {
       ...CORS_HEADERS,
-      'content-type': 'image/png',
+      'content-type': mimeType,
       'cache-control': 'no-store',
-      'x-usage-tracked': 'true', // tells the client to skip its own insert
+      'x-usage-tracked': 'true',
+      'x-model-used': GEMINI_MODEL,
     },
   });
 });
