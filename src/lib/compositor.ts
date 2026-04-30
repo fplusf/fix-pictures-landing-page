@@ -150,7 +150,7 @@ export const composeCompliantImage = async (
         scaleRatio: scaledBboxHeight / CANVAS_SIZE,
         resolution: CANVAS_SIZE,
         backgroundHex: BACKGROUND_HEX,
-        grounded: shadowSignals.grounded,
+        grounded: false,
         shadowApplied: shouldApplyShadow,
         shadowOpacity,
         compliance: complianceRefinement.diagnostics,
@@ -159,88 +159,6 @@ export const composeCompliantImage = async (
   } finally {
     URL.revokeObjectURL(objectUrl);
   }
-};
-
-interface ShadowDrawParams {
-  bbox: Bounds;
-  scale: number;
-  left: number;
-  floorY: number;
-  opacity: number;
-}
-
-const drawContactShadow = (context: CanvasRenderingContext2D, params: ShadowDrawParams) => {
-  const bboxWidth = Math.max(params.bbox.maxX - params.bbox.minX + 1, 1) * params.scale;
-  const bboxHeight = Math.max(params.bbox.maxY - params.bbox.minY + 1, 1) * params.scale;
-  // Shadow ellipse: narrower than the bbox so it looks like a point-contact, not a slab.
-  const radiusX = clamp(bboxWidth * 0.28, 24, 420);
-  const radiusY = clamp(bboxHeight * 0.04, 6, 50);
-  // Blur must exceed radiusY — otherwise the ellipse edge stays visible as a hard line.
-  const blurRadius = clamp(radiusY * 1.8, 14, 80);
-  const offsetY = clamp(bboxHeight * 0.01, 3, 18);
-  const centerX = params.left + ((params.bbox.minX + params.bbox.maxX + 1) / 2) * params.scale;
-  const centerY = params.floorY + offsetY;
-
-  context.save();
-  context.globalAlpha = params.opacity;
-  context.filter = `blur(${blurRadius}px)`;
-  context.fillStyle = '#000000';
-  context.beginPath();
-  context.ellipse(centerX, centerY, radiusX, radiusY, 0, 0, Math.PI * 2);
-  context.fill();
-  context.restore();
-};
-
-const computeShadowSignals = (
-  source: CanvasImageSource,
-  width: number,
-  height: number,
-  bounds: Bounds,
-) => {
-  const canvas = document.createElement('canvas');
-  canvas.width = width;
-  canvas.height = height;
-  const context = canvas.getContext('2d', { willReadFrequently: true });
-  if (!context) {
-    return { grounded: true, transparent: false };
-  }
-
-  context.drawImage(source, 0, 0, width, height);
-
-  const bbox = normalizeBounds(bounds, width, height);
-  const bboxWidth = Math.max(bbox.maxX - bbox.minX + 1, 1);
-  const bboxHeight = Math.max(bbox.maxY - bbox.minY + 1, 1);
-  const sampleHeight = Math.max(2, Math.floor(bboxHeight * 0.05));
-  const sampleTop = Math.max(bbox.minY, bbox.maxY - sampleHeight + 1);
-  const sample = context.getImageData(bbox.minX, sampleTop, bboxWidth, sampleHeight).data;
-  const boxPixels = context.getImageData(bbox.minX, bbox.minY, bboxWidth, bboxHeight).data;
-
-  let bottomSolid = 0;
-  for (let i = 3; i < sample.length; i += 4) {
-    if (sample[i] >= 190) {
-      bottomSolid += 1;
-    }
-  }
-  const bottomCoverage = bottomSolid / Math.max((sample.length / 4), 1);
-
-  let foreground = 0;
-  let semiTransparent = 0;
-  for (let i = 3; i < boxPixels.length; i += 4) {
-    const alpha = boxPixels[i];
-    if (alpha <= 16) continue;
-    foreground += 1;
-    if (alpha < 210) semiTransparent += 1;
-  }
-
-  const transparencyRatio = semiTransparent / Math.max(foreground, 1);
-  // A product is "grounded" only when its bottom edge has broad horizontal coverage —
-  // indicating a real flat base (bag, bottle, box). A narrow strap tail or diagonal edge
-  // typically covers < 20% of the bbox width, so raising from 0.08 → 0.25 suppresses
-  // unnatural shadows on flat/coiled/hanging products.
-  return {
-    grounded: bottomCoverage >= 0.25,
-    transparent: transparencyRatio >= 0.58,
-  };
 };
 
 interface ForegroundComponent {

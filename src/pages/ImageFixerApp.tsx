@@ -3,7 +3,6 @@ import { ConfirmDialog } from '@/src/components/ConfirmDialog';
 import { Dropzone } from '@/src/components/dropzone';
 import { ProcessingSteps } from '@/src/components/processing-steps';
 import { Button } from '@/src/components/ui/button';
-import { Slider } from '@/src/components/ui/slider';
 import { useAuth } from '@/src/contexts/AuthContext';
 import {
   FREE_IMAGE_LIMIT,
@@ -27,8 +26,6 @@ import type { ProcessedPayload, WorkerProgress } from '@/src/workers/ai.worker';
 import JSZip from 'jszip';
 import {
   CheckCircle2,
-  ChevronDown,
-  ChevronUp,
   CircleAlert,
   Download,
   ImagePlus,
@@ -80,10 +77,8 @@ function App() {
   const [batchItems, setBatchItems] = useState<BatchItem[]>([]);
   const [activeItemId, setActiveItemId] = useState<string | null>(null);
   const [sessionError, setSessionError] = useState<string | null>(null);
-  const [shadowMode, setShadowMode] = useState<ShadowMode>('auto');
-  const [shadowIntensity, setShadowIntensity] = useState(DEFAULT_SHADOW_INTENSITY);
-  const [showAdvancedShadow, setShowAdvancedShadow] = useState(false);
-  const [renderingShadow, setRenderingShadow] = useState(false);
+  const shadowMode: ShadowMode = 'off';
+  const shadowIntensity = DEFAULT_SHADOW_INTENSITY;
   const [downloadingSelected, setDownloadingSelected] = useState(false);
   const [zipExporting, setZipExporting] = useState(false);
   const [showSignOutDialog, setShowSignOutDialog] = useState(false);
@@ -712,7 +707,6 @@ function App() {
     const payload = activeItem.payload;
 
     let cancelled = false;
-    setRenderingShadow(true);
 
     void (async () => {
       try {
@@ -728,10 +722,6 @@ function App() {
       } catch (error) {
         if (cancelled) return;
         setSessionError((error as Error).message ?? 'Could not update shadow rendering.');
-      } finally {
-        if (!cancelled) {
-          setRenderingShadow(false);
-        }
       }
     })();
 
