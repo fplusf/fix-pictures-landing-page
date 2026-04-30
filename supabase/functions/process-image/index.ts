@@ -9,7 +9,7 @@ import { createClient } from 'jsr:@supabase/supabase-js@2';
 
 // ── Model config ───────────────────────────────────────────────────────────────
 // Gemini model that supports image-in → image-out editing
-const GEMINI_MODEL = 'gemini-2.0-flash-exp-image-generation';
+const GEMINI_MODEL = 'gemini-2.5-flash-image';
 const GEMINI_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`;
 
 // /* [OpenAI — commented out]

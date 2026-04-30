@@ -370,6 +370,16 @@ function App() {
           return;
         }
 
+        if (err.message?.startsWith('SERVER_ERROR:')) {
+          updateBatchItem(itemId, (entry) => ({
+            ...entry,
+            status: 'error',
+            error: 'Server error — the AI model is not configured correctly. Please try again later.',
+            completedAt: Date.now(),
+          }));
+          return;
+        }
+
         if (err.name === 'AbortError') {
           const wasCancelled = cancelledItemIdsRef.current.has(itemId);
           if (wasCancelled) {

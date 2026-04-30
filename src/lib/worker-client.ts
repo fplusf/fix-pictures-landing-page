@@ -242,6 +242,9 @@ class SmartWorkerClient {
       // Surface quota errors clearly so the UI can redirect to /upgrade
       if (response.status === 402) throw new Error('QUOTA_EXCEEDED');
       if (response.status === 503) throw new Error('CAPACITY_REACHED');
+      // 5xx = server misconfiguration (e.g. missing API key) — don't silently
+      // fall back to the local worker, surface the error so it's visible.
+      if (response.status >= 500) throw new Error(`SERVER_ERROR:${response.status}`);
       throw new Error(text || `Remote image processing failed (${response.status})`);
     }
 
@@ -265,6 +268,7 @@ class SmartWorkerClient {
       // These errors must surface to the UI — never fall back to local worker
       if (err.message === 'QUOTA_EXCEEDED') throw err;
       if (err.message === 'CAPACITY_REACHED') throw err;
+      if (err.message?.startsWith('SERVER_ERROR:')) throw err;
       console.warn('fix.pictures: remote image edit unavailable, falling back to local worker', error);
     }
 

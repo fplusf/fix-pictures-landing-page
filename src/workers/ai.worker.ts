@@ -260,7 +260,12 @@ const runHfModel = async (id: string, inputBlob: Blob): Promise<Blob> => {
   postProgress(id, 'segmenting', 'Segmenting [high-quality model]…');
 
   const image = await RawImage.fromBlob(inputBlob);
-  const inputs = await _hfProcessor(image);
+  const processed = await _hfProcessor(image);
+  // RMBG-1.4's ONNX graph names the input node 'input', but AutoProcessor
+  // returns { pixel_values: Tensor }. Remap so the model can find it.
+  const inputs = processed.pixel_values !== undefined
+    ? { input: processed.pixel_values }
+    : processed;
   const { output } = await _hfModel(inputs);
 
   // RMBG-1.4 outputs raw logits → sigmoid → min-max normalise → uint8 mask.
