@@ -332,6 +332,18 @@ class SmartWorkerClient {
       type: 'warmup',
     } satisfies WorkerRequest);
   }
+
+  private _imglyWarmedUp = false;
+
+  public warmupImgly() {
+    if (this._imglyWarmedUp) return;
+    this._imglyWarmedUp = true;
+    // Trigger imgly model download by running it on a 1×1 transparent PNG.
+    // The browser caches the WASM + model weights so the first real image is instant.
+    const pixel = new Uint8Array([137,80,78,71,13,10,26,10,0,0,0,13,73,72,68,82,0,0,0,1,0,0,0,1,8,6,0,0,0,31,21,196,137,0,0,0,11,73,68,65,84,8,215,99,248,15,0,0,1,1,0,5,24,216,78,0,0,0,0,73,69,78,68,174,66,96,130]);
+    const blob = new Blob([pixel], { type: 'image/png' });
+    removeBackground(blob).catch(() => { /* ignore — warmup only */ });
+  }
 }
 
 export const smartWorkerClient = new SmartWorkerClient();
