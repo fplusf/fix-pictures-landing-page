@@ -1471,8 +1471,8 @@ const shouldSkipByQuickLayer = (snapshot: AuditSnapshot, failedCheckIds: AuditCh
   );
   if (!onlySoftFailures) return false;
 
-  // Product-fill is advisory for this tool; avoid destructive re-runs for this alone.
-  if (!failedCheckIds.includes('white-background')) return true;
+  // Product-fill failure means the image needs framing/centering — always process.
+  if (!failedCheckIds.includes('white-background')) return false;
 
   // CRITICAL: Never skip if background is heavily non-white (colored, dark, etc.)
   // Only skip for near-white backgrounds or light shadows

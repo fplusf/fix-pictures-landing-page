@@ -238,16 +238,82 @@ interface ForegroundRefinementResult {
   diagnostics: ComplianceDiagnostics;
 }
 
+// Returns true when every pixel has alpha ≥ 200 (JPEG or opaque PNG — no real transparency).
+const isImageFullyOpaque = (data: Uint8ClampedArray, total: number): boolean => {
+  for (let i = 0; i < total; i++) {
+    if (data[i * 4 + 3] < 200) return false;
+  }
+  return true;
+};
+
+// For opaque images (no alpha channel): flood-fill from white corners to mark background,
+// then invert to get the foreground mask. Handles any white/near-white background image.
+const buildForegroundMaskFromWhiteBackground = (
+  data: Uint8ClampedArray,
+  width: number,
+  height: number,
+): Uint8Array => {
+  const total = width * height;
+  const visited = new Uint8Array(total);
+  const queue = new Int32Array(total);
+  let head = 0, tail = 0;
+
+  const isBgCandidate = (i: number): boolean => {
+    const off = i * 4;
+    return data[off] >= 220 && data[off + 1] >= 220 && data[off + 2] >= 220;
+  };
+
+  const enqueue = (i: number) => {
+    if (i < 0 || i >= total || visited[i] || !isBgCandidate(i)) return;
+    visited[i] = 1;
+    queue[tail++] = i;
+  };
+
+  for (let x = 0; x < width; x++) {
+    enqueue(x);
+    enqueue((height - 1) * width + x);
+  }
+  for (let y = 1; y < height - 1; y++) {
+    enqueue(y * width);
+    enqueue(y * width + width - 1);
+  }
+
+  while (head < tail) {
+    const i = queue[head++];
+    const x = i % width, y = Math.floor(i / width);
+    if (x > 0) enqueue(i - 1);
+    if (x < width - 1) enqueue(i + 1);
+    if (y > 0) enqueue(i - width);
+    if (y < height - 1) enqueue(i + width);
+  }
+
+  const mask = new Uint8Array(total);
+  for (let i = 0; i < total; i++) {
+    mask[i] = visited[i] ? 0 : 1;
+  }
+  return mask;
+};
+
 const refineForegroundForCompliance = (source: ImageData): ForegroundRefinementResult => {
   const { width, height, data } = source;
   const total = width * height;
 
   // Step 1: Initial Alpha Cleanup & Mask Extraction
   const output = new Uint8ClampedArray(data);
-  const alphaMask = new Uint8Array(total);
-  for (let i = 0; i < total; i += 1) {
-    if (data[i * 4 + 3] >= FOREGROUND_ALPHA_THRESHOLD) {
-      alphaMask[i] = 1;
+
+  // Detect whether the image has real transparency (imgly transparent PNG)
+  // or is fully opaque (JPEG, or imgly failed to remove background).
+  // For opaque images we flood-fill from the white corners to find the product.
+  let alphaMask: Uint8Array;
+  const isOpaque = isImageFullyOpaque(data, total);
+  if (isOpaque) {
+    alphaMask = buildForegroundMaskFromWhiteBackground(data, width, height);
+  } else {
+    alphaMask = new Uint8Array(total);
+    for (let i = 0; i < total; i += 1) {
+      if (data[i * 4 + 3] >= FOREGROUND_ALPHA_THRESHOLD) {
+        alphaMask[i] = 1;
+      }
     }
   }
 
