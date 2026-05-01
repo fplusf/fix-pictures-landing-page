@@ -221,7 +221,7 @@ function BeforeAfterSlider({
 // ─── Main component ───────────────────────────────────────────────────────────
 function LandingPage() {
   const { user, signInWithGoogle, loading } = useAuth();
-  const { canProcess, imagesUsed, loading: subLoading } = useSubscription();
+  const { canProcess, loading: subLoading } = useSubscription();
   const navigate = useNavigate();
   const location = useLocation();
   const [showCreditsExhausted, setShowCreditsExhausted] = useState(false);
