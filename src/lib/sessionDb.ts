@@ -29,6 +29,7 @@ export interface PersistedBatchItem {
 
 interface StoredRecord {
   id: string;
+  order: number;
   fileName: string;
   fileType: string;
   fileBlob: Blob;
@@ -67,10 +68,12 @@ export async function persistItems(items: PersistedBatchItem[]): Promise<void> {
     const store = t.objectStore(STORE);
 
     store.clear();
-    for (const item of items) {
+    for (let index = 0; index < items.length; index++) {
+      const item = items[index];
       const { maskedImageBuffer, ...payloadMeta } = item.payload ?? {};
       const record: StoredRecord = {
         id: item.id,
+        order: index,
         fileName: item.file.name,
         fileType: item.file.type,
         fileBlob: item.file,
@@ -107,6 +110,8 @@ export async function loadPersistedItems(): Promise<PersistedBatchItem[]> {
     req.onsuccess = () => resolve(req.result as StoredRecord[]);
     req.onerror = () => reject(req.error);
   });
+
+  records.sort((a, b) => a.order - b.order);
 
   return records.map((r) => {
     const file = new File([r.fileBlob], r.fileName, { type: r.fileType });
