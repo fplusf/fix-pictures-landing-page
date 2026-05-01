@@ -4,6 +4,8 @@ import { fileURLToPath, URL } from 'node:url'
 import { defineConfig } from 'vite'
 import { handleProcessImage } from './src/lib/process-image-handler'
 
+import { cloudflare } from "@cloudflare/vite-plugin";
+
 const readRequestBody = async (req: IncomingMessage) => {
   const chunks: Buffer[] = []
   for await (const chunk of req) {
@@ -54,7 +56,7 @@ const localApiPlugin = () => ({
 
 // https://vite.dev/config/
 export default defineConfig({
-  plugins: [react(), localApiPlugin()],
+  plugins: [react(), localApiPlugin(), cloudflare()],
   server: {
     port: 3000,
     strictPort: true,
