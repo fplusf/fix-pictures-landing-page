@@ -41,29 +41,16 @@ const proofCases = [
 const pricingPlans: Array<{
   name: string;
   price: string;
-  interval: string;
   quota: string;
   features: string[];
   tagline: string;
   cta: string;
   featured: boolean;
-  planId: PayPalPlan | null;
+  planId: PayPalPlan;
 }> = [
-  {
-    name: 'Free Trial',
-    price: '$0',
-    interval: '',
-    quota: '15 free images',
-    features: ['Amazon-ready exports', 'Compliance report', 'Before/after review'],
-    tagline: 'Test the output quality on real images. No card needed.',
-    cta: 'Start Free Trial',
-    featured: false,
-    planId: null,
-  },
   {
     name: 'Starter',
     price: '$19',
-    interval: '',
     quota: '250 image credits',
     features: ['Everything in Free', 'Credits never expire', '$0.076 per image'],
     tagline: 'Perfect for testing with a real product catalog.',
@@ -74,7 +61,6 @@ const pricingPlans: Array<{
   {
     name: 'Growth',
     price: '$49',
-    interval: '',
     quota: '1,000 image credits',
     features: ['Everything in Starter', '$0.049 per image', 'For active sellers'],
     tagline: 'For sellers processing new SKUs every week.',
@@ -85,7 +71,6 @@ const pricingPlans: Array<{
   {
     name: 'Pro',
     price: '$99',
-    interval: '',
     quota: '3,000 image credits',
     features: ['Everything in Growth', '$0.033 per image', 'High-volume catalogs'],
     tagline: 'For agencies and large-catalog Amazon sellers.',
@@ -503,11 +488,20 @@ function LandingPage() {
                 </div>
               </div>
             )}
-            <p className="text-center text-xs font-bold uppercase tracking-[0.24em] text-zinc-400">Pricing</p>
-            <h2 className="mt-2 text-center text-3xl font-black text-zinc-950 md:text-4xl">Simple, honest pricing.</h2>
-            <p className="mt-3 text-center text-sm text-zinc-500 md:text-base">
-              Start free. No card needed. Upgrade when you're ready.
-            </p>
+            <div className="relative flex flex-col items-center">
+              <p className="text-xs font-bold uppercase tracking-[0.24em] text-zinc-400">Pricing</p>
+              <h2 className="mt-2 text-center text-3xl font-black text-zinc-950 md:text-4xl">Simple, honest pricing.</h2>
+              <p className="mt-3 text-center text-sm text-zinc-500 md:text-base">
+                Start free. No card needed. Upgrade when you're ready.
+              </p>
+              <a
+                href="/app"
+                className="absolute right-0 top-0 inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-4 py-2 text-sm font-semibold text-emerald-700 transition hover:bg-emerald-100"
+              >
+                <span className="h-2 w-2 rounded-full bg-emerald-500" />
+                15 free images — no card
+              </a>
+            </div>
 
             <div className="mt-10 grid gap-5 md:grid-cols-3">
               {pricingPlans.map((plan) => (
@@ -534,7 +528,7 @@ function LandingPage() {
 
                     <div className="mt-5 flex items-end gap-1.5">
                       <span className="text-4xl font-black leading-none text-zinc-950">{plan.price}</span>
-                      <span className="mb-0.5 text-sm font-semibold text-zinc-500">{plan.interval}</span>
+                      <span className="mb-0.5 text-sm font-semibold text-zinc-500">one-time</span>
                     </div>
 
                     <p className="mt-4 rounded-xl border border-zinc-200 bg-zinc-50 px-3 py-2 text-sm font-semibold text-zinc-800">

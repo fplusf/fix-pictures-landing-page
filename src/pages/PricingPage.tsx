@@ -9,62 +9,42 @@ const APP_ROUTE = '/app';
 const pricingPlans: Array<{
   name: string;
   price: string;
-  interval: string;
   quota: string;
   features: string[];
   tagline: string;
   cta: string;
   featured: boolean;
-  planId: PayPalPlan | null;
-  isTrial: boolean;
+  planId: PayPalPlan;
 }> = [
-  {
-    name: 'Free Trial',
-    price: '$0',
-    interval: '',
-    quota: '15 free images',
-    features: ['Amazon-ready exports', 'Compliance report', 'Before/after review'],
-    tagline: 'Test the output quality on real images.',
-    cta: 'Start Free Trial',
-    featured: false,
-    planId: null,
-    isTrial: true,
-  },
   {
     name: 'Starter',
     price: '$19',
-    interval: '',
     quota: '250 image credits',
     features: ['Everything in Free', 'Credits never expire', '$0.076 per image'],
     tagline: 'For sellers who need a practical first paid tier.',
     cta: 'Get Starter',
     featured: false,
     planId: 'starter',
-    isTrial: false,
   },
   {
     name: 'Growth',
     price: '$49',
-    interval: '',
     quota: '1,000 image credits',
     features: ['Everything in Starter', '$0.049 per image', 'For active sellers'],
     tagline: 'For teams working through larger SKU batches.',
     cta: 'Get Growth',
     featured: true,
     planId: 'growth',
-    isTrial: false,
   },
   {
     name: 'Pro',
     price: '$99',
-    interval: '',
     quota: '3,000 image credits',
     features: ['Everything in Growth', '$0.033 per image', 'High-volume catalogs'],
     tagline: 'For agencies and large-catalog Amazon sellers.',
     cta: 'Get Pro',
     featured: false,
     planId: 'pro',
-    isTrial: false,
   },
 ];
 
@@ -91,16 +71,14 @@ export default function PricingPage() {
       .finally(() => setCheckoutLoading(null));
   }, [user, loading]);
 
-  const handlePlanClick = async (planName: string, planId: PayPalPlan | null) => {
+  const handlePlanClick = async (planName: string, planId: PayPalPlan) => {
     trackEvent('pricing_plan_clicked', { plan: planName });
     if (loading) return;
     setCheckoutError(null);
 
     if (!user) {
-      if (planId) {
-        sessionStorage.setItem('pendingPlanId', planId);
-        sessionStorage.setItem('pendingPlanName', planName);
-      }
+      sessionStorage.setItem('pendingPlanId', planId);
+      sessionStorage.setItem('pendingPlanName', planName);
       try {
         await signInWithGoogle();
       } catch (err) {
@@ -108,8 +86,6 @@ export default function PricingPage() {
       }
       return;
     }
-
-    if (!planId) return;
 
     setCheckoutLoading(planName);
     try {
@@ -140,14 +116,24 @@ export default function PricingPage() {
       </nav>
 
       <main className="mx-auto max-w-7xl px-6 py-16 md:px-10 md:py-24">
-        <div className="text-center">
+        <div className="relative text-center">
           <p className="text-xs font-bold uppercase tracking-[0.24em] text-zinc-400">Pricing</p>
           <h1 className="mt-4 text-4xl font-black tracking-tight text-zinc-950 md:text-6xl">
             Simple, honest pricing.
           </h1>
-          <p className="mx-auto mt-6 max-w-2xl text-lg text-zinc-600">
-            Start with 15 trial images, then move to the credit pack that fits your catalog volume.
+          <p className="mx-auto mt-4 text-base text-zinc-500">
+            Start free. No card needed. Upgrade when you're ready.
           </p>
+
+          {/* Free trial pill — top-right of heading block */}
+          <Link
+            to={APP_ROUTE}
+            onClick={() => trackEvent('pricing_free_trial_clicked')}
+            className="absolute right-0 top-0 inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-4 py-2 text-sm font-semibold text-emerald-700 transition hover:bg-emerald-100"
+          >
+            <span className="h-2 w-2 rounded-full bg-emerald-500" />
+            15 free images — no card
+          </Link>
         </div>
 
         <div className="mt-16 grid gap-6 md:grid-cols-3">
@@ -175,7 +161,7 @@ export default function PricingPage() {
 
                 <div className="mt-6 flex items-end gap-1.5">
                   <span className="text-5xl font-black leading-none text-zinc-950">{plan.price}</span>
-                  <span className="mb-1 text-base font-semibold text-zinc-500">{plan.interval}</span>
+                  <span className="mb-1 text-base font-semibold text-zinc-500">one-time</span>
                 </div>
 
                 <div className="mt-6 rounded-xl border border-zinc-200 bg-zinc-50 px-4 py-3 text-sm font-semibold text-zinc-800">
@@ -223,7 +209,7 @@ export default function PricingPage() {
               <div>
                 <h4 className="font-bold text-zinc-950">How does the free tier work?</h4>
                 <p className="mt-2 text-sm text-zinc-600 leading-relaxed">
-                  You get 15 full-resolution, Amazon-ready trial images. Once you use your quota, you can move to Starter or Growth depending on the image volume you need.
+                  You get 15 full-resolution, Amazon-ready trial images with no card required. Once you use your quota, you can move to Starter or Growth depending on the image volume you need.
                 </p>
               </div>
               <div>
