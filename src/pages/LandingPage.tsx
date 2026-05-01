@@ -272,7 +272,7 @@ function LandingPage() {
             <a href="/pricing" className="transition hover:text-zinc-900">Pricing</a>
           </div>
           <button
-            onClick={() => handlePlanClick('Free')}
+            onClick={() => handlePlanClick('Free', null)}
             className="rounded-xl bg-gradient-to-r from-[#e636a4] to-[#ff7a2f] px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:brightness-105 active:scale-[0.98]"
           >
             {loading ? 'Loading…' : 'Start Free →'}
@@ -304,7 +304,7 @@ function LandingPage() {
 
             <div className="mt-8 flex flex-col gap-4 sm:flex-row sm:items-center">
               <button
-                onClick={() => handlePlanClick('Free')}
+                onClick={() => handlePlanClick('Free', null)}
                 className="flex h-14 items-center justify-center rounded-xl bg-gradient-to-r from-[#e636a4] to-[#ff7a2f] px-8 text-base font-bold text-white shadow-md transition hover:brightness-105 active:scale-[0.98]"
               >
                 {loading ? 'Loading…' : 'Fix your images free →'}
@@ -554,7 +554,7 @@ function LandingPage() {
             Free to start. Results in under 30 seconds.
           </p>
           <button
-            onClick={() => handlePlanClick('Free')}
+            onClick={() => handlePlanClick('Free', null)}
             className="mt-8 inline-flex rounded-xl bg-gradient-to-r from-[#e636a4] to-[#ff7a2f] px-10 py-4 text-base font-bold text-white shadow-lg transition hover:brightness-110 active:scale-[0.98]"
           >
             {loading ? 'Loading…' : 'Open fix.pictures free →'}
