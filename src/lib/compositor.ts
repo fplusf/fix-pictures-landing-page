@@ -138,18 +138,47 @@ export const composeCompliantImage = async (
 
     context.drawImage(sourceCanvas, left, top, image.width * scale, image.height * scale);
 
-    // Whitening pass — deterministically eliminate any shadow/gradient the AI left behind.
-    // Any pixel that is near-white (all channels ≥ 245) is forced to pure #FFFFFF.
-    // This catches contact shadows, gradient remnants, and off-white bleed without
-    // touching the product itself (which always has meaningful colour variation).
+    // Pass 1 — Near-white → pure white.
+    // Eliminates shadow gradients and off-white bleed without touching the product
+    // (product pixels always have meaningful colour below the 245 threshold).
     const frame = context.getImageData(0, 0, CANVAS_SIZE, CANVAS_SIZE);
     const px = frame.data;
-    const SHADOW_THRESHOLD = 245;
+    const W = CANVAS_SIZE;
+    const NEAR_WHITE = 245;
     for (let i = 0; i < px.length; i += 4) {
-      if (px[i] >= SHADOW_THRESHOLD && px[i + 1] >= SHADOW_THRESHOLD && px[i + 2] >= SHADOW_THRESHOLD) {
+      if (px[i] >= NEAR_WHITE && px[i + 1] >= NEAR_WHITE && px[i + 2] >= NEAR_WHITE) {
         px[i] = 255; px[i + 1] = 255; px[i + 2] = 255;
       }
     }
+
+    // Pass 2 — Isolated dark speck removal.
+    // After whitening, any non-white pixel that has only white neighbours within a
+    // 3-pixel radius is an isolated artifact dot (masking residue, JPEG halo).
+    // We check the 8 immediate neighbours; if ≥ 7 of 8 are pure white, zap it.
+    const total2 = W * W;
+    const toWhite = new Uint8Array(total2); // marks pixels to clear
+    for (let y = 1; y < W - 1; y++) {
+      for (let x = 1; x < W - 1; x++) {
+        const idx = (y * W + x) * 4;
+        if (px[idx] === 255 && px[idx + 1] === 255 && px[idx + 2] === 255) continue; // already white
+        let whiteNeighbours = 0;
+        for (let dy = -1; dy <= 1; dy++) {
+          for (let dx = -1; dx <= 1; dx++) {
+            if (dx === 0 && dy === 0) continue;
+            const ni = ((y + dy) * W + (x + dx)) * 4;
+            if (px[ni] === 255 && px[ni + 1] === 255 && px[ni + 2] === 255) whiteNeighbours++;
+          }
+        }
+        if (whiteNeighbours >= 7) toWhite[y * W + x] = 1;
+      }
+    }
+    for (let i = 0; i < total2; i++) {
+      if (toWhite[i]) {
+        const idx = i * 4;
+        px[idx] = 255; px[idx + 1] = 255; px[idx + 2] = 255;
+      }
+    }
+
     context.putImageData(frame, 0, 0);
 
     const rawBlob = await canvasToBlob(canvas, quality);
@@ -241,16 +270,18 @@ const refineForegroundForCompliance = (source: ImageData): ForegroundRefinementR
     if (c.area > primary.area) primary = c;
   }
 
-  // Rule: Trust the model for object segmentation. We only remove extremely tiny 
-  // disconnected fragments (< 40px) which are almost certainly noise.
+  // Remove isolated artifact dots: any component that is both small in absolute
+  // terms AND is not the primary component is almost certainly a masking artifact,
+  // JPEG halo, or background speck — not an intentional product detail.
+  // Intentional product parts (logos, small features) are physically connected to
+  // the main body so they merge into the primary component; they are not isolated.
+  // Threshold: 500px² ≈ a 25px-diameter circle — large enough to catch real dots.
+  const MIN_COMPONENT_AREA = 500;
   const keepIds = new Set<number>();
   let removedSecondaryComponents = 0;
 
   for (const component of analysis.components) {
-    // RULE: Trust the RMBG-2.0 model for object segmentation.
-    // Only remove absolute noise (tiny disconnected fragments < 40px).
-    // Everything else segmented by the model is considered intentional.
-    if (component.area >= 40) {
+    if (component === primary || component.area >= MIN_COMPONENT_AREA) {
       keepIds.add(component.id);
     } else {
       removedSecondaryComponents += 1;

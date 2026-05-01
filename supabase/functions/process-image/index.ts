@@ -52,8 +52,10 @@ const EDIT_PROMPT = [
   'FRAMING RULE: The product must fill 85–90% of the image frame. Crop tightly so the product is large in frame with only minimal padding on each side.',
   'Center the product both horizontally and vertically. Do not leave large empty white areas.',
 
-  // Product fidelity
-  'Preserve the exact real product: every detail, color, texture, branding, shape, and proportion must remain unchanged.',
+  // Product fidelity — colour is the most common failure mode
+  'COLOR PRESERVATION RULE: You must not change the color, brightness, or tone of any part of the product.',
+  'Dark areas of the product must remain exactly as dark as in the original photo. Black must stay black. Dark grey must stay dark grey.',
+  'Do not lighten, brighten, or adjust any part of the product. The only change allowed is removing the background.',
   'Do not add props, text, badges, watermarks, reflections, or any extra objects.',
   'Do not crop off any part of the product — the entire product including handles, lids, or protruding elements must be fully visible.',
 
