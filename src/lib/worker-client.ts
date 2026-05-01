@@ -1,3 +1,4 @@
+import { removeBackground } from '@imgly/background-removal';
 import aiWorkerUrl from '@/src/workers/ai.worker?worker&url';
 import type {
   ProcessedPayload,
@@ -252,8 +253,25 @@ class SmartWorkerClient {
     // x-usage-tracked: true means the server already inserted the usage row —
     // the client must NOT insert again to avoid double-counting.
     const usageTrackedByServer = response.headers.get('x-usage-tracked') === 'true';
-    const outputBlob = await response.blob();
-    progress('refining', 'Verifying cutout edges…');
+    const geminiBlob = await response.blob();
+
+    // imgly final pass — Gemini returns a flat image (product on white).
+    // Running background removal on it produces a clean transparent cutout,
+    // eliminating any residual shadow, gradient, or dirty edge pixels.
+    progress('refining', 'Cleaning up background…');
+    let outputBlob: Blob;
+    try {
+      outputBlob = await removeBackground(geminiBlob, {
+        progress: (_key: string, current: number, total: number) => {
+          const pct = total > 0 ? Math.round((current / total) * 100) : 0;
+          progress('refining', `Cleaning up background… ${pct}%`);
+        },
+      });
+    } catch (err) {
+      console.warn('[fix.pictures] imgly cleanup failed — using raw Gemini output', err);
+      outputBlob = geminiBlob;
+    }
+
     const result = await this.buildPayload(file, outputBlob);
     return { ...result, usageTrackedByServer };
   }
