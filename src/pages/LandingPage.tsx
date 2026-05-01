@@ -122,9 +122,9 @@ const steps = [
 // ─── Features ─────────────────────────────────────────────────────────────────
 const features = [
   {
-    icon: '🧠',
-    title: 'Model-routed pipeline',
-    description: 'Each job is routed through the processing path that fits speed, quality, and catalog workload.',
+    icon: '⚡',
+    title: 'Results in under 30 seconds',
+    description: 'Upload, process, and download your Amazon-ready image faster than any manual editor.',
   },
   {
     icon: '📦',
