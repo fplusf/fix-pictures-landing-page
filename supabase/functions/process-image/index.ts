@@ -37,14 +37,27 @@ const PLAN_LIMITS: Record<string, number | null> = {
 
 const EDIT_PROMPT = [
   'Convert this product photo to a fully Amazon main image compliant result.',
-  'Replace the entire background with pure white (RGB 255, 255, 255) — no gradients, off-white tones, or texture anywhere.',
-  'CRITICAL: remove ALL shadows completely — no drop shadow, no cast shadow, no floor shadow, no ground shadow, no shadow of any kind below or around the product. The area below the product must be pure white with zero grey or dark pixels.',
-  'The product must fill at least 85% of the image frame — center the subject tightly with minimal padding.',
-  'Keep the exact real product: preserve every detail, color, texture, branding, shape, and proportion.',
-  'Do not add any props, text, badges, watermarks, reflections, extra objects, or decorative elements.',
-  'Do not alter the product design, branding, packaging, geometry, materials, or finish in any way.',
-  'Do not crop off any part of the product.',
-  'Output a single centered product floating cleanly on a pure white background with crisp edges and no shadow whatsoever.',
+
+  // Background — absolute pixel requirement
+  'BACKGROUND RULE: Every pixel that is not part of the physical product must be exactly RGB(255,255,255).',
+  'This means zero gradients, zero off-white tones, zero texture, zero noise — mathematically pure white everywhere outside the product.',
+
+  // Shadow — the #1 failure mode
+  'SHADOW RULE: There must be NO shadow of any kind anywhere in the image.',
+  'No drop shadow. No cast shadow. No floor shadow. No contact shadow. No ambient occlusion. No darkening near the base.',
+  'Every pixel below, beside, and around the product must be exactly RGB(255,255,255) — not RGB(254,254,254), not RGB(245,245,245) — exactly 255.',
+  'If the product was photographed on a surface that caused a natural shadow, erase that shadow completely and replace with pure white.',
+
+  // Framing
+  'FRAMING RULE: The product must fill 85–90% of the image frame. Crop tightly so the product is large in frame with only minimal padding on each side.',
+  'Center the product both horizontally and vertically. Do not leave large empty white areas.',
+
+  // Product fidelity
+  'Preserve the exact real product: every detail, color, texture, branding, shape, and proportion must remain unchanged.',
+  'Do not add props, text, badges, watermarks, reflections, or any extra objects.',
+  'Do not crop off any part of the product — the entire product including handles, lids, or protruding elements must be fully visible.',
+
+  'Final output: one product, centered, filling most of the frame, on a mathematically pure white background with zero shadow.',
 ].join(' ');
 
 const CORS_HEADERS = {

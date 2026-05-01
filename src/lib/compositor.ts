@@ -39,8 +39,8 @@ export interface CompositorResult {
 }
 
 const BACKGROUND_HEX = '#FFFFFF';
-const MAX_FRAME_WIDTH_RATIO = 0.9;
-const MIN_MARGIN_RATIO = 0.05;
+const MAX_FRAME_WIDTH_RATIO = 0.92;
+const MIN_MARGIN_RATIO = 0.04;
 const TARGET_VERTICAL_OFFSET_RATIO = 0.03;
 const FOREGROUND_ALPHA_THRESHOLD = 20;
 const PRODUCT_DOMINANCE_THRESHOLD = 0.35;
@@ -137,6 +137,20 @@ export const composeCompliantImage = async (
     void options.shadowMode; // suppress unused-var lint
 
     context.drawImage(sourceCanvas, left, top, image.width * scale, image.height * scale);
+
+    // Whitening pass — deterministically eliminate any shadow/gradient the AI left behind.
+    // Any pixel that is near-white (all channels ≥ 245) is forced to pure #FFFFFF.
+    // This catches contact shadows, gradient remnants, and off-white bleed without
+    // touching the product itself (which always has meaningful colour variation).
+    const frame = context.getImageData(0, 0, CANVAS_SIZE, CANVAS_SIZE);
+    const px = frame.data;
+    const SHADOW_THRESHOLD = 245;
+    for (let i = 0; i < px.length; i += 4) {
+      if (px[i] >= SHADOW_THRESHOLD && px[i + 1] >= SHADOW_THRESHOLD && px[i + 2] >= SHADOW_THRESHOLD) {
+        px[i] = 255; px[i + 1] = 255; px[i + 2] = 255;
+      }
+    }
+    context.putImageData(frame, 0, 0);
 
     const rawBlob = await canvasToBlob(canvas, quality);
     const blob = await embedProcessedMetadata(rawBlob);
