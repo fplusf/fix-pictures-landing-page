@@ -73,7 +73,7 @@ export default function UpgradePage() {
 
   const handleDismiss = () => {
     trackEvent('upgrade_dismissed', { source: 'upgrade_page' });
-    navigate('/');
+    navigate('/', { state: { skipAppRedirect: true } });
   };
 
   const usedCapped = Math.min(imagesUsed, FREE_IMAGE_LIMIT);

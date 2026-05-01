@@ -2,7 +2,7 @@ import { useAuth } from '@/src/contexts/AuthContext';
 import { trackEvent } from '@/src/lib/posthog';
 import { openCheckout, type PayPalPlan } from '@/src/lib/paypal';
 import { useEffect, useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 
 const APP_ROUTE = '/app';
 
@@ -221,10 +221,11 @@ function BeforeAfterSlider({
 function LandingPage() {
   const { user, signInWithGoogle, loading } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
 
   useEffect(() => {
-    if (user && !loading) navigate(APP_ROUTE);
-  }, [user, loading, navigate]);
+    if (user && !loading && !location.state?.skipAppRedirect) navigate(APP_ROUTE);
+  }, [user, loading, navigate, location.state]);
 
   const [checkoutLoading, setCheckoutLoading] = useState<string | null>(null);
   const [checkoutError, setCheckoutError] = useState<string | null>(null);
