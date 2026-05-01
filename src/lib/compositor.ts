@@ -88,8 +88,13 @@ export const composeCompliantImage = async (
     const scaleByWidth = maxWidth / bboxWidth;
     const scale = Math.min(scaleByHeight, scaleByWidth);
 
-    const sourceCenterX = (bbox.minX + bbox.maxX) / 2;
-    const sourceCenterY = (bbox.minY + bbox.maxY) / 2;
+    // Use pixel centroid (center of mass) instead of bounding-box center.
+    // For asymmetric products (mugs with handles, items with thin protrusions)
+    // the bbox center drifts toward the sparse handle side, making the heavy
+    // product body look off-center. Centroid anchors to the visual mass.
+    const centroid = computeForegroundCentroid(complianceRefinement.image);
+    const sourceCenterX = centroid.x;
+    const sourceCenterY = centroid.y;
     const targetCenterX = CANVAS_SIZE / 2;
     const targetCenterY = CANVAS_SIZE / 2 + CANVAS_SIZE * TARGET_VERTICAL_OFFSET_RATIO;
     let left = targetCenterX - sourceCenterX * scale;
@@ -569,3 +574,22 @@ const canvasToBlob = (canvas: HTMLCanvasElement, quality: number) =>
   });
 
 const clamp = (value: number, min: number, max: number) => Math.min(max, Math.max(min, value));
+
+// Returns the pixel centroid (center of mass) of all foreground (non-transparent) pixels.
+// Falls back to the geometric center of the canvas if no foreground pixels are found.
+const computeForegroundCentroid = (image: ImageData): { x: number; y: number } => {
+  const { data, width, height } = image;
+  let sumX = 0, sumY = 0, count = 0;
+  for (let y = 0; y < height; y++) {
+    for (let x = 0; x < width; x++) {
+      const alpha = data[(y * width + x) * 4 + 3];
+      if (alpha >= FOREGROUND_ALPHA_THRESHOLD) {
+        sumX += x;
+        sumY += y;
+        count++;
+      }
+    }
+  }
+  if (count === 0) return { x: width / 2, y: height / 2 };
+  return { x: sumX / count, y: sumY / count };
+};
