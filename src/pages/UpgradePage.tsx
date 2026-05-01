@@ -1,58 +1,44 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { openCheckout } from '@/src/lib/paddle';
+import { openCheckout, type PayPalPlan } from '@/src/lib/paypal';
 import { useAuth } from '@/src/contexts/AuthContext';
 import { trackEvent } from '@/src/lib/posthog';
 import { FREE_IMAGE_LIMIT, useSubscription } from '@/src/hooks/useSubscription';
 
-const PRICE_STARTER = import.meta.env.VITE_PADDLE_PRICE_STARTER as string | undefined;
-const PRICE_GROWTH  = import.meta.env.VITE_PADDLE_PRICE_GROWTH  as string | undefined;
-const PRICE_PRO     = import.meta.env.VITE_PADDLE_PRICE_PRO     as string | undefined;
-
-type PaidPlan = 'starter' | 'growth' | 'pro';
-
 const PLANS: Array<{
-  id: PaidPlan;
+  id: PayPalPlan;
   label: string;
   price: number;
-  images: number;
   perImage: string;
   badge: string;
   highlight: boolean;
-  priceId: string | undefined;
   description: string;
 }> = [
   {
     id: 'starter',
     label: 'Starter',
     price: 19,
-    images: 100,
     perImage: '$0.19',
     badge: 'Entry',
     highlight: false,
-    priceId: PRICE_STARTER,
     description: '100 image credits · Good for testing',
   },
   {
     id: 'growth',
     label: 'Growth',
     price: 49,
-    images: 500,
     perImage: '$0.098',
     badge: 'Best value',
     highlight: true,
-    priceId: PRICE_GROWTH,
     description: '500 image credits · For active sellers',
   },
   {
     id: 'pro',
     label: 'Pro',
     price: 99,
-    images: 1500,
     perImage: '$0.066',
     badge: 'Most images',
     highlight: false,
-    priceId: PRICE_PRO,
     description: '1,500 image credits · High-volume catalogs',
   },
 ];
@@ -61,11 +47,10 @@ export default function UpgradePage() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const { imagesUsed } = useSubscription();
-  const [loading, setLoading] = useState<PaidPlan | null>(null);
+  const [loading, setLoading] = useState<PayPalPlan | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const handleUpgrade = async (plan: PaidPlan, priceId: string | undefined, price: number) => {
-    if (!priceId) return;
+  const handleUpgrade = async (plan: PayPalPlan, price: number) => {
     setLoading(plan);
     setError(null);
     trackEvent('pricing_plan_clicked', {
@@ -75,7 +60,7 @@ export default function UpgradePage() {
       source: 'upgrade_page',
     });
     try {
-      await openCheckout(priceId, user?.email ?? undefined);
+      await openCheckout(plan, user?.email ?? undefined);
     } catch (err) {
       console.error('Checkout failed:', err);
       const message = err instanceof Error ? err.message : 'Something went wrong. Please try again.';
@@ -134,8 +119,8 @@ export default function UpgradePage() {
           {PLANS.map((plan) => (
             <button
               key={plan.id}
-              onClick={() => handleUpgrade(plan.id, plan.priceId, plan.price)}
-              disabled={!!loading || !plan.priceId}
+              onClick={() => handleUpgrade(plan.id, plan.price)}
+              disabled={!!loading}
               className={`w-full rounded-xl border-2 p-4 text-left transition disabled:opacity-60 ${
                 plan.highlight
                   ? 'border-[#e636a4] hover:bg-pink-50'
@@ -155,7 +140,7 @@ export default function UpgradePage() {
                     ? 'bg-pink-100 text-[#c71f8a]'
                     : 'bg-zinc-100 text-zinc-700'
                 }`}>
-                  {loading === plan.id ? 'Loading…' : plan.badge}
+                  {loading === plan.id ? 'Redirecting…' : plan.badge}
                 </span>
               </div>
             </button>

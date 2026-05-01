@@ -1,6 +1,6 @@
 import { useAuth } from '@/src/contexts/AuthContext';
 import { trackEvent } from '@/src/lib/posthog';
-import { openCheckout } from '@/src/lib/paddle';
+import { openCheckout, type PayPalPlan } from '@/src/lib/paypal';
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
@@ -37,10 +37,17 @@ const proofCases = [
 ];
 
 // ─── Pricing ─────────────────────────────────────────────────────────────────
-const PRICE_STARTER = import.meta.env.VITE_PADDLE_PRICE_STARTER as string | undefined;
-const PRICE_GROWTH  = import.meta.env.VITE_PADDLE_PRICE_GROWTH  as string | undefined;
-const PRICE_PRO     = import.meta.env.VITE_PADDLE_PRICE_PRO     as string | undefined;
-const pricingPlans = [
+const pricingPlans: Array<{
+  name: string;
+  price: string;
+  interval: string;
+  quota: string;
+  features: string[];
+  tagline: string;
+  cta: string;
+  featured: boolean;
+  planId: PayPalPlan | null;
+}> = [
   {
     name: 'Free Trial',
     price: '$0',
@@ -50,7 +57,7 @@ const pricingPlans = [
     tagline: 'Test the output quality on real images. No card needed.',
     cta: 'Start Free Trial',
     featured: false,
-    priceId: PRICE_STARTER,
+    planId: null,
   },
   {
     name: 'Starter',
@@ -61,7 +68,7 @@ const pricingPlans = [
     tagline: 'Perfect for testing with a real product catalog.',
     cta: 'Get Starter',
     featured: false,
-    priceId: PRICE_STARTER,
+    planId: 'starter',
   },
   {
     name: 'Growth',
@@ -72,7 +79,7 @@ const pricingPlans = [
     tagline: 'For sellers processing new SKUs every week.',
     cta: 'Get Growth',
     featured: true,
-    priceId: PRICE_GROWTH,
+    planId: 'growth',
   },
   {
     name: 'Pro',
@@ -83,7 +90,7 @@ const pricingPlans = [
     tagline: 'For agencies and large-catalog Amazon sellers.',
     cta: 'Get Pro',
     featured: false,
-    priceId: PRICE_PRO,
+    planId: 'pro',
   },
 ];
 
@@ -222,27 +229,25 @@ function LandingPage() {
   const [checkoutLoading, setCheckoutLoading] = useState<string | null>(null);
   const [checkoutError, setCheckoutError] = useState<string | null>(null);
 
-  const handlePlanClick = async (planName: string, priceId?: string) => {
+  const handlePlanClick = async (planName: string, planId: PayPalPlan | null) => {
     trackEvent('pricing_plan_clicked', { plan: planName });
     if (loading) return;
     setCheckoutError(null);
 
     if (!user) {
-      if (priceId) {
-        // Save intent so AuthCallback can redirect to /pricing and resume checkout
-        sessionStorage.setItem('pendingPriceId', priceId);
+      if (planId) {
+        sessionStorage.setItem('pendingPlanId', planId);
         sessionStorage.setItem('pendingPlanName', planName);
       }
       try { await signInWithGoogle(); } catch (err) { console.error('Sign in failed:', err); }
       return;
     }
 
-    if (!priceId) return;
+    if (!planId) return;
 
     setCheckoutLoading(planName);
     try {
-      await openCheckout(priceId, user.email ?? undefined);
-      // navigates away on success
+      await openCheckout(planId, user.email ?? undefined);
     } catch (err) {
       console.error('Checkout failed:', err);
       setCheckoutError(err instanceof Error ? err.message : 'Something went wrong. Please try again.');
@@ -516,8 +521,8 @@ function LandingPage() {
                     </ul>
 
                     <button
-                      onClick={() => handlePlanClick(plan.name, plan.priceId)}
-                      disabled={checkoutLoading === plan.name || !plan.priceId}
+                      onClick={() => handlePlanClick(plan.name, plan.planId)}
+                      disabled={checkoutLoading === plan.name}
                       className={`mt-6 inline-flex w-full items-center justify-center rounded-xl px-4 py-3 text-sm font-bold transition disabled:opacity-60 disabled:cursor-not-allowed ${
                         plan.featured
                           ? 'bg-gradient-to-r from-[#e636a4] to-[#ff7a2f] text-white hover:brightness-105'

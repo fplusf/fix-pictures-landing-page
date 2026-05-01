@@ -1,10 +1,7 @@
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/src/components/ui/dialog';
-import { openCheckout } from '@/src/lib/paddle';
+import { openCheckout } from '@/src/lib/paypal';
 import { useState } from 'react';
 import { useAuth } from '@/src/contexts/AuthContext';
-
-const PRICE_STARTER = (import.meta.env.VITE_PADDLE_PRICE_STARTER || import.meta.env.VITE_PADDLE_PRICE_PRO) as string;
-const PRICE_GROWTH = (import.meta.env.VITE_PADDLE_PRICE_GROWTH as string) || '';
 
 interface Props {
   open: boolean;
@@ -17,13 +14,10 @@ export function UpgradeModal({ open, onClose }: Props) {
   const [error, setError] = useState<string | null>(null);
 
   const handleUpgrade = async (plan: 'starter' | 'growth') => {
-    const priceId = plan === 'starter' ? PRICE_STARTER : PRICE_GROWTH;
-    if (!priceId) return;
     setLoading(plan);
     setError(null);
     try {
-      await openCheckout(priceId, user?.email ?? undefined);
-      // openCheckout navigates away — code below only runs on failure
+      await openCheckout(plan, user?.email ?? undefined);
     } catch (err) {
       console.error('Checkout failed:', err);
       setError(err instanceof Error ? err.message : 'Something went wrong. Please try again.');
@@ -35,7 +29,6 @@ export function UpgradeModal({ open, onClose }: Props) {
   return (
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
       <DialogContent className="max-w-md rounded-2xl p-0 overflow-hidden border-0">
-        {/* Accessible title/description (visually hidden — gradient header serves as the UI heading) */}
         <DialogTitle className="sr-only">Upgrade your plan</DialogTitle>
         <DialogDescription className="sr-only">
           You have used all 10 free images. Upgrade to Starter or Growth to continue processing.
@@ -59,27 +52,27 @@ export function UpgradeModal({ open, onClose }: Props) {
           >
             <div className="flex items-center justify-between">
               <div>
-                <p className="font-black text-zinc-900">Starter — $49</p>
-                <p className="text-sm text-zinc-500 mt-0.5">1,000 images · Best for smaller catalogs</p>
+                <p className="font-black text-zinc-900">Starter — $19</p>
+                <p className="text-sm text-zinc-500 mt-0.5">100 images · Good for testing</p>
               </div>
               <span className="rounded-full bg-zinc-100 px-3 py-1 text-xs font-bold text-zinc-700">
-                {loading === 'starter' ? 'Loading…' : 'Entry'}
+                {loading === 'starter' ? 'Redirecting…' : 'Entry'}
               </span>
             </div>
           </button>
 
           <button
             onClick={() => handleUpgrade('growth')}
-            disabled={!!loading || !PRICE_GROWTH}
+            disabled={!!loading}
             className="w-full rounded-xl border-2 border-[#e636a4] p-4 text-left transition hover:bg-pink-50 disabled:opacity-60"
           >
             <div className="flex items-center justify-between">
               <div>
-                <p className="font-black text-zinc-900">Growth — $99</p>
-                <p className="text-sm text-zinc-500 mt-0.5">2,500 images · Lower cost per image</p>
+                <p className="font-black text-zinc-900">Growth — $49</p>
+                <p className="text-sm text-zinc-500 mt-0.5">500 images · For active sellers</p>
               </div>
               <span className="rounded-full bg-pink-100 px-3 py-1 text-xs font-bold text-[#c71f8a]">
-                {loading === 'growth' ? 'Loading…' : !PRICE_GROWTH ? 'Set Paddle Price' : 'Best value'}
+                {loading === 'growth' ? 'Redirecting…' : 'Best value'}
               </span>
             </div>
           </button>

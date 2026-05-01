@@ -2,47 +2,68 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '@/src/contexts/AuthContext';
 import { trackEvent } from '@/src/lib/posthog';
-import { openCheckout } from '@/src/lib/paddle';
+import { openCheckout, type PayPalPlan } from '@/src/lib/paypal';
 
 const APP_ROUTE = '/app';
 
-const PRICE_STARTER = (import.meta.env.VITE_PADDLE_PRICE_STARTER || import.meta.env.VITE_PADDLE_PRICE_PRO) as string;
-const PRICE_GROWTH = (import.meta.env.VITE_PADDLE_PRICE_GROWTH as string) || '';
-const pricingPlans = [
+const pricingPlans: Array<{
+  name: string;
+  price: string;
+  interval: string;
+  quota: string;
+  features: string[];
+  tagline: string;
+  cta: string;
+  featured: boolean;
+  planId: PayPalPlan | null;
+  isTrial: boolean;
+}> = [
   {
     name: 'Free Trial',
     price: '$0',
     interval: '',
     quota: '10 free images',
     features: ['Amazon-ready exports', 'Compliance report', 'Before/after review'],
-    tagline: 'Test the output quality on 5 real images.',
+    tagline: 'Test the output quality on real images.',
     cta: 'Start Free Trial',
     featured: false,
-    priceId: PRICE_STARTER,
+    planId: null,
     isTrial: true,
   },
   {
     name: 'Starter',
-    price: '$49',
+    price: '$19',
     interval: '',
-    quota: '1,000 images included',
-    features: ['Everything in Free', 'Credit-based processing', 'Best for smaller catalogs'],
+    quota: '100 image credits',
+    features: ['Everything in Free', 'Credits never expire', 'Best for smaller catalogs'],
     tagline: 'For sellers who need a practical first paid tier.',
     cta: 'Get Starter',
     featured: false,
-    priceId: PRICE_STARTER,
+    planId: 'starter',
     isTrial: false,
   },
   {
     name: 'Growth',
-    price: '$99',
+    price: '$49',
     interval: '',
-    quota: '2,500 images included',
-    features: ['Everything in Starter', 'Higher-volume processing', 'Lower cost per image'],
+    quota: '500 image credits',
+    features: ['Everything in Starter', 'Lower cost per image', 'For active sellers'],
     tagline: 'For teams working through larger SKU batches.',
     cta: 'Get Growth',
     featured: true,
-    priceId: PRICE_GROWTH,
+    planId: 'growth',
+    isTrial: false,
+  },
+  {
+    name: 'Pro',
+    price: '$99',
+    interval: '',
+    quota: '1,500 image credits',
+    features: ['Everything in Growth', 'Lowest cost per image', 'High-volume catalogs'],
+    tagline: 'For agencies and large-catalog Amazon sellers.',
+    cta: 'Get Pro',
+    featured: false,
+    planId: 'pro',
     isTrial: false,
   },
 ];
@@ -55,14 +76,14 @@ export default function PricingPage() {
   // After OAuth redirect back to /pricing, resume the pending checkout automatically
   useEffect(() => {
     if (!user || loading) return;
-    const pendingPriceId = sessionStorage.getItem('pendingPriceId');
+    const pendingPlanId = sessionStorage.getItem('pendingPlanId') as PayPalPlan | null;
     const pendingPlanName = sessionStorage.getItem('pendingPlanName');
-    if (!pendingPriceId) return;
-    sessionStorage.removeItem('pendingPriceId');
+    if (!pendingPlanId) return;
+    sessionStorage.removeItem('pendingPlanId');
     sessionStorage.removeItem('pendingPlanName');
     const name = pendingPlanName ?? '';
     setCheckoutLoading(name);
-    openCheckout(pendingPriceId, user.email ?? undefined)
+    openCheckout(pendingPlanId, user.email ?? undefined)
       .catch((err) => {
         console.error('Checkout failed:', err);
         setCheckoutError(err instanceof Error ? err.message : 'Something went wrong. Please try again.');
@@ -70,15 +91,16 @@ export default function PricingPage() {
       .finally(() => setCheckoutLoading(null));
   }, [user, loading]);
 
-  const handlePlanClick = async (planName: string, priceId: string) => {
+  const handlePlanClick = async (planName: string, planId: PayPalPlan | null) => {
     trackEvent('pricing_plan_clicked', { plan: planName });
     if (loading) return;
     setCheckoutError(null);
 
     if (!user) {
-      // Save intent so we can resume after OAuth redirect
-      sessionStorage.setItem('pendingPriceId', priceId);
-      sessionStorage.setItem('pendingPlanName', planName);
+      if (planId) {
+        sessionStorage.setItem('pendingPlanId', planId);
+        sessionStorage.setItem('pendingPlanName', planName);
+      }
       try {
         await signInWithGoogle();
       } catch (err) {
@@ -87,10 +109,11 @@ export default function PricingPage() {
       return;
     }
 
+    if (!planId) return;
+
     setCheckoutLoading(planName);
     try {
-      await openCheckout(priceId, user.email ?? undefined);
-      // navigates away on success — finally still runs
+      await openCheckout(planId, user.email ?? undefined);
     } catch (err) {
       console.error('Checkout failed:', err);
       setCheckoutError(err instanceof Error ? err.message : 'Something went wrong. Please try again.');
@@ -169,15 +192,15 @@ export default function PricingPage() {
                 </ul>
 
                 <button
-                  onClick={() => handlePlanClick(plan.name, plan.priceId!)}
-                  disabled={checkoutLoading === plan.name || !plan.priceId}
+                  onClick={() => handlePlanClick(plan.name, plan.planId)}
+                  disabled={checkoutLoading === plan.name}
                   className={`mt-10 inline-flex w-full items-center justify-center rounded-xl py-4 text-base font-bold transition disabled:opacity-60 disabled:cursor-not-allowed ${
                     plan.featured
                       ? 'bg-gradient-to-r from-[#e636a4] to-[#ff7a2f] text-white hover:brightness-105'
                       : 'bg-zinc-900 text-white hover:bg-zinc-800'
                   }`}
                 >
-                  {checkoutLoading === plan.name ? 'Loading…' : !plan.priceId ? 'Set Paddle Price' : plan.cta}
+                  {checkoutLoading === plan.name ? 'Redirecting…' : plan.cta}
                 </button>
               </div>
             </article>
