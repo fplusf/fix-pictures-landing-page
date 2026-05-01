@@ -14,6 +14,12 @@ import {
 } from '@/src/hooks/useSubscription';
 import { analyzeImageFile, type AuditSnapshot } from '@/src/lib/auditor';
 import {
+  clearPersistedItems,
+  loadPersistedItems,
+  persistItems,
+  removePersistedItem,
+} from '@/src/lib/sessionDb';
+import {
   composeCompliantImage,
   type CompositorMetrics,
   type ShadowMode,
@@ -95,9 +101,30 @@ function App() {
 
   const batchItemsRef = useRef<BatchItem[]>([]);
   const cancelledItemIdsRef = useRef<Set<string>>(new Set());
+  const persistTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     batchItemsRef.current = batchItems;
+  }, [batchItems]);
+
+  // Restore queue from last session on mount
+  useEffect(() => {
+    loadPersistedItems()
+      .then((items) => {
+        if (items.length > 0) setBatchItems(items as BatchItem[]);
+      })
+      .catch(() => {/* silently ignore if IndexedDB unavailable */});
+  }, []);
+
+  // Debounced persist: write to IndexedDB 1.5s after the last change
+  useEffect(() => {
+    if (persistTimerRef.current) clearTimeout(persistTimerRef.current);
+    persistTimerRef.current = setTimeout(() => {
+      persistItems(batchItems).catch(() => {});
+    }, 1500);
+    return () => {
+      if (persistTimerRef.current) clearTimeout(persistTimerRef.current);
+    };
   }, [batchItems]);
 
   const activeItem = useMemo(() => {
@@ -537,6 +564,7 @@ function App() {
     setBatchItems([]);
     setActiveItemId(null);
     setSessionError(null);
+    clearPersistedItems().catch(() => {});
   }, []);
 
   const removeItem = useCallback((itemId: string) => {
@@ -547,6 +575,7 @@ function App() {
     }
 
     setBatchItems((previous) => previous.filter((entry) => entry.id !== itemId));
+    removePersistedItem(itemId).catch(() => {});
   }, []);
 
   const retryItem = useCallback((itemId: string) => {
@@ -970,10 +999,10 @@ function App() {
             ) : (
               <section className="grid gap-3 xl:grid-cols-[1.45fr,1fr] xl:items-stretch lg:h-full lg:min-h-0">
                 <article className="relative isolate min-h-[300px] rounded-2xl border border-zinc-200 bg-white p-4 shadow-[0_16px_52px_-42px_rgba(15,23,42,0.5)] sm:p-5 lg:h-full lg:min-h-0 lg:overflow-y-auto">
-            <div className="sticky top-0 z-50 -mx-4 -mt-4 mb-4 flex flex-wrap items-center justify-between gap-3 border-b border-zinc-100 bg-white px-4 py-3 sm:-mx-5 sm:-mt-5 sm:px-5">
+            <div className="sticky top-0 z-50 -mx-4 -mt-4 mb-3 flex flex-wrap items-center justify-between gap-2 border-b border-zinc-100 bg-white px-4 py-2 sm:-mx-5 sm:-mt-5 sm:px-5">
               <div>
-                <h2 className="text-xl font-semibold tracking-tight text-zinc-950">Selected Image</h2>
-                <p className="break-all text-sm text-zinc-600">
+                <h2 className="text-base font-semibold tracking-tight text-zinc-950">Selected Image</h2>
+                <p className="break-all text-xs text-zinc-600">
                   {activeItem?.file.name ?? 'No image selected'}
                 </p>
               </div>
