@@ -1,4 +1,5 @@
 import { useAuth } from '@/src/contexts/AuthContext';
+import { FREE_IMAGE_LIMIT, useSubscription } from '@/src/hooks/useSubscription';
 import { trackEvent } from '@/src/lib/posthog';
 import { openCheckout, type PayPalPlan } from '@/src/lib/paypal';
 import { useEffect, useRef, useState } from 'react';
@@ -220,20 +221,35 @@ function BeforeAfterSlider({
 // ─── Main component ───────────────────────────────────────────────────────────
 function LandingPage() {
   const { user, signInWithGoogle, loading } = useAuth();
+  const { canProcess, imagesUsed, loading: subLoading } = useSubscription();
   const navigate = useNavigate();
   const location = useLocation();
+  const [showCreditsExhausted, setShowCreditsExhausted] = useState(false);
+
+  const creditsExhausted = !!user && !subLoading && !canProcess;
 
   useEffect(() => {
-    if (user && !loading && !location.state?.skipAppRedirect) navigate(APP_ROUTE);
-  }, [user, loading, navigate, location.state]);
+    if (user && !loading && !location.state?.skipAppRedirect && canProcess) navigate(APP_ROUTE);
+  }, [user, loading, navigate, location.state, canProcess]);
 
   const [checkoutLoading, setCheckoutLoading] = useState<string | null>(null);
   const [checkoutError, setCheckoutError] = useState<string | null>(null);
+
+  const scrollToPricing = () => {
+    setShowCreditsExhausted(true);
+    document.getElementById('pricing')?.scrollIntoView({ behavior: 'smooth' });
+  };
 
   const handlePlanClick = async (planName: string, planId: PayPalPlan | null) => {
     trackEvent('pricing_plan_clicked', { plan: planName });
     if (loading) return;
     setCheckoutError(null);
+
+    // User has exhausted free credits — scroll to pricing instead of going to /app
+    if (!planId && creditsExhausted) {
+      scrollToPricing();
+      return;
+    }
 
     if (!user) {
       if (planId) {
@@ -276,7 +292,7 @@ function LandingPage() {
             onClick={() => handlePlanClick('Free', null)}
             className="rounded-xl bg-gradient-to-r from-[#e636a4] to-[#ff7a2f] px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:brightness-105 active:scale-[0.98]"
           >
-            {loading ? 'Loading…' : 'Start Free →'}
+            {loading ? 'Loading…' : creditsExhausted ? 'See plans →' : 'Start Free →'}
           </button>
         </div>
       </nav>
@@ -308,7 +324,7 @@ function LandingPage() {
                 onClick={() => handlePlanClick('Free', null)}
                 className="flex h-14 items-center justify-center rounded-xl bg-gradient-to-r from-[#e636a4] to-[#ff7a2f] px-8 text-base font-bold text-white shadow-md transition hover:brightness-105 active:scale-[0.98]"
               >
-                {loading ? 'Loading…' : 'Fix your images free →'}
+                {loading ? 'Loading…' : creditsExhausted ? 'See plans →' : 'Fix your images free →'}
               </button>
               <a
                 href="#how-it-works"
@@ -475,6 +491,18 @@ function LandingPage() {
           <div className="pointer-events-none absolute -bottom-24 -right-12 h-60 w-60 rounded-full bg-[#ff7a2f]/20 blur-3xl" />
 
           <div className="relative">
+            {showCreditsExhausted && (
+              <div className="mb-8 rounded-2xl bg-gradient-to-r from-[#e636a4] to-[#ff7a2f] p-px">
+                <div className="rounded-2xl bg-white px-6 py-4 text-center">
+                  <p className="text-sm font-bold text-zinc-900">
+                    You've used all {FREE_IMAGE_LIMIT} free images.
+                  </p>
+                  <p className="mt-1 text-sm text-zinc-500">
+                    Pick a credit pack below to keep processing. Credits never expire.
+                  </p>
+                </div>
+              </div>
+            )}
             <p className="text-center text-xs font-bold uppercase tracking-[0.24em] text-zinc-400">Pricing</p>
             <h2 className="mt-2 text-center text-3xl font-black text-zinc-950 md:text-4xl">Simple, honest pricing.</h2>
             <p className="mt-3 text-center text-sm text-zinc-500 md:text-base">
@@ -558,7 +586,7 @@ function LandingPage() {
             onClick={() => handlePlanClick('Free', null)}
             className="mt-8 inline-flex rounded-xl bg-gradient-to-r from-[#e636a4] to-[#ff7a2f] px-10 py-4 text-base font-bold text-white shadow-lg transition hover:brightness-110 active:scale-[0.98]"
           >
-            {loading ? 'Loading…' : 'Open fix.pictures free →'}
+            {loading ? 'Loading…' : creditsExhausted ? 'See plans →' : 'Open fix.pictures free →'}
           </button>
         </section>
 
