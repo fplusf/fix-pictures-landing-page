@@ -1509,12 +1509,14 @@ const shouldSkipProcessing = async (file: File, snapshot: AuditSnapshot | null, 
   }
 
   // Phase 2 Safety Gate #1: Check for our own EXIF metadata marker
+  // NOTE: metadata alone is NOT enough to skip — it must be combined with a clean
+  // static analysis. A previously processed image that still fails checks must be
+  // reprocessed. The actual skip decision is made in shouldSkipByQuickLayer.
   let hasOurMetadata = false;
   try {
     hasOurMetadata = await hasProcessedMetadata(file);
     if (hasOurMetadata) {
-      console.log('[Skip] Image has ProcessedByFixPicturesApp metadata - already processed');
-      return true;
+      console.log('[Info] Image has our metadata — will skip only if static checks also pass');
     }
   } catch (error) {
     console.warn('Failed to check EXIF metadata:', error);
