@@ -22,7 +22,7 @@ const pricingPlans: Array<{
     name: 'Free Trial',
     price: '$0',
     interval: '',
-    quota: '10 free images',
+    quota: '15 free images',
     features: ['Amazon-ready exports', 'Compliance report', 'Before/after review'],
     tagline: 'Test the output quality on real images.',
     cta: 'Start Free Trial',
@@ -34,8 +34,8 @@ const pricingPlans: Array<{
     name: 'Starter',
     price: '$19',
     interval: '',
-    quota: '100 image credits',
-    features: ['Everything in Free', 'Credits never expire', 'Best for smaller catalogs'],
+    quota: '250 image credits',
+    features: ['Everything in Free', 'Credits never expire', '$0.076 per image'],
     tagline: 'For sellers who need a practical first paid tier.',
     cta: 'Get Starter',
     featured: false,
@@ -46,8 +46,8 @@ const pricingPlans: Array<{
     name: 'Growth',
     price: '$49',
     interval: '',
-    quota: '500 image credits',
-    features: ['Everything in Starter', 'Lower cost per image', 'For active sellers'],
+    quota: '1,000 image credits',
+    features: ['Everything in Starter', '$0.049 per image', 'For active sellers'],
     tagline: 'For teams working through larger SKU batches.',
     cta: 'Get Growth',
     featured: true,
@@ -58,8 +58,8 @@ const pricingPlans: Array<{
     name: 'Pro',
     price: '$99',
     interval: '',
-    quota: '1,500 image credits',
-    features: ['Everything in Growth', 'Lowest cost per image', 'High-volume catalogs'],
+    quota: '3,000 image credits',
+    features: ['Everything in Growth', '$0.033 per image', 'High-volume catalogs'],
     tagline: 'For agencies and large-catalog Amazon sellers.',
     cta: 'Get Pro',
     featured: false,
@@ -146,7 +146,7 @@ export default function PricingPage() {
             Simple, honest pricing.
           </h1>
           <p className="mx-auto mt-6 max-w-2xl text-lg text-zinc-600">
-            Start with 10 trial images, then move to the credit pack that fits your catalog volume.
+            Start with 15 trial images, then move to the credit pack that fits your catalog volume.
           </p>
         </div>
 
@@ -223,13 +223,13 @@ export default function PricingPage() {
               <div>
                 <h4 className="font-bold text-zinc-950">How does the free tier work?</h4>
                 <p className="mt-2 text-sm text-zinc-600 leading-relaxed">
-                  You get 10 full-resolution, Amazon-ready trial images. Once you use your quota, you can move to Starter or Growth depending on the image volume you need.
+                  You get 15 full-resolution, Amazon-ready trial images. Once you use your quota, you can move to Starter or Growth depending on the image volume you need.
                 </p>
               </div>
               <div>
                 <h4 className="font-bold text-zinc-950">How do paid plans work?</h4>
                 <p className="mt-2 text-sm text-zinc-600 leading-relaxed">
-                  Starter includes up to 1,000 processed images and Growth includes up to 2,500. Choose the tier that matches your expected catalog workload.
+                  Credits never expire. Starter gives you 250 images, Growth gives 1,000, and Pro covers 3,000. Choose the tier that matches your expected catalog workload.
                 </p>
               </div>
               <div>

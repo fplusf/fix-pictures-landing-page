@@ -3,9 +3,9 @@ import { supabase } from './supabase';
 export type PayPalPlan = 'starter' | 'growth' | 'pro';
 
 export const PLAN_META: Record<PayPalPlan, { amount: string; label: string; credits: number }> = {
-  starter: { amount: '19.00', label: 'Starter', credits: 100 },
-  growth:  { amount: '49.00', label: 'Growth',  credits: 500 },
-  pro:     { amount: '99.00', label: 'Pro',      credits: 1500 },
+  starter: { amount: '19.00', label: 'Starter', credits: 250 },
+  growth:  { amount: '49.00', label: 'Growth',  credits: 1000 },
+  pro:     { amount: '99.00', label: 'Pro',      credits: 3000 },
 };
 
 export async function openCheckout(plan: PayPalPlan, _email?: string): Promise<void> {

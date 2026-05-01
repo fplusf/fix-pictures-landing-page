@@ -19,10 +19,10 @@ const GEMINI_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/
 // */
 
 // Must stay in sync with src/hooks/useSubscription.ts
-const FREE_IMAGE_LIMIT = 10;
-const STARTER_IMAGE_LIMIT = 100;
-const GROWTH_IMAGE_LIMIT = 500;
-const PRO_IMAGE_LIMIT = 1500;
+const FREE_IMAGE_LIMIT = 15;
+const STARTER_IMAGE_LIMIT = 250;
+const GROWTH_IMAGE_LIMIT = 1000;
+const PRO_IMAGE_LIMIT = 3000;
 
 // Hard cap on total free users — raise once payments are live
 const FREE_USER_CAP = 100;
