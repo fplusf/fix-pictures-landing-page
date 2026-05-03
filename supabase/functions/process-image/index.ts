@@ -52,6 +52,12 @@ const EDIT_PROMPT = [
   'FRAMING RULE: The product must fill 85–90% of the image frame. Crop tightly so the product is large in frame with only minimal padding on each side.',
   'Center the product both horizontally and vertically. Do not leave large empty white areas.',
 
+  // Orientation / symmetry
+  'ORIENTATION RULE: If the product has a natural upright orientation (bottles, boxes, cans, electronics, appliances, bags, jars), it must be rendered perfectly vertical — zero tilt, zero rotation.',
+  'If the product was photographed at an angle, straighten it so its primary axis is exactly perpendicular to the bottom of the frame.',
+  'For inherently symmetrical products, the left and right sides must appear balanced. Do not introduce or preserve any lean or tilt from the original photo.',
+  'Only preserve a non-upright angle if the product has no clear upright orientation (e.g. a flat cable, a coiled rope, a watch laid flat for display).',
+
   // Product fidelity — colour is the most common failure mode
   'COLOR PRESERVATION RULE: You must not change the color, brightness, or tone of any part of the product.',
   'Dark areas of the product must remain exactly as dark as in the original photo. Black must stay black. Dark grey must stay dark grey.',
@@ -59,7 +65,7 @@ const EDIT_PROMPT = [
   'Do not add props, text, badges, watermarks, reflections, or any extra objects.',
   'Do not crop off any part of the product — the entire product including handles, lids, or protruding elements must be fully visible.',
 
-  'Final output: one product, centered, filling most of the frame, on a mathematically pure white background with zero shadow.',
+  'Final output: one product, perfectly upright and centered, filling most of the frame, on a mathematically pure white background with zero shadow.',
 ].join(' ');
 
 const CORS_HEADERS = {
