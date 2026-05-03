@@ -14,13 +14,6 @@ export default defineConfig({
       'Cross-Origin-Opener-Policy': 'same-origin',
       'Cross-Origin-Embedder-Policy': 'credentialless',
     },
-    proxy: {
-      '/api/process-image': {
-        target: 'http://localhost:54321',
-        rewrite: () => '/functions/v1/process-image',
-        changeOrigin: true,
-      },
-    },
   },
   preview: {
     headers: {
