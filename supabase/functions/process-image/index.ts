@@ -65,7 +65,14 @@ const EDIT_PROMPT = [
   'Do not add props, text, badges, watermarks, reflections, or any extra objects.',
   'Do not crop off any part of the product — the entire product including handles, lids, or protruding elements must be fully visible.',
 
-  'Final output: one product, perfectly upright and centered, filling most of the frame, on a mathematically pure white background with zero shadow.',
+  // Output quality
+  'QUALITY RULE: The final image must look like a professional studio photograph, not a cutout pasted on white.',
+  'Edges must be crisp and natural — no jagged pixels, no halo, no fringing, no soft blurry cutout edges.',
+  'Surface details, textures, labels, embossing, and material finishes (matte, gloss, metallic) must be fully preserved and rendered with clarity.',
+  'Lighting on the product must look natural and consistent — no flat, washed-out look. Preserve the original highlights and subtle shading that give the product its three-dimensional form.',
+  'The product must look sharp and detailed at full resolution. Do not soften, blur, or over-smooth any surface.',
+
+  'Final output: one product, perfectly upright and centered, filling most of the frame, on a mathematically pure white background with zero shadow, rendered at professional studio quality.',
 ].join(' ');
 
 const CORS_HEADERS = {
