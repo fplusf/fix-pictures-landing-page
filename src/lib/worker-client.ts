@@ -218,8 +218,12 @@ class SmartWorkerClient {
     const url = `${supabaseUrl}/functions/v1/process-image`;
 
     const { supabase } = await import('@/src/lib/supabase');
-    const { data: { session } } = await supabase.auth.getSession();
-    const userJwt = session?.access_token;
+    // refreshSession() exchanges the refresh token for a fresh access token,
+    // avoiding 401s from stale/expired JWTs. Falls back to the cached session
+    // if the user is not logged in (returns null session → throws below).
+    const { data: refreshed } = await supabase.auth.refreshSession();
+    const userJwt = refreshed.session?.access_token
+      ?? (await supabase.auth.getSession()).data.session?.access_token;
     if (!userJwt) throw new Error('Not authenticated');
     const headers: Record<string, string> = {
       'Authorization': `Bearer ${userJwt}`,
@@ -234,11 +238,10 @@ class SmartWorkerClient {
 
     if (!response.ok) {
       const text = await response.text();
-      // Surface quota errors clearly so the UI can redirect to /upgrade
+      console.error(`[process-image] ${response.status}:`, text);
+      if (response.status === 401) throw new Error(`AUTH_ERROR: ${text}`);
       if (response.status === 402) throw new Error('QUOTA_EXCEEDED');
       if (response.status === 503) throw new Error('CAPACITY_REACHED');
-      // 5xx = server misconfiguration (e.g. missing API key) — don't silently
-      // fall back to the local worker, surface the error so it's visible.
       if (response.status >= 500) throw new Error(`SERVER_ERROR:${response.status}`);
       throw new Error(text || `Remote image processing failed (${response.status})`);
     }
