@@ -212,24 +212,23 @@ class SmartWorkerClient {
     const formData = new FormData();
     formData.append('image', file, file.name);
 
-    // Dev: Vite middleware intercepts /api/process-image and calls Gemini directly (no Docker needed)
-    // Prod: Supabase Edge Function (quota-enforced, auth-gated)
+    // Dev: Vite proxy → local Supabase function at localhost:54321 (run: supabase start)
+    // Prod: Supabase Edge Function
     const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string;
     const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY as string;
     const url = import.meta.env.DEV
       ? '/api/process-image'
       : `${supabaseUrl}/functions/v1/process-image`;
 
-    const headers: Record<string, string> = {};
-    if (!import.meta.env.DEV) {
-      // Send the user's session JWT so the Edge Function can verify identity + quota.
-      const { supabase } = await import('@/src/lib/supabase');
-      const { data: { session } } = await supabase.auth.getSession();
-      const userJwt = session?.access_token;
-      if (!userJwt) throw new Error('Not authenticated');
-      headers['Authorization'] = `Bearer ${userJwt}`;
-      headers['apikey'] = anonKey;
-    }
+    // Always send auth — local Supabase function requires JWT + anon key just like prod.
+    const { supabase } = await import('@/src/lib/supabase');
+    const { data: { session } } = await supabase.auth.getSession();
+    const userJwt = session?.access_token;
+    if (!userJwt) throw new Error('Not authenticated');
+    const headers: Record<string, string> = {
+      'Authorization': `Bearer ${userJwt}`,
+      'apikey': anonKey,
+    };
 
     const response = await fetch(url, {
       method: 'POST',
