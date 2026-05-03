@@ -779,7 +779,7 @@ function App() {
                 <img src="/logo.png" alt="fix.pictures icon" className="h-7 w-7 rounded-lg object-cover" />
               </span>
               <div className="min-w-0">
-                <p className="truncate text-xs font-semibold uppercase tracking-[0.2em] text-zinc-500">fix.pictures</p>
+                <p className="truncate text-xs font-semibold uppercase tracking-[0.2em] text-zinc-500">fix.pictures AI</p>
                 <p className="truncate text-sm font-medium text-zinc-800">Amazon Image Compliance Engine</p>
               </div>
             </div>

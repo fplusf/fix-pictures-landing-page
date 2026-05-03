@@ -266,7 +266,7 @@ function LandingPage() {
         <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4 md:px-10">
           <a href="/" className="flex items-center gap-2.5">
             <img src="/logo.png" alt="fix.pictures logo" className="h-8 w-8 rounded-xl object-cover" />
-            <span className="text-sm font-bold tracking-wide text-zinc-900">fix.pictures</span>
+            <span className="text-sm font-bold tracking-wide text-zinc-900">fix.pictures AI</span>
           </a>
           <div className="hidden items-center gap-8 text-sm font-medium text-zinc-600 md:flex">
             <a href="#how-it-works" className="transition hover:text-zinc-900">How it works</a>
@@ -583,7 +583,7 @@ function LandingPage() {
             onClick={() => handlePlanClick('Free', null)}
             className="mt-8 inline-flex rounded-xl bg-gradient-to-r from-[#e636a4] to-[#ff7a2f] px-10 py-4 text-base font-bold text-white shadow-lg transition hover:brightness-110 active:scale-[0.98]"
           >
-            {loading ? 'Loading…' : creditsExhausted ? 'See plans →' : 'Open fix.pictures free →'}
+            {loading ? 'Loading…' : creditsExhausted ? 'See plans →' : 'Open fix.pictures AI free →'}
           </button>
         </section>
 
@@ -594,7 +594,7 @@ function LandingPage() {
         <div className="flex flex-col items-start justify-between gap-6 md:flex-row md:items-center">
           <div className="flex items-center gap-2.5">
             <img src="/logo.png" alt="fix.pictures" className="h-7 w-7 rounded-lg object-cover" />
-            <span className="text-sm font-bold text-zinc-800">fix.pictures</span>
+            <span className="text-sm font-bold text-zinc-800">fix.pictures AI</span>
             <span className="text-xs text-zinc-400">· Built for Amazon FBA sellers</span>
           </div>
           <div className="flex flex-wrap items-center gap-6 text-xs font-medium text-zinc-500">
@@ -606,7 +606,7 @@ function LandingPage() {
           </div>
         </div>
         <p className="mt-6 text-xs text-zinc-400">
-          © {new Date().getFullYear()} fix.pictures. Built for Amazon-ready product image cleanup and compliance workflows.
+          © {new Date().getFullYear()} fix.pictures AI. Built for Amazon-ready product image cleanup and compliance workflows.
         </p>
       </footer>
     </div>

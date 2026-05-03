@@ -104,7 +104,7 @@ export default function PricingPage() {
         <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4 md:px-10">
           <Link to="/" className="flex items-center gap-2.5">
             <img src="/logo.png" alt="fix.pictures logo" className="h-8 w-8 rounded-xl object-cover" />
-            <span className="text-sm font-bold tracking-wide text-zinc-900">fix.pictures</span>
+            <span className="text-sm font-bold tracking-wide text-zinc-900">fix.pictures AI</span>
           </Link>
           <Link
             to={APP_ROUTE}
@@ -233,7 +233,7 @@ export default function PricingPage() {
         <div className="flex flex-col items-center justify-between gap-6 md:flex-row">
           <div className="flex items-center gap-2.5">
             <img src="/logo.png" alt="fix.pictures" className="h-6 w-6 rounded-lg object-cover" />
-            <span className="text-sm font-bold text-zinc-800">fix.pictures</span>
+            <span className="text-sm font-bold text-zinc-800">fix.pictures AI</span>
           </div>
           <div className="flex items-center gap-8 text-xs font-medium text-zinc-500">
             <Link to="/privacy" className="hover:text-zinc-900">Privacy</Link>
@@ -243,7 +243,7 @@ export default function PricingPage() {
           </div>
         </div>
         <p className="mt-8 text-center text-xs text-zinc-400">
-          © {new Date().getFullYear()} fix.pictures. Built for Amazon-ready product image cleanup and compliance workflows.
+          © {new Date().getFullYear()} fix.pictures AI. Built for Amazon-ready product image cleanup and compliance workflows.
         </p>
       </footer>
     </div>
