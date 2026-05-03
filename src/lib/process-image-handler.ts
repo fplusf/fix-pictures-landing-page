@@ -1,16 +1,26 @@
-const OPENAI_API_URL = 'https://api.openai.com/v1/images/edits';
-const DEFAULT_MODEL = 'gpt-image-1';
-const DEFAULT_QUALITY = 'high';
+// Local dev handler — mirrors supabase/functions/process-image/index.ts exactly,
+// minus quota enforcement (DB not running locally).
+// Called by the Vite dev-server middleware in vite.config.ts.
+
+const GEMINI_MODEL = 'gemini-2.5-flash-image';
+const GEMINI_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`;
 
 const EDIT_PROMPT = [
-  'Transform the uploaded image into a production-safe product cutout for ecommerce.',
-  'Keep the exact real product from the source image.',
-  'Preserve shape, color, texture, branding, proportions, and product details.',
-  'Remove the entire background and output the product on a fully transparent background.',
-  'Do not add props, text, badges, reflections, extra objects, decorative elements, or new shadows.',
-  'Do not alter the product design, branding, packaging, geometry, materials, or finish.',
-  'Do not crop off any part of the product.',
-  'Return a single centered product cutout with crisp edges and no surrounding scene.',
+  'Convert this product photo to a fully Amazon main image compliant result.',
+  'BACKGROUND RULE: Every pixel that is not part of the physical product must be exactly RGB(255,255,255).',
+  'This means zero gradients, zero off-white tones, zero texture, zero noise — mathematically pure white everywhere outside the product.',
+  'SHADOW RULE: There must be NO shadow of any kind anywhere in the image.',
+  'No drop shadow. No cast shadow. No floor shadow. No contact shadow. No ambient occlusion. No darkening near the base.',
+  'Every pixel below, beside, and around the product must be exactly RGB(255,255,255) — not RGB(254,254,254), not RGB(245,245,245) — exactly 255.',
+  'If the product was photographed on a surface that caused a natural shadow, erase that shadow completely and replace with pure white.',
+  'FRAMING RULE: The product must fill 85–90% of the image frame. Crop tightly so the product is large in frame with only minimal padding on each side.',
+  'Center the product both horizontally and vertically. Do not leave large empty white areas.',
+  'COLOR PRESERVATION RULE: You must not change the color, brightness, or tone of any part of the product.',
+  'Dark areas of the product must remain exactly as dark as in the original photo. Black must stay black. Dark grey must stay dark grey.',
+  'Do not lighten, brighten, or adjust any part of the product. The only change allowed is removing the background.',
+  'Do not add props, text, badges, watermarks, reflections, or any extra objects.',
+  'Do not crop off any part of the product — the entire product including handles, lids, or protruding elements must be fully visible.',
+  'Final output: one product, centered, filling most of the frame, on a mathematically pure white background with zero shadow.',
 ].join(' ');
 
 const jsonResponse = (message: string, status = 400) =>
@@ -19,84 +29,108 @@ const jsonResponse = (message: string, status = 400) =>
     headers: { 'content-type': 'application/json' },
   });
 
-function decodeBase64Image(input: string): Uint8Array {
-  const binary = atob(input);
-  const bytes = new Uint8Array(binary.length);
-  for (let i = 0; i < binary.length; i += 1) {
-    bytes[i] = binary.charCodeAt(i);
-  }
-  return bytes;
-}
-
-interface EnvBindings {
-  OPENAI_API_KEY?: string;
-  VITE_OPEN_AI_API_KEY?: string;
-}
-
-function getOpenAiKey(env?: EnvBindings): string | undefined {
-  // 1. Cloudflare Pages / Workers — env bindings passed from function context
-  if (env?.OPENAI_API_KEY) return env.OPENAI_API_KEY;
-  if (env?.VITE_OPEN_AI_API_KEY) return env.VITE_OPEN_AI_API_KEY;
-  // 2. Node.js dev server (Vite plugin) — process.env
-  if (typeof process !== 'undefined') {
-    return process.env?.OPENAI_API_KEY || process.env?.VITE_OPEN_AI_API_KEY || undefined;
-  }
-  return undefined;
-}
-
-export async function handleProcessImage(request: Request, env?: EnvBindings): Promise<Response> {
+export async function handleProcessImage(request: Request): Promise<Response> {
   if (request.method !== 'POST') {
     return jsonResponse('Method not allowed', 405);
   }
 
-  const apiKey = getOpenAiKey(env);
-  if (!apiKey) {
-    return jsonResponse('OPENAI_API_KEY is not configured', 500);
+  const geminiKey =
+    process.env?.VITE_GEMINI_API_KEY ||
+    process.env?.GEMINI_API_KEY ||
+    undefined;
+
+  if (!geminiKey) {
+    return jsonResponse('VITE_GEMINI_API_KEY is not set in .env', 500);
   }
 
-  const form = await request.formData();
+  let form: FormData;
+  try {
+    form = await request.formData();
+  } catch {
+    return jsonResponse('Failed to parse form data');
+  }
+
   const image = form.get('image');
   if (!(image instanceof File)) {
-    return jsonResponse('Missing image upload');
+    return jsonResponse('Missing or invalid image field');
   }
 
-  const outgoing = new FormData();
-  outgoing.append('model', DEFAULT_MODEL);
-  outgoing.append('prompt', EDIT_PROMPT);
-  outgoing.append('image', image, image.name || 'upload.png');
-  outgoing.append('quality', DEFAULT_QUALITY);
-  outgoing.append('output_format', 'png');
-  outgoing.append('background', 'transparent');
-  outgoing.append('input_fidelity', 'high');
+  // Convert to base64 for Gemini inlineData
+  const imageBytes = await image.arrayBuffer();
+  const uint8Array = new Uint8Array(imageBytes);
+  const CHUNK = 8192;
+  let binary = '';
+  for (let i = 0; i < uint8Array.length; i += CHUNK) {
+    binary += String.fromCharCode(...uint8Array.subarray(i, i + CHUNK));
+  }
+  const base64Image = btoa(binary);
 
-  const openaiResponse = await fetch(OPENAI_API_URL, {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
+  const requestBody = {
+    contents: [{
+      parts: [
+        { text: EDIT_PROMPT },
+        {
+          inlineData: {
+            mimeType: image.type || 'image/jpeg',
+            data: base64Image,
+          },
+        },
+      ],
+    }],
+    generationConfig: {
+      responseModalities: ['IMAGE'],
     },
-    body: outgoing,
-  });
-
-  if (!openaiResponse.ok) {
-    const text = await openaiResponse.text();
-    return jsonResponse(`OpenAI image edit failed: ${text}`, openaiResponse.status);
-  }
-
-  const payload = await openaiResponse.json() as {
-    data?: Array<{ b64_json?: string }>;
   };
-  const encoded = payload.data?.[0]?.b64_json;
-  if (!encoded) {
-    return jsonResponse('OpenAI image edit returned no image', 502);
+
+  let geminiResponse: Response;
+  try {
+    geminiResponse = await fetch(`${GEMINI_API_URL}?key=${geminiKey}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(requestBody),
+    });
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    return jsonResponse(`Failed to reach Gemini: ${msg}`, 502);
   }
 
-  const bytes = decodeBase64Image(encoded);
-  const outputBuffer = bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength) as ArrayBuffer
-  return new Response(new Blob([outputBuffer], { type: 'image/png' }), {
+  if (!geminiResponse.ok) {
+    const text = await geminiResponse.text().catch(() => '');
+    return jsonResponse(`Gemini error: ${text}`, geminiResponse.status);
+  }
+
+  const payload = await geminiResponse.json() as {
+    candidates?: Array<{
+      content?: {
+        parts?: Array<{
+          inlineData?: { mimeType?: string; data?: string };
+        }>;
+      };
+    }>;
+  };
+
+  const imagePart = payload.candidates?.[0]?.content?.parts?.find(
+    (p) => p.inlineData?.data,
+  );
+  const encoded = imagePart?.inlineData?.data;
+  const mimeType = imagePart?.inlineData?.mimeType ?? 'image/png';
+
+  if (!encoded) {
+    return jsonResponse('Gemini returned no image data', 502);
+  }
+
+  const binaryOut = atob(encoded);
+  const bytes = new Uint8Array(binaryOut.length);
+  for (let i = 0; i < binaryOut.length; i++) {
+    bytes[i] = binaryOut.charCodeAt(i);
+  }
+
+  return new Response(new Blob([bytes], { type: mimeType }), {
     status: 200,
     headers: {
-      'content-type': 'image/png',
+      'content-type': mimeType,
       'cache-control': 'no-store',
+      'x-model-used': GEMINI_MODEL,
     },
   });
 }

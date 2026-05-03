@@ -52,7 +52,7 @@ const pricingPlans: Array<{
     name: 'Starter',
     price: '$19',
     quota: '250 image credits',
-    features: ['Everything in Free', 'Credits never expire', '$0.076 per image'],
+    features: ['Everything in Free', 'Credits never expire', 'Intro rate per image'],
     tagline: 'Perfect for testing with a real product catalog.',
     cta: 'Get Starter',
     featured: false,
@@ -62,7 +62,7 @@ const pricingPlans: Array<{
     name: 'Growth',
     price: '$49',
     quota: '1,000 image credits',
-    features: ['Everything in Starter', '$0.049 per image', 'For active sellers'],
+    features: ['Everything in Starter', '36% cheaper per image', 'For active sellers'],
     tagline: 'For sellers processing new SKUs every week.',
     cta: 'Get Growth',
     featured: true,
@@ -72,7 +72,7 @@ const pricingPlans: Array<{
     name: 'Pro',
     price: '$99',
     quota: '3,000 image credits',
-    features: ['Everything in Growth', '$0.033 per image', 'High-volume catalogs'],
+    features: ['Everything in Growth', '57% cheaper per image', 'High-volume catalogs'],
     tagline: 'For agencies and large-catalog Amazon sellers.',
     cta: 'Get Pro',
     featured: false,
@@ -92,9 +92,9 @@ const steps = [
   {
     number: '02',
     icon: '⚡',
-    title: 'AI fixes it in seconds',
+    title: 'AI generates a compliant image',
     description:
-      'Background removed, framing corrected, grounding shadow added. All compliance checks run automatically.',
+      'We generate a clean, compliant image from whatever you drop in. Background removed, framing corrected, grounding shadow added.',
   },
   {
     number: '03',
@@ -301,7 +301,7 @@ function LandingPage() {
             </h1>
 
             <p className="mt-5 max-w-lg text-base leading-relaxed text-zinc-600 md:text-lg">
-              Drop any product photo. Our AI pipeline removes the background, corrects framing, adds a grounding shadow, and exports a 2000px Amazon-ready JPG.
+              Lifestyle shots, grey backgrounds, Chinese watermarks, cluttered scenes. Drop any supplier photo and we generate a 2000px Amazon-ready JPG in seconds.
             </p>
 
             <div className="mt-8 flex flex-col gap-4 sm:flex-row sm:items-center">
@@ -382,20 +382,23 @@ function LandingPage() {
             </p>
           </div>
 
-          <div className="mt-12 grid gap-6 md:grid-cols-3">
-            {steps.map((step, i) => (
-              <div key={step.number} className="relative rounded-2xl border border-zinc-200 bg-white p-7 shadow-sm">
-                {i < steps.length - 1 && (
-                  <div className="absolute -right-3 top-1/2 hidden -translate-y-1/2 text-zinc-300 md:block">→</div>
-                )}
-                <div className="flex items-center gap-3">
-                  <span className="text-3xl">{step.icon}</span>
-                  <span className="text-xs font-bold uppercase tracking-[0.2em] text-zinc-400">{step.number}</span>
+          <div className="mt-12 grid items-center gap-3 md:grid-cols-[1fr_auto_1fr_auto_1fr]">
+            {steps.flatMap((step, i) => {
+              const card = (
+                <div key={step.number} className="rounded-2xl border border-zinc-200 bg-white p-7 shadow-sm">
+                  <div className="flex items-center gap-3">
+                    <span className="text-3xl">{step.icon}</span>
+                    <span className="text-xs font-bold uppercase tracking-[0.2em] text-zinc-400">{step.number}</span>
+                  </div>
+                  <h3 className="mt-4 text-lg font-black text-zinc-950">{step.title}</h3>
+                  <p className="mt-2 text-sm leading-relaxed text-zinc-500">{step.description}</p>
                 </div>
-                <h3 className="mt-4 text-lg font-black text-zinc-950">{step.title}</h3>
-                <p className="mt-2 text-sm leading-relaxed text-zinc-500">{step.description}</p>
-              </div>
-            ))}
+              );
+              if (i < steps.length - 1) {
+                return [card, <div key={`arrow-${i}`} className="hidden px-1 text-xl text-zinc-300 md:block">→</div>];
+              }
+              return [card];
+            })}
           </div>
         </section>
 
@@ -403,8 +406,8 @@ function LandingPage() {
         <section id="examples" className="mt-24">
           <div className="text-center">
             <p className="text-xs font-bold uppercase tracking-[0.24em] text-zinc-400">Examples</p>
-            <h2 className="mt-2 text-3xl font-black text-zinc-950 md:text-4xl">Works on any product type.</h2>
-            <p className="mt-3 text-sm text-zinc-500 md:text-base">Drag the slider to compare.</p>
+            <h2 className="mt-2 text-3xl font-black text-zinc-950 md:text-4xl">Every input below is broken. See what we generate.</h2>
+            <p className="mt-3 text-sm text-zinc-500 md:text-base">Real supplier photos: lifestyle backgrounds, grey canvases, watermarks. Drag the slider to see the output.</p>
           </div>
           <div className="mt-10 grid gap-6 md:grid-cols-2">
             {proofCases.map((item, index) => (
@@ -456,7 +459,7 @@ function LandingPage() {
             </div>
             <div className="shrink-0 rounded-2xl border border-emerald-200 bg-white p-5 shadow-sm">
               <div className="space-y-2 text-sm font-semibold">
-                {['Model routing', 'Batch-friendly workflow', 'Repeatable outputs'].map((item) => (
+                {['Handles any supplier photo', 'Batch-friendly workflow', 'Repeatable outputs'].map((item) => (
                   <div key={item} className="flex items-center gap-2 text-emerald-800">
                     <span className="inline-flex h-4 w-4 items-center justify-center rounded-full bg-emerald-500 text-[10px] font-black text-white">✓</span>
                     {item}
@@ -520,7 +523,7 @@ function LandingPage() {
                         <p className="mt-1 text-xs text-zinc-500">{plan.tagline}</p>
                       </div>
                       {plan.featured && (
-                        <span className="rounded-full bg-[#ffe6f5] px-3 py-1 text-[10px] font-bold uppercase tracking-wide text-[#c71f8a]">
+                        <span className="whitespace-nowrap rounded-full bg-[#ffe6f5] px-3 py-1 text-[10px] font-bold uppercase tracking-wide text-[#c71f8a]">
                           Best value
                         </span>
                       )}
@@ -592,7 +595,7 @@ function LandingPage() {
           <div className="flex items-center gap-2.5">
             <img src="/logo.png" alt="fix.pictures" className="h-7 w-7 rounded-lg object-cover" />
             <span className="text-sm font-bold text-zinc-800">fix.pictures</span>
-            <span className="text-xs text-zinc-400">· Amazon Image Compliance Engine</span>
+            <span className="text-xs text-zinc-400">· Built for Amazon FBA sellers</span>
           </div>
           <div className="flex flex-wrap items-center gap-6 text-xs font-medium text-zinc-500">
             <a href="/privacy" className="transition hover:text-zinc-900">Privacy Policy</a>

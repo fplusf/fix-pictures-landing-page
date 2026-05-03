@@ -212,8 +212,8 @@ class SmartWorkerClient {
     const formData = new FormData();
     formData.append('image', file, file.name);
 
-    // Dev: Vite plugin intercepts /api/process-image (reads process.env.OPENAI_API_KEY)
-    // Prod: Supabase Edge Function (reads OPENAI_API_KEY secret)
+    // Dev: Vite middleware intercepts /api/process-image and calls Gemini directly (no Docker needed)
+    // Prod: Supabase Edge Function (quota-enforced, auth-gated)
     const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string;
     const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY as string;
     const url = import.meta.env.DEV
@@ -223,7 +223,6 @@ class SmartWorkerClient {
     const headers: Record<string, string> = {};
     if (!import.meta.env.DEV) {
       // Send the user's session JWT so the Edge Function can verify identity + quota.
-      // Dynamically import supabase to avoid circular deps.
       const { supabase } = await import('@/src/lib/supabase');
       const { data: { session } } = await supabase.auth.getSession();
       const userJwt = session?.access_token;

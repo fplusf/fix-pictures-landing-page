@@ -14,6 +14,8 @@ const readRequestBody = async (req: IncomingMessage) => {
   return Buffer.concat(chunks)
 }
 
+// Mirrors the Supabase edge function locally — calls Gemini directly,
+// skips quota enforcement (no local DB). No Docker required.
 const localApiPlugin = () => ({
   name: 'local-api-process-image',
   configureServer(server: {

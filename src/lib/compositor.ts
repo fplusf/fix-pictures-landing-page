@@ -134,7 +134,7 @@ export const composeCompliantImage = async (
     const scaledBboxHeight = bboxHeight * scale;
 
     // Shadow drawing disabled — fully rely on the AI model output.
-    // gpt-image-2 handles background removal cleanly; our contact-shadow
+    // Gemini handles background removal cleanly; our contact-shadow
     // logic was adding an unwanted fake shadow on flat-based products.
     // Kept for reference but not called.
     const shouldApplyShadow = false;
