@@ -369,7 +369,7 @@ function App() {
           inferenceBackend,
         }));
 
-        const effectiveShadowMode = payload.modelUsed === 'gpt-image-2' || payload.modelUsed === 'gemini-2.0-flash' ? 'off' : shadowMode;
+        const effectiveShadowMode = payload.modelUsed === 'gemini-2.0-flash' ? 'off' : shadowMode;
         const renderKey = `${effectiveShadowMode}:${shadowIntensity}`;
         const result = await composeCompliantImage(payload, {
           shadowMode: effectiveShadowMode,
@@ -639,7 +639,7 @@ function App() {
       }
 
       const result = await composeCompliantImage(item.payload, {
-        shadowMode: item.payload.modelUsed === 'gpt-image-2' || item.payload.modelUsed === 'gemini-2.0-flash' ? 'off' : shadowMode,
+        shadowMode: item.payload.modelUsed === 'gemini-2.0-flash' ? 'off' : shadowMode,
         shadowIntensity,
         quality: 0.9,
       });
@@ -740,7 +740,7 @@ function App() {
   useEffect(() => {
     if (!activeItem || activeItem.status !== 'completed' || !activeItem.payload) return;
 
-    const effectiveShadowMode = activeItem.payload.modelUsed === 'gpt-image-2' || activeItem.payload.modelUsed === 'gemini-2.0-flash' ? 'off' : shadowMode;
+    const effectiveShadowMode = activeItem.payload.modelUsed === 'gemini-2.0-flash' ? 'off' : shadowMode;
     const renderKey = `${effectiveShadowMode}:${shadowIntensity}`;
     if (activeItem.renderKey === renderKey) return;
     const payload = activeItem.payload;
