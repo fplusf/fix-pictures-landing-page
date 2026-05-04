@@ -127,6 +127,11 @@ const features = [
     title: 'Contact shadow',
     description: 'Subtle grounding shadow keeps products looking natural on white.',
   },
+  {
+    icon: '✨',
+    title: 'Smart AI retries',
+    description: 'Not happy with a result? Hit Improve, describe what\'s wrong, and the AI re-generates with your feedback. Free gets 3 total, Starter gets 10, Growth & Pro get unlimited.',
+  },
 ];
 
 // ─── BeforeAfterSlider ────────────────────────────────────────────────────────
@@ -602,6 +607,7 @@ function LandingPage() {
             <a href="/terms" className="transition hover:text-zinc-900">Terms of Service</a>
             <a href="/refund" className="transition hover:text-zinc-900">Refund Policy</a>
             <a href="/pricing" className="transition hover:text-zinc-900">Pricing</a>
+            <a href="/support" className="transition hover:text-zinc-900">Support</a>
             <a href={APP_ROUTE} className="transition hover:text-zinc-900">Open App</a>
           </div>
         </div>

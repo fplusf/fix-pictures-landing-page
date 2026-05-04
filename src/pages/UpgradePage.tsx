@@ -21,7 +21,7 @@ const PLANS: Array<{
     perImage: '$0.076',
     badge: 'Entry',
     highlight: false,
-    description: '250 image credits · Good for testing',
+    description: '250 image credits · Good for testing · 10 AI retries',
   },
   {
     id: 'growth',
@@ -30,7 +30,7 @@ const PLANS: Array<{
     perImage: '$0.049',
     badge: 'Best value',
     highlight: true,
-    description: '1,000 image credits · For active sellers',
+    description: '1,000 image credits · For active sellers · Unlimited AI retries',
   },
   {
     id: 'pro',
@@ -39,7 +39,7 @@ const PLANS: Array<{
     perImage: '$0.033',
     badge: 'Most images',
     highlight: false,
-    description: '3,000 image credits · High-volume catalogs',
+    description: '3,000 image credits · High-volume catalogs · Unlimited AI retries',
   },
 ];
 
@@ -100,7 +100,7 @@ export default function UpgradePage() {
               <div>
                 <p className="font-black text-zinc-400">Free — {FREE_IMAGE_LIMIT} credits</p>
                 <p className="text-sm text-zinc-400 mt-0.5">
-                  {usedCapped}/{FREE_IMAGE_LIMIT} used · Limit reached
+                  {usedCapped}/{FREE_IMAGE_LIMIT} used · {usedCapped >= FREE_IMAGE_LIMIT ? 'Limit reached' : `${FREE_IMAGE_LIMIT - usedCapped} remaining`}
                 </p>
               </div>
               <span className="rounded-full bg-zinc-200 px-3 py-1 text-xs font-bold text-zinc-400">

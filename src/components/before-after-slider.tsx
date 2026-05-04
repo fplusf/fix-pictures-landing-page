@@ -3,9 +3,10 @@ import { useCallback, useRef, useState, type KeyboardEvent, type PointerEvent as
 interface BeforeAfterSliderProps {
   beforeSrc: string;
   afterSrc: string;
+  className?: string;
 }
 
-export const BeforeAfterSlider = ({ beforeSrc, afterSrc }: BeforeAfterSliderProps) => {
+export const BeforeAfterSlider = ({ beforeSrc, afterSrc, className = '' }: BeforeAfterSliderProps) => {
   const [position, setPosition] = useState(40);
   const frameRef = useRef<HTMLDivElement | null>(null);
   const activePointerId = useRef<number | null>(null);
@@ -64,10 +65,9 @@ export const BeforeAfterSlider = ({ beforeSrc, afterSrc }: BeforeAfterSliderProp
   );
 
   return (
-    <div className="select-none">
-      <div
-        ref={frameRef}
-        className="relative touch-none select-none overflow-hidden rounded-2xl border border-zinc-200 bg-zinc-100"
+    <div
+      ref={frameRef}
+      className={`relative touch-none select-none overflow-hidden bg-zinc-100 ${className}`}
         onPointerDown={handlePointerDown}
         onPointerMove={handlePointerMove}
         onPointerUp={handlePointerRelease}
@@ -102,7 +102,6 @@ export const BeforeAfterSlider = ({ beforeSrc, afterSrc }: BeforeAfterSliderProp
           <span className="absolute left-3 top-3 rounded-full bg-white/90 px-2 py-1 text-xs font-medium text-zinc-600">Before</span>
           <span className="absolute right-3 top-3 rounded-full bg-white/90 px-2 py-1 text-xs font-medium text-zinc-600">After</span>
         </div>
-      </div>
     </div>
   );
 };

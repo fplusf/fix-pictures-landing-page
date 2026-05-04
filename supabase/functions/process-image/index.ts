@@ -35,45 +35,38 @@ const PLAN_LIMITS: Record<string, number | null> = {
   lifetime: null, // unlimited
 };
 
-const EDIT_PROMPT = [
-  'Convert this product photo to a fully Amazon main image compliant result.',
+const BASE_PROMPT = [
+  'You are a professional photo retouching AI. Your sole task: isolate the main product and place it on a perfectly pure white background.',
 
-  // Background — absolute pixel requirement
-  'BACKGROUND RULE: Every pixel that is not part of the physical product must be exactly RGB(255,255,255).',
-  'This means zero gradients, zero off-white tones, zero texture, zero noise — mathematically pure white everywhere outside the product.',
+  // The only rule that matters
+  'ISOLATION RULE: Identify the single main product in this photo. Replace EVERYTHING that is not the product itself with exactly RGB(255,255,255) — pure white. This includes backgrounds, surfaces, shadows, gradients, reflections, props, packaging inserts, and any human body parts (hands, fingers, arms) that may be holding the item. If it is not the product, it must become white.',
 
-  // Shadow — the #1 failure mode
-  'SHADOW RULE: There must be NO shadow of any kind anywhere in the image.',
-  'No drop shadow. No cast shadow. No floor shadow. No contact shadow. No ambient occlusion. No darkening near the base.',
-  'Every pixel below, beside, and around the product must be exactly RGB(255,255,255) — not RGB(254,254,254), not RGB(245,245,245) — exactly 255.',
-  'If the product was photographed on a surface that caused a natural shadow, erase that shadow completely and replace with pure white.',
+  // No shadows
+  'SHADOW RULE: The final image must have zero shadows of any kind. No drop shadow, no cast shadow, no soft floor shadow, no ambient occlusion. Every non-product pixel is pure white.',
 
   // Framing
-  'FRAMING RULE: The product must fill 85–90% of the image frame. Crop tightly so the product is large in frame with only minimal padding on each side.',
-  'Center the product both horizontally and vertically. Do not leave large empty white areas.',
+  'FRAMING RULE: The product must fill 85–90% of the frame, centered horizontally and vertically with minimal padding.',
 
-  // Orientation / symmetry
-  'ORIENTATION RULE: If the product has a natural upright orientation (bottles, boxes, cans, electronics, appliances, bags, jars), it must be rendered perfectly vertical — zero tilt, zero rotation.',
-  'If the product was photographed at an angle, straighten it so its primary axis is exactly perpendicular to the bottom of the frame.',
-  'For inherently symmetrical products, the left and right sides must appear balanced. Do not introduce or preserve any lean or tilt from the original photo.',
-  'Only preserve a non-upright angle if the product has no clear upright orientation (e.g. a flat cable, a coiled rope, a watch laid flat for display).',
+  // Orientation
+  'ORIENTATION RULE: Render the product perfectly upright if it has a natural vertical orientation. Only preserve a non-upright angle when the product has no clear standing position.',
 
-  // Product fidelity — colour is the most common failure mode
-  'COLOR PRESERVATION RULE: You must not change the color, brightness, or tone of any part of the product.',
-  'Dark areas of the product must remain exactly as dark as in the original photo. Black must stay black. Dark grey must stay dark grey.',
-  'Do not lighten, brighten, or adjust any part of the product. The only change allowed is removing the background.',
-  'Do not add props, text, badges, watermarks, reflections, or any extra objects.',
-  'Do not crop off any part of the product — the entire product including handles, lids, or protruding elements must be fully visible.',
+  // Colour and detail fidelity
+  'FIDELITY RULE: Preserve every detail, colour, texture, and finish of the product exactly as captured. Do not brighten, recolour, or alter the product in any way. Do not add or remove any part of the product itself.',
 
-  // Output quality
-  'QUALITY RULE: The final image must look like a professional studio photograph, not a cutout pasted on white.',
-  'Edges must be crisp and natural — no jagged pixels, no halo, no fringing, no soft blurry cutout edges.',
-  'Surface details, textures, labels, embossing, and material finishes (matte, gloss, metallic) must be fully preserved and rendered with clarity.',
-  'Lighting on the product must look natural and consistent — no flat, washed-out look. Preserve the original highlights and subtle shading that give the product its three-dimensional form.',
-  'The product must look sharp and detailed at full resolution. Do not soften, blur, or over-smooth any surface.',
+  // Quality
+  'QUALITY RULE: Output must look like a professional studio photograph — crisp edges, no halos, no fringing, full material detail preserved.',
 
-  'Final output: one product, perfectly upright and centered, filling most of the frame, on a mathematically pure white background with zero shadow, rendered at professional studio quality.',
+  'Final output: the product alone, centered, on mathematically pure white, no shadows, no people, no props, studio quality.',
 ].join(' ');
+
+const buildPrompt = (feedback?: string): string => {
+  if (!feedback?.trim()) return BASE_PROMPT;
+  return [
+    BASE_PROMPT,
+    'IMPROVEMENT FEEDBACK FROM PREVIOUS ATTEMPT: The previous result had the following specific problems that you MUST fix: ' + feedback.trim(),
+    'Look carefully at these issues and ensure none of them appear in your new output.',
+  ].join(' ');
+};
 
 const CORS_HEADERS = {
   'Access-Control-Allow-Origin': '*',
@@ -155,6 +148,8 @@ Deno.serve(async (req: Request) => {
     return jsonError('Missing or invalid image field');
   }
 
+  const feedback = typeof form.get('feedback') === 'string' ? (form.get('feedback') as string) : undefined;
+
   // ── 4. Call Gemini ─────────────────────────────────────────────────────────
   // Convert image file to base64 for the Gemini inlineData format
   const imageBytes = await image.arrayBuffer();
@@ -169,7 +164,7 @@ Deno.serve(async (req: Request) => {
   const requestBody = {
     contents: [{
       parts: [
-        { text: EDIT_PROMPT },
+        { text: buildPrompt(feedback) },
         {
           inlineData: {
             mimeType: image.type || 'image/jpeg',

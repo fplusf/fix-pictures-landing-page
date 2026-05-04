@@ -9,6 +9,7 @@ import RefundPolicy from '@/src/pages/RefundPolicy';
 import PricingPage from '@/src/pages/PricingPage';
 import AuthCallback from '@/src/pages/AuthCallback';
 import UpgradePage from '@/src/pages/UpgradePage';
+import SupportPage from '@/src/pages/SupportPage';
 import ProtectedRoute, { AppRoute } from '@/src/components/ProtectedRoute';
 
 export default function AppRouter() {
@@ -34,6 +35,7 @@ export default function AppRouter() {
       <Route path="/privacy" element={<PrivacyPolicy />} />
       <Route path="/refund" element={<RefundPolicy />} />
       <Route path="/pricing" element={<PricingPage />} />
+      <Route path="/support" element={<SupportPage />} />
       <Route
         path="/upgrade"
         element={

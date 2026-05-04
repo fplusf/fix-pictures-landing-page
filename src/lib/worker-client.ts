@@ -201,16 +201,17 @@ class SmartWorkerClient {
     };
   }
 
-  private async tryRemoteImageEdit(file: File, id: string, options?: { onProgress?: RequestProgressCallback }) {
+  private async tryRemoteImageEdit(file: File, id: string, options?: { onProgress?: RequestProgressCallback; feedback?: string }) {
     const progress = (stage: WorkerProgress['stage'], message: string) => {
       const event: WorkerProgress = { id, type: 'progress', stage, message };
       options?.onProgress?.(event);
       this.listeners.forEach((listener) => listener(event));
     };
 
-    progress('loading', 'Uploading source image…');
+    progress('loading', options?.feedback ? 'Re-uploading for improvement…' : 'Uploading source image…');
     const formData = new FormData();
     formData.append('image', file, file.name);
+    if (options?.feedback) formData.append('feedback', options.feedback);
 
     // Always call the deployed Supabase edge function — dev and prod are identical.
     const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string;
@@ -273,7 +274,7 @@ class SmartWorkerClient {
     return { ...result, usageTrackedByServer };
   }
 
-  public async process(file: File, options?: { onProgress?: RequestProgressCallback }) {
+  public async process(file: File, options?: { onProgress?: RequestProgressCallback; feedback?: string }) {
     const id = crypto.randomUUID();
     try {
       const result = await this.tryRemoteImageEdit(file, id, options);

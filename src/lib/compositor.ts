@@ -294,6 +294,47 @@ const buildForegroundMaskFromWhiteBackground = (
   return mask;
 };
 
+// Flood-fill from every border pixel that is transparent (exterior background).
+// Any transparent pixel NOT reached by this fill is an interior hole surrounded
+// by product — treat it as foreground so the model never punches holes into the
+// product itself (e.g. skeleton watch dials, hollow handles, ring apertures).
+const fillInteriorHoles = (mask: Uint8Array, width: number, height: number): void => {
+  const total = width * height;
+  const exterior = new Uint8Array(total);
+  const queue = new Int32Array(total);
+  let head = 0, tail = 0;
+
+  const enqueue = (i: number) => {
+    if (i < 0 || i >= total || mask[i] || exterior[i]) return;
+    exterior[i] = 1;
+    queue[tail++] = i;
+  };
+
+  for (let x = 0; x < width; x++) {
+    enqueue(x);
+    enqueue((height - 1) * width + x);
+  }
+  for (let y = 1; y < height - 1; y++) {
+    enqueue(y * width);
+    enqueue(y * width + width - 1);
+  }
+
+  while (head < tail) {
+    const i = queue[head++];
+    const x = i % width;
+    const y = Math.floor(i / width);
+    if (x > 0) enqueue(i - 1);
+    if (x < width - 1) enqueue(i + 1);
+    if (y > 0) enqueue(i - width);
+    if (y < height - 1) enqueue(i + width);
+  }
+
+  // Any transparent pixel not reached from the border is an interior hole → fill it.
+  for (let i = 0; i < total; i++) {
+    if (!mask[i] && !exterior[i]) mask[i] = 1;
+  }
+};
+
 const refineForegroundForCompliance = (source: ImageData): ForegroundRefinementResult => {
   const { width, height, data } = source;
   const total = width * height;
@@ -313,6 +354,17 @@ const refineForegroundForCompliance = (source: ImageData): ForegroundRefinementR
     for (let i = 0; i < total; i += 1) {
       if (data[i * 4 + 3] >= FOREGROUND_ALPHA_THRESHOLD) {
         alphaMask[i] = 1;
+      }
+    }
+    // Fill interior holes: transparent regions fully enclosed by product pixels
+    // (e.g. see-through watch dials, hollow product handles) are not background —
+    // only areas reachable from the image border are true exterior background.
+    fillInteriorHoles(alphaMask, width, height);
+    // RMBG preserves original RGB values even for alpha=0 pixels, so we can
+    // restore opacity for filled interior holes and recover their original colors.
+    for (let i = 0; i < total; i++) {
+      if (alphaMask[i] && data[i * 4 + 3] < FOREGROUND_ALPHA_THRESHOLD) {
+        output[i * 4 + 3] = 255;
       }
     }
   }

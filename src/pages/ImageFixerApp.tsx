@@ -28,6 +28,7 @@ import { hasProcessedMetadata, looksLikeOurOutput } from '@/src/lib/exif-metadat
 import { trackEvent } from '@/src/lib/posthog';
 import { cn } from '@/src/lib/utils';
 import { smartWorkerClient } from '@/src/lib/worker-client';
+import { useRetryCredits } from '@/src/hooks/useRetryCredits';
 import type { ProcessedPayload, WorkerProgress } from '@/src/workers/ai.worker';
 import JSZip from 'jszip';
 import {
@@ -68,7 +69,11 @@ interface BatchItem {
   analysisError: string | null;
   inferenceBackend: InferenceBackend | null;
   forceProcess?: boolean;
+  retryCount: number;
+  pendingFeedback: string | null;
 }
+
+const MAX_RETRIES = 3;
 
 const ALLOWED_TYPES = new Set(['image/jpeg', 'image/jpg', 'image/png', 'image/webp']);
 const MAX_FILE_SIZE_BYTES = 25 * 1024 * 1024;
@@ -83,6 +88,9 @@ function App() {
   const [batchItems, setBatchItems] = useState<BatchItem[]>([]);
   const [activeItemId, setActiveItemId] = useState<string | null>(null);
   const [sessionError, setSessionError] = useState<string | null>(null);
+  const [improveDialogItemId, setImproveDialogItemId] = useState<string | null>(null);
+  const [improveFeedback, setImproveFeedback] = useState('');
+  const { remaining: retryCreditsRemaining, canRetry, consumeRetry } = useRetryCredits(user?.id, plan);
   const shadowMode: ShadowMode = 'off';
   const shadowIntensity = DEFAULT_SHADOW_INTENSITY;
   const [downloadingSelected, setDownloadingSelected] = useState(false);
@@ -347,6 +355,7 @@ function App() {
 
         const payload = await smartWorkerClient.process(item.file, {
           onProgress: pushProgress,
+          feedback: item.pendingFeedback ?? undefined,
         });
 
         // If the Edge Function tracked usage server-side, mark this item so
@@ -463,9 +472,8 @@ function App() {
         navigate('/upgrade');
         return;
       }
-      // Allow only up to the remaining slots; show modal if truncated
+      // Silently cap to remaining slots — only redirect once the quota is truly exhausted
       if (files.length > imagesRemaining) {
-        navigate('/upgrade');
         files = files.slice(0, imagesRemaining);
         if (!files.length) return;
       }
@@ -543,6 +551,8 @@ function App() {
           analysisState,
           analysisError,
           inferenceBackend: null,
+          retryCount: 0,
+          pendingFeedback: null,
         };
       }),
     );
@@ -587,6 +597,28 @@ function App() {
       completedAt: null,
       progressLogs: [],
       inferenceBackend: null,
+      pendingFeedback: null,
+    }));
+  }, [updateBatchItem]);
+
+  const improveItem = useCallback((itemId: string, feedback: string) => {
+    updateBatchItem(itemId, (item) => ({
+      ...item,
+      status: 'queued',
+      error: null,
+      startedAt: null,
+      completedAt: null,
+      progressLogs: [],
+      inferenceBackend: null,
+      outputUrl: null,
+      outputBlob: null,
+      outputName: null,
+      payload: null,
+      metrics: null,
+      renderKey: null,
+      retryCount: item.retryCount + 1,
+      pendingFeedback: feedback,
+      forceProcess: true,
     }));
   }, [updateBatchItem]);
  
@@ -1010,7 +1042,11 @@ function App() {
             </div>
 
             {activeItem?.outputUrl ? (
-              <BeforeAfterSlider beforeSrc={activeItem.sourceUrl} afterSrc={activeItem.outputUrl} />
+              <BeforeAfterSlider
+                beforeSrc={activeItem.sourceUrl}
+                afterSrc={activeItem.outputUrl}
+                className="-mx-4 -mb-4 sm:-mx-5 sm:-mb-5 rounded-b-2xl"
+              />
             ) : (
               <div className="aspect-square rounded-2xl border border-dashed border-zinc-300 bg-zinc-50">
                 {activeItem?.status === 'processing' ? (
@@ -1112,6 +1148,21 @@ function App() {
                           <Download className="mr-1.5 h-3.5 w-3.5" />
                           Download
                         </Button>
+                        {canRetry && item.retryCount < MAX_RETRIES && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="h-8 border-[#e636a4] px-3 text-[#e636a4] hover:bg-pink-50"
+                            onClick={(event) => {
+                              event.stopPropagation();
+                              setImproveFeedback('');
+                              setImproveDialogItemId(item.id);
+                            }}
+                          >
+                            <Sparkles className="mr-1.5 h-3.5 w-3.5" />
+                            Improve ({retryCreditsRemaining === Infinity ? `${MAX_RETRIES - item.retryCount}` : retryCreditsRemaining} left)
+                          </Button>
+                        )}
                       </>
                     )}
                     <Button
@@ -1195,6 +1246,66 @@ function App() {
         onConfirm={handleSignOut}
         variant="destructive"
       />
+
+      {/* Improve Result dialog */}
+      {improveDialogItemId && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
+          onClick={() => setImproveDialogItemId(null)}
+        >
+          <div
+            className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="mb-1 flex items-center gap-2">
+              <Sparkles className="h-4 w-4 text-[#e636a4]" />
+              <h2 className="text-base font-black text-zinc-900">Improve this result</h2>
+            </div>
+            <p className="mb-4 text-sm text-zinc-500">
+              Tell us what's wrong with the current result. The AI will re-process with your feedback. Uses 1 credit.
+            </p>
+            <div className="mb-1 flex flex-wrap gap-2">
+              {['Hand / person still visible', 'Dark holes inside handle', 'Background not fully white', 'Product color changed', 'Part of product is cut off'].map((hint) => (
+                <button
+                  key={hint}
+                  onClick={() => setImproveFeedback((prev) => prev ? `${prev}, ${hint.toLowerCase()}` : hint.toLowerCase())}
+                  className="rounded-full border border-zinc-200 bg-zinc-50 px-3 py-1 text-xs font-medium text-zinc-700 transition hover:border-[#e636a4] hover:text-[#e636a4]"
+                >
+                  + {hint}
+                </button>
+              ))}
+            </div>
+            <textarea
+              value={improveFeedback}
+              onChange={(e) => setImproveFeedback(e.target.value)}
+              placeholder="Describe the problem, or click the quick tags above…"
+              rows={3}
+              className="mt-3 w-full resize-none rounded-lg border border-zinc-200 bg-zinc-50 px-3 py-2 text-sm text-zinc-900 outline-none focus:border-[#e636a4] focus:ring-2 focus:ring-[#e636a4]/20"
+            />
+            <div className="mt-4 flex gap-2">
+              <button
+                onClick={() => setImproveDialogItemId(null)}
+                className="flex-1 rounded-lg border border-zinc-200 py-2 text-sm font-semibold text-zinc-600 transition hover:bg-zinc-50"
+              >
+                Cancel
+              </button>
+              <button
+                disabled={!improveFeedback.trim()}
+                onClick={() => {
+                  if (!improveFeedback.trim()) return;
+                  consumeRetry();
+                  improveItem(improveDialogItemId, improveFeedback.trim());
+                  setImproveDialogItemId(null);
+                  setImproveFeedback('');
+                }}
+                className="flex-1 rounded-lg bg-gradient-to-r from-[#e636a4] to-[#ff7a2f] py-2 text-sm font-bold text-white shadow-sm transition hover:opacity-90 disabled:opacity-40"
+              >
+                Re-process with feedback
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
     </div>
   );
