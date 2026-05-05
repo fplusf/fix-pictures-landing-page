@@ -159,7 +159,9 @@ export const composeCompliantImage = async (
     // Pass 2 — Isolated dark speck removal.
     // After whitening, any non-white pixel that has only white neighbours within a
     // 3-pixel radius is an isolated artifact dot (masking residue, JPEG halo).
-    // We check the 8 immediate neighbours; if ≥ 7 of 8 are pure white, zap it.
+    // We require ALL 8 neighbours to be pure white (was ≥7) to avoid erasing
+    // legitimate thin product features like watch hands, indices, or fine engravings
+    // that may be surrounded by white on most but not all sides.
     const total2 = W * W;
     const toWhite = new Uint8Array(total2); // marks pixels to clear
     for (let y = 1; y < W - 1; y++) {
@@ -174,7 +176,7 @@ export const composeCompliantImage = async (
             if (px[ni] === 255 && px[ni + 1] === 255 && px[ni + 2] === 255) whiteNeighbours++;
           }
         }
-        if (whiteNeighbours >= 7) toWhite[y * W + x] = 1;
+        if (whiteNeighbours === 8) toWhite[y * W + x] = 1;
       }
     }
     for (let i = 0; i < total2; i++) {

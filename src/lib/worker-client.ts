@@ -253,24 +253,14 @@ class SmartWorkerClient {
     const usageTrackedByServer = response.headers.get('x-usage-tracked') === 'true';
     const geminiBlob = await response.blob();
 
-    // imgly final pass — Gemini returns a flat image (product on white).
-    // Running background removal on it produces a clean transparent cutout,
-    // eliminating any residual shadow, gradient, or dirty edge pixels.
-    progress('refining', 'Cleaning up background…');
-    let outputBlob: Blob;
-    try {
-      outputBlob = await removeBackground(geminiBlob, {
-        progress: (_key: string, current: number, total: number) => {
-          const pct = total > 0 ? Math.round((current / total) * 100) : 0;
-          progress('refining', `Cleaning up background… ${pct}%`);
-        },
-      });
-    } catch (err) {
-      console.warn('[fix.pictures] imgly cleanup failed — using raw Gemini output', err);
-      outputBlob = geminiBlob;
-    }
-
-    const result = await this.buildPayload(file, outputBlob);
+    // Pass Gemini's flat output directly to the compositor.
+    // The compositor detects fully-opaque images and uses flood-fill from
+    // white corners to cut the product — this is more reliable than running
+    // imgly on top of Gemini's output, because imgly misidentifies Gemini's
+    // dark artifacts (from watermark removal, reflective surfaces, etc.) as
+    // product pixels and preserves them as black stains in the final image.
+    progress('refining', 'Finalising…');
+    const result = await this.buildPayload(file, geminiBlob);
     return { ...result, usageTrackedByServer };
   }
 

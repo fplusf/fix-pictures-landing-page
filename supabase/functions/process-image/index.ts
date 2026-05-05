@@ -53,10 +53,22 @@ const BASE_PROMPT = [
   // Colour and detail fidelity
   'FIDELITY RULE: Preserve every detail, colour, texture, and finish of the product exactly as captured. Do not brighten, recolour, or alter the product in any way. Do not add or remove any part of the product itself.',
 
+  // Fine/intricate detail preservation
+  'DETAIL RULE: This image may contain products with extremely fine or intricate details — mechanical watch movements, skeleton dials, filigree, engravings, mesh, lattice, openwork, perforations, or similar delicate structures. You MUST reproduce every micro-detail with photographic precision. Never hallucinate, smear, simplify, blur, or AI-generate replacement detail in these areas. Every gear tooth, aperture, wire strand, mesh opening, index mark, and engraved line must match the source image exactly. Treat the product pixels as sacred — copy them, do not reinterpret them.',
+
+  // Junction areas
+  'JUNCTION RULE: At every point where different product components meet — strap-to-case, lid-to-body, sole-to-upper, cap-to-tube, band-to-dial, hinge, clasp — preserve the exact pixel boundary of that transition. Do not blend, smear, invent, or alter the pixels where materials change. The junction must look identical to the input.',
+
+  // Watermarks / overlaid text
+  'WATERMARK RULE: The input image may contain overlaid stock-photo watermarks, vendor logos, URLs, or text labels printed on top of the product (not part of the product\'s design). Erase these completely by reconstructing the underlying product surface beneath them. The reconstructed area must show the correct product material — never leave dark, black, grey, or undefined pixels where a watermark was. If you cannot perfectly reconstruct what is underneath, render that area as pure white rather than any dark colour.',
+
+  // No dark artifacts anywhere
+  'NO-ARTIFACT RULE: Your output must contain ZERO unexplained dark or black pixels. Every pixel is either the correctly-coloured product, or exactly RGB(255,255,255). No dark halos, no black smears, no undefined regions, no dark fringing at product edges. If you are uncertain about a pixel — make it white, never dark.',
+
   // Quality
   'QUALITY RULE: Output must look like a professional studio photograph — crisp edges, no halos, no fringing, full material detail preserved.',
 
-  'Final output: the product alone, centered, on mathematically pure white, no shadows, no people, no props, studio quality.',
+  'Final output: the product alone, centered, on mathematically pure white, no shadows, no people, no props, no watermarks, no dark artifacts, studio quality.',
 ].join(' ');
 
 const buildPrompt = (feedback?: string): string => {
