@@ -11,6 +11,12 @@ import AuthCallback from '@/src/pages/AuthCallback';
 import UpgradePage from '@/src/pages/UpgradePage';
 import SupportPage from '@/src/pages/SupportPage';
 import ProtectedRoute, { AppRoute } from '@/src/components/ProtectedRoute';
+import AmazonImageRequirements from '@/src/pages/seo/AmazonImageRequirements';
+import RemoveBackgroundAmazon from '@/src/pages/seo/RemoveBackgroundAmazon';
+import AmazonWhiteBackground from '@/src/pages/seo/AmazonWhiteBackground';
+import AmazonImageSize from '@/src/pages/seo/AmazonImageSize';
+import AmazonListingImageChecker from '@/src/pages/seo/AmazonListingImageChecker';
+import FixAmazonProductPhotos from '@/src/pages/seo/FixAmazonProductPhotos';
 
 export default function AppRouter() {
   const location = useLocation();
@@ -36,6 +42,12 @@ export default function AppRouter() {
       <Route path="/refund" element={<RefundPolicy />} />
       <Route path="/pricing" element={<PricingPage />} />
       <Route path="/support" element={<SupportPage />} />
+      <Route path="/amazon-image-requirements" element={<AmazonImageRequirements />} />
+      <Route path="/remove-background-amazon" element={<RemoveBackgroundAmazon />} />
+      <Route path="/amazon-white-background" element={<AmazonWhiteBackground />} />
+      <Route path="/amazon-image-size" element={<AmazonImageSize />} />
+      <Route path="/amazon-listing-image-checker" element={<AmazonListingImageChecker />} />
+      <Route path="/fix-amazon-product-photos" element={<FixAmazonProductPhotos />} />
       <Route
         path="/upgrade"
         element={
